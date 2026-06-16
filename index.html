@@ -2572,7 +2572,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '2.6';
+    const SITE_VERSION = '2.7';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -3009,6 +3009,20 @@
           } catch (err) {
             console.log(`Could not load sheet: ${sheetName}`);
           }
+        }
+        
+        // Load Inventory sheet from oil management sheet
+        try {
+          const inventorySheetId = '1tbCZpRWmgHxJC2UT4_4Nwgz0iZ-7JP3eTbIHvHj3p5A';
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${inventorySheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('Inventory')}`;
+          const res = await fetch(csvUrl);
+          if (res.ok) {
+            const csvText = await res.text();
+            const rows = parseCSV(csvText);
+            sheetsData['Inventory'] = rows;
+          }
+        } catch (err) {
+          console.log('Could not load Inventory sheet');
         }
         
         // Load others sheet separately
@@ -3783,12 +3797,12 @@
       const rows = window._driverStatusRows || [];
       if (window._driverStatusUnavailable) {
         const message = window._driverStatusUnavailableMessage || 'غير متوفر جدول السائقين لهذا الشهر، سيتم التحديث قريباً';
-        tbody.innerHTML = `<tr><td colspan="5" style="color:#fbbf24;padding:12px">${escapeHtml(message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="color:#fbbf24;padding:12px">${escapeHtml(message)}</td></tr>`;
         return;
       }
 
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:#999;padding:12px">لا توجد بيانات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#999;padding:12px">لا توجد بيانات</td></tr>';
         return;
       }
 
@@ -3813,7 +3827,7 @@
       });
 
       if (computed.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:#999;padding:12px">لا توجد نتائج مطابقة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#999;padding:12px">لا توجد نتائج مطابقة</td></tr>';
         return;
       }
 
@@ -3827,7 +3841,7 @@
 
         const headerRow = document.createElement('tr');
         headerRow.className = 'shift-group-row';
-        headerRow.innerHTML = `<td colspan="5">${escapeHtml(getShiftSectionTitle(groupKey, lang))}</td>`;
+        headerRow.innerHTML = `<td colspan="6">${escapeHtml(getShiftSectionTitle(groupKey, lang))}</td>`;
         tbody.appendChild(headerRow);
 
         const columns = getDriverColumnsRowLabels(lang);
@@ -3839,6 +3853,7 @@
           <td>${escapeHtml(columns.type)}</td>
           <td>${escapeHtml(columns.shift)}</td>
           <td class="export-hide">${escapeHtml(columns.status)}</td>
+          <td>${escapeHtml(columns.daysOff)}</td>
         `;
         tbody.appendChild(columnsRow);
 
@@ -3857,6 +3872,7 @@
             <td>${escapeHtml(typeDisplay || '-')}</td>
             <td>${escapeHtml(shiftDisplay)}</td>
             <td class="export-hide"><span class="status-badge ${problemText ? 'status-problem' : `status-${r.status.key}`}" ${problemText ? `data-problem="${escapeHtml(problemText)}"` : ''}>${statusLabel}</span></td>
+            <td>${daysOff}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -3875,6 +3891,7 @@
           name: 'Driver Name',
           type: 'Type',
           shift: 'Shift Start',
+          daysOff: 'Days Off',
           status: 'Status'
         };
       }
@@ -3884,6 +3901,7 @@
         name: 'اسم السائق',
         type: 'النوع',
         shift: 'وقت بداية الدوام',
+        daysOff: 'أيام الإجازة',
         status: 'الحالة'
       };
     }
@@ -5625,7 +5643,9 @@
       if (!copyText) return '';
       let normalized = copyText.replace(/الطريق/g, 'الطريج');
       const suffix = ' والباجي يرجع بحسابك خلال ٣ ايام عمل بنكيه';
-      if ((/رسوم الإلغاء|رسوم الالغاء/).test(normalized) && !normalized.includes(suffix)) {
+      if ((/رسوم الإلغاء|رسوم الالغاء/).test(normalized)
+          && !normalized.includes(suffix)
+          && !/يرجع بحسابك|يرد بحسابك|ورد بحسابك|يعود بحسابك/.test(normalized)) {
         normalized = normalized.trim().replace(/[\.\s]*$/g, '');
         normalized += suffix;
       }
@@ -5665,7 +5685,7 @@
 
 وفي حال حبيت تبدل البطارية رسوم الـ${servicePrice} دك تنخصم من سعر البطارية.
 
-وفي حال إلغاء الطلب والفني بالطريج او المشكله من الدينمو او السلف رسوم الالغاء بقيمه ${cancellation} دك.`);
+وفي حال إلغاء الطلب والفني بالطريج او المشكله من الدينمو او السلف رسوم الالغاء بقيمه ${cancellation} .`);
     }
 
     function buildFuelCopyText() {
@@ -5681,7 +5701,7 @@
 
 رسوم خدمة التوصيل إلى ${area} بقيمة ${servicePrice}.
 
-وفي حال إلغاء الطلب والفني بالطريج أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation} دك.`);
+وفي حال إلغاء الطلب والفني بالطريج أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation} .`);
     }
 
     function buildLockPortarageCopyText() {
@@ -5690,7 +5710,7 @@
       if (!price) return '';
       return normalizeCopyText(`رسوم فتح القفل تكون بقيمة ${price}.
 
-وفي حال إلغاء الطلب والفني بالطريج، تكون رسوم الإلغاء ${cancellation} دك.`);
+وفي حال إلغاء الطلب والفني بالطريج، تكون رسوم الإلغاء ${cancellation}.`);
     }
 
     function buildLockExternalCopyText() {
@@ -5708,17 +5728,60 @@
         if (!price) return '';
         return normalizeCopyText(`رسوم التوصيل والتركيب والميزان جدام البيت بقيمة ${price}.
 
-وفي حال إلغاء الطلب بسبب المقاس خطأ أو الرنق مكسور أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation} دك.`);
+وفي حال إلغاء الطلب بسبب المقاس خطأ أو الرنق مكسور أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation}.`);
       }
       const total = normalizeCurrencyLabel(getTableCellText('#balanceResultBody', 3, 1));
       const cancellation = makeDkAmount(normalizeCurrencyLabel(getTableCellText('#balanceResultBody', 4, 1) || 'غير محدد'));
       if (!total) return '';
       return normalizeCopyText(`رسوم التركيب مع الميزان جدام البيت بقيمة ${total}.
 
-وفي حال إلغاء الطلب بسبب المقاس خطأ أو الرنق مكسور أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation} دك.`);
+وفي حال إلغاء الطلب بسبب المقاس خطأ أو الرنق مكسور أو لأي سبب آخر، تكون رسوم الإلغاء بقيمة ${cancellation}.`);
+    }
+
+    function buildFluidServiceCopyText() {
+      const serviceNameMap = {
+        coolant: 'ماي الراديتر',
+        brakefluid: 'زيت بريك',
+        transmission: 'زيت سكان'
+      };
+      const serviceName = serviceNameMap[formData.mechanicalService];
+      if (!serviceName) return '';
+
+      const tbody = document.querySelector('#mechResultBody');
+      if (!tbody) return '';
+
+      const rows = [...tbody.querySelectorAll('tr')];
+      if (!rows.length) return '';
+
+      const brandRows = rows.filter((row, index) => index < rows.length - 1 && row.querySelectorAll('td').length >= 4);
+      if (!brandRows.length) return getResultTableCopyText('#mechResultBody', 'نتيجة الحساب');
+
+      const serviceFeeRaw = brandRows[0].querySelectorAll('td')[2].innerText.trim();
+      const serviceFee = normalizeCurrencyLabel(serviceFeeRaw);
+      const cancellationRow = rows[rows.length - 1].querySelectorAll('td');
+      const cancellationText = cancellationRow[3] ? normalizeCurrencyLabel(cancellationRow[3].innerText.trim()) : 'غير محدد';
+      const cancellation = makeDkAmount(cancellationText || 'غير محدد');
+
+      const multiple = brandRows.length > 1;
+      const brandLines = brandRows.map((row, index) => {
+        const cells = row.querySelectorAll('td');
+        let brandName = cells[0].innerText.trim();
+        brandName = brandName.replace(/\s*\(\d+\s*متوفرة\)$/i, '').trim();
+        const priceText = normalizeCurrencyLabel(cells[1].innerText.trim());
+        const prefix = multiple ? `${index + 1}- ` : '';
+        return `${prefix}متوفر ${serviceName} ماركه : ${brandName} سعر القطعه : ${priceText}`;
+      });
+      const serviceFeeText = serviceFee.endsWith('دك') ? serviceFee : `${serviceFee} دك`;
+
+      return normalizeCopyText(`${brandLines.join('\n')}
+رسوم خدمة التوصيل والتعبئة : ${serviceFeeText}
+في حال الغاء الطلب ،والفني بالطريج او تم الغاء الطلب لاي سبب من الاسباب في رسوم إلغاء بقيمه ${cancellation} والباحي يرد بحسابك من 24 ساعه الى 3 ايام عمل بنكيه`);
     }
 
     function buildMechanicalCopyText() {
+      if (formData.mechanicalService === 'coolant' || formData.mechanicalService === 'brakefluid' || formData.mechanicalService === 'transmission') {
+        return buildFluidServiceCopyText();
+      }
       if (formData.mechanicalService !== 'inspection') {
         return getResultTableCopyText('#mechResultBody', 'نتيجة الحساب');
       }
@@ -5727,7 +5790,7 @@
       if (!price) return '';
       return normalizeCopyText(`رسوم فحص السيارة تكون بقيمة ${price}.
 
-وفي حال إلغاء الطلب والفني بالطريج، تكون رسوم الإلغاء ${cancellation} دك.`);
+وفي حال إلغاء الطلب والفني بالطريج، تكون رسوم الإلغاء ${cancellation}.`);
     }
 
     function buildPunctureCopyText() {
@@ -5739,7 +5802,7 @@
 - رقعة خارجية او تركيب سبير او تعبئة هواء: ${externalPrice}
 - رقعة داخلية: ${internalPrice}
 
-وفي حال إلغاء الطلب والفني بالطريج، أو التاير ما يتصلح، أو الرنق مكسور، أو السبير غير متوفر، أو لأي سبب آخر، تكون رسوم الإلغاء ${externalCancel} دك.`);
+وفي حال إلغاء الطلب والفني بالطريج، أو التاير ما يتصلح، أو الرنق مكسور، أو السبير غير متوفر، أو لأي سبب آخر، تكون رسوم الإلغاء ${externalCancel} .`);
     }
 
     function attachResultCopyButton(buttonSelector) {
@@ -8425,7 +8488,7 @@
       document.getElementById('mechResultSection').classList.remove('hidden');
     }
 
-    function calculateFluidPrice() {
+    async function calculateFluidPrice() {
       if (!formData.area) return;
 
       const rows = sheetsData['خدمات5'];
@@ -8448,80 +8511,81 @@
         }
       }
 
-      // Determine service name and type
+      // Determine service name and type filter
       let serviceName = '';
       let typeFilter = '';
       if (formData.mechanicalService === 'coolant') {
         serviceName = 'ماي راديتر';
-        typeFilter = 'COOLANT';
+        typeFilter = 'Coolant';
       } else if (formData.mechanicalService === 'brakefluid') {
         serviceName = 'زيت بريك';
-        typeFilter = 'BREAK LIQUIDO';
+        typeFilter = 'brake oil';
       } else if (formData.mechanicalService === 'transmission') {
         serviceName = 'زيت سكان';
-        typeFilter = 'TRANSMISIONES';
+        typeFilter = 'transmission oil';
       }
 
       const tbody = document.getElementById('mechResultBody');
-      const noteDiv = document.getElementById('mechNote');
       const resultSection = document.getElementById('mechResultSection');
 
-      // Load brands from 'others' sheet - retry if not loaded
-      let brands = [];
-      const othersRows = sheetsData['others'];
-      
-      if (!othersRows) {
-        // If data not loaded, retry in a moment
-        setTimeout(() => {
-          calculateFluidPrice();
-        }, 500);
-        return;
+      async function refreshInventory() {
+        try {
+          const inventorySheetId = '1tbCZpRWmgHxJC2UT4_4Nwgz0iZ-7JP3eTbIHvHj3p5A';
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${inventorySheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('Inventory')}&_=${Date.now()}`;
+          const res = await fetch(csvUrl, { cache: 'no-store' });
+          if (!res.ok) return null;
+          const csvText = await res.text();
+          const rows = parseCSV(csvText);
+          sheetsData['Inventory'] = rows;
+          return rows;
+        } catch (e) {
+          return null;
+        }
       }
-      
-      if (othersRows) {
-        for (let i = 1; i < othersRows.length; i++) { // start from 1 to skip header
-          const row = othersRows[i];
-          if (row[1] === typeFilter) { // column B is type
-            let country = row[2] || ''; // column C
-            if (country === 'Spain') country = 'إسبانيا';
-            else if (country === 'Britain') country = 'بريطانيا';
-            else if (country === 'Cepsa') country = 'سيسبا';
-            else if (country === 'dukhum') country = 'داكهام';
-            const brand = row[0] || ''; // column A
-            const price = parseFloat(row[3]) || 0; // column D
-            if (brand && !isNaN(price)) {
-              brands.push({ brand, country, price });
-            }
+
+      let inventoryRows = sheetsData['Inventory'];
+      const refreshed = await refreshInventory();
+      if (Array.isArray(refreshed) && refreshed.length) inventoryRows = refreshed;
+
+      const brands = [];
+      if (inventoryRows && inventoryRows.length) {
+        for (let i = 1; i < inventoryRows.length; i++) {
+          const row = inventoryRows[i];
+          const brandRaw = (row[0] || '').toString().trim();
+          const partType = (row[2] || '').toString().trim().toLowerCase();
+          const quantity = toNumber(row[3]) || 0;
+          const price = toNumber(row[4]) || 0;
+          const typeMatch = typeFilter.toLowerCase();
+          if (!brandRaw || quantity <= 0) continue;
+          if (partType === typeMatch || partType.includes(typeMatch)) {
+            let displayBrand = brandRaw;
+            if (brandRaw.toLowerCase().includes('duckhams')) displayBrand = 'داكهامز بريطاني 🇬🇧';
+            brands.push({ brand: displayBrand, quantity, price });
           }
         }
       }
 
-      // Build table rows - only details, no headers
-      let tableHtml = '';
-      
-      if (brands.length > 0) {
-        brands.forEach(b => {
-          const total = basePrice + b.price;
-          tableHtml += `
+      function restoreDefaultHeader() {
+        const thead = resultSection.querySelector('thead');
+        if (thead) {
+          thead.innerHTML = `
             <tr>
-              <td>${b.brand} (${b.price.toFixed(2)} ${config.currency}) - رسوم خدمة التعبئه: ${basePrice.toFixed(2)} ${config.currency}</td>
-              <td class="highlight">${total.toFixed(2)} ${config.currency}</td>
+              <th>البيان</th>
+              <th>الإجمالى</th>
             </tr>
           `;
-        });
-        
-        // Add cancellation fee once at the bottom
-        tableHtml += `
-          <tr style="border-top: 1px solid #333; padding-top: 8px; margin-top: 8px;">
-            <td>رسوم الإلغاء</td>
-            <td>${cancellation}</td>
-          </tr>
-        `;
-      } else {
-        // If no brands, just show service price
-        tableHtml = `
+        }
+      }
+
+      if (!brands.length) {
+        restoreDefaultHeader();
+        tbody.innerHTML = `
           <tr>
-            <td>رسوم خدمة تعبئه ${serviceName}</td>
+            <td>لا يتوفر أي كمية لـ${escapeHtml(serviceName)} في المخزن</td>
+            <td class="highlight">-</td>
+          </tr>
+          <tr>
+            <td>رسوم الخدمة فقط</td>
             <td class="highlight">${basePrice.toFixed(2)} ${config.currency}</td>
           </tr>
           <tr>
@@ -8529,31 +8593,57 @@
             <td>${cancellation}</td>
           </tr>
         `;
+        updateMechResultNote();
+        resultSection.classList.remove('hidden');
+        return;
       }
 
-      tbody.innerHTML = tableHtml;
-
-      // Auto-expand the result container when there are multiple brands
-      if (brands.length > 1) {
-        resultSection.style.maxHeight = 'none';
-        resultSection.style.overflow = 'visible';
-        const tableScroll = resultSection.querySelector('.table-scroll');
-        if (tableScroll) {
-          tableScroll.style.maxHeight = 'none';
-          tableScroll.style.overflow = 'visible';
-        }
-      } else {
-        // Reset to normal for single brand or no brands
-        resultSection.style.maxHeight = '350px';
-        resultSection.style.overflow = 'hidden';
-        const tableScroll = resultSection.querySelector('.table-scroll');
-        if (tableScroll) {
-          tableScroll.style.maxHeight = '300px';
-          tableScroll.style.overflowY = 'auto';
-        }
+      const thead = resultSection.querySelector('thead');
+      if (thead) {
+        thead.innerHTML = `
+          <tr>
+            <th>البيان</th>
+            <th>سعر القطعة</th>
+            <th>رسوم الخدمة</th>
+            <th>الإجمالي</th>
+          </tr>
+        `;
       }
 
-      // Add note for coolant
+      let rowsHtml = '';
+      const serviceFee = parseFloat(basePrice) || 0;
+      brands.forEach(b => {
+        const piecePrice = Number.isFinite(b.price) ? b.price : 0;
+        const qtyDisplay = b.quantity > 0 ? ` (${b.quantity} متوفرة)` : ' (غير متوفر)';
+        const brandTotal = piecePrice + serviceFee;
+        rowsHtml += `
+          <tr>
+            <td>${escapeHtml(b.brand)}${qtyDisplay}</td>
+            <td>${piecePrice.toFixed(2)} ${config.currency}</td>
+            <td>${serviceFee.toFixed(2)} ${config.currency}</td>
+            <td class="highlight">${brandTotal.toFixed(2)} ${config.currency}</td>
+          </tr>
+        `;
+      });
+
+      rowsHtml += `
+        <tr>
+          <td>رسوم الإلغاء</td>
+          <td></td>
+          <td></td>
+          <td>${cancellation}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = rowsHtml;
+      resultSection.style.maxHeight = 'none';
+      resultSection.style.overflow = 'visible';
+      const tableScroll = resultSection.querySelector('.table-scroll');
+      if (tableScroll) {
+        tableScroll.style.maxHeight = 'none';
+        tableScroll.style.overflow = 'visible';
+      }
+
       updateMechResultNote();
       resultSection.classList.remove('hidden');
     }
@@ -12199,25 +12289,27 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
 
     const BATTERY_DRIVER_COLUMN_CONFIGS = [
-      { label: 'dattaram+niyas', fkIndex: 7, mIndex: 8 },
-      { label: 'hari+roxy', fkIndex: 9, mIndex: 10 },
-      { label: 'GUFRAN', fkIndex: 11, mIndex: 12 },
-      { label: 'riesh+kesavan', fkIndex: 13, mIndex: 14 },
-      { label: 'sanidu', fkIndex: 15, mIndex: 16 },
-      { label: 'mortada+irfan', fkIndex: 17, mIndex: 18 },
-      { label: 'Ganesh', fkIndex: 19, mIndex: 20 },
-      { label: 'Albert', fkIndex: 21, mIndex: 22 },
-      { label: 'Lakshman', fkIndex: 23, mIndex: 24 },
-      { label: 'Mayura', fkIndex: 25, mIndex: 26 },
-      { label: 'bala', fkIndex: 27, mIndex: 28 },
-      { label: 'santheel', fkIndex: 29, mIndex: 30 },
-      { label: 'ARVENTH', fkIndex: 31, mIndex: 32 },
-      { label: 'yusuf & rahimah allah', fkIndex: 33, mIndex: 34 },
-      { label: 'ali and Mohammed', fkIndex: 35, mIndex: 36 },
-      { label: 'Sayid and Ramos', fkIndex: 37, mIndex: 38 },
-      { label: 'Durga Prasad', fkIndex: 39, mIndex: 40 },
-      { label: 'sinjiwah', fkIndex: 41, mIndex: 42 },
-      { label: 'driver19', fkIndex: 43, mIndex: 44 }
+      { label: 'Gufran', fkIndex: 7, mIndex: 8 },
+      { label: 'dattaram+kesavan', fkIndex: 9, mIndex: 10 },
+      { label: 'sanidu+niyas', fkIndex: 11, mIndex: 12 },
+      { label: 'mortada', fkIndex: 13, mIndex: 14 },
+      { label: 'bala', fkIndex: 15, mIndex: 16 },
+      { label: 'Lakshman', fkIndex: 17, mIndex: 18 },
+      { label: 'sanjeewa', fkIndex: 19, mIndex: 20 },
+      { label: 'supun', fkIndex: 21, mIndex: 22 },
+      { label: 'patel', fkIndex: 23, mIndex: 24 },
+      { label: 'ruchira', fkIndex: 25, mIndex: 26 },
+      { label: 'harshan', fkIndex: 27, mIndex: 28 },
+      { label: 'waji', fkIndex: 29, mIndex: 30 },
+      { label: 'irfan', fkIndex: 31, mIndex: 32 },
+      { label: 'hari+rangan', fkIndex: 33, mIndex: 34 },
+      { label: 'senthil', fkIndex: 35, mIndex: 36 },
+      { label: 'durga', fkIndex: 37, mIndex: 38 },
+      { label: 'albert', fkIndex: 39, mIndex: 40 },
+      { label: 'santo', fkIndex: 41, mIndex: 42 },
+      { label: 'Ali', fkIndex: 43, mIndex: 44 },
+      { label: 'rahimah allah', fkIndex: 45, mIndex: 46 },
+      { label: 'mohammad', fkIndex: 47, mIndex: 48 }
     ];
 
     function getDriverColumnGroups() {
@@ -12626,28 +12718,27 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
 
     const BATTERY_DRIVER_MAP = {
-      'dattaram+niyas': 'نياز-داترام',
-      'muthu': 'موتو',
-      'ganesh': 'جانيش',
-      'riesh+kesavan': 'اريش-كيسافان',
       'gufran': 'غفران',
-      'edeson alpert': 'إيديسون ألبرت',
-      'hari+roxy': 'هاري و روكسي',
-      'irfan': 'عرفان',
-      'albert': 'ألبرت',
-      'lakshman': 'لاكشمان',
-      'santheel': 'سانتيل',
-      'arventh': 'أرفنت',
-      'sanidu': 'سانيدو',
-      'mortada+irfan': 'مرتضى و عرفان',
-      'mayura': 'مايورا',
-      'yusuf & rahimah allah': 'يوسف و رحمة الله',
-      'ali and sayed': 'علي وسيد',
-      'ali and mohammed': 'علي ومحمد',
-      'sayid and ramos': 'سيد ورامو',
+      'dattaram+kesavan': 'داترام و كيسافان',
+      'sanidu+niyas': 'سانيدو و نياز',
+      'mortada': 'مرتضى',
       'bala': 'بالا',
-      'durga prasad': 'دورجا براساد',
-      'sinjiwah': 'سينجيا'
+      'lakshman': 'لاكشمان',
+      'sanjeewa': 'سانجيوا',
+      'supun': 'سوبون',
+      'patel': 'باتيل',
+      'ruchira': 'روتشيرا',
+      'harshan': 'هارشان',
+      'waji': 'واجي',
+      'irfan': 'عرفان',
+      'hari+rangan': 'هاري و رانجان',
+      'senthil': 'سنتيل',
+      'durga': 'دورجا',
+      'albert': 'ألبرت',
+      'santo': 'سانتو',
+      'ali': 'علي',
+      'rahimah allah': 'رحمة الله',
+      'mohammad': 'محمد'
     };
 
     function getDriverName(raw) {
