@@ -300,6 +300,349 @@
       padding: 10px;
       height: fit-content;
     }
+
+    .inventory-management-dashboard {
+      padding: 12px 12px 8px;
+      gap: 8px;
+    }
+
+    .inventory-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .inventory-tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .inventory-tab-bar .btn-option {
+      flex: 1 1 auto;
+      min-width: 140px;
+      border-radius: 6px;
+      padding: 8px 14px;
+      text-align: center;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .inventory-tab-bar .btn-option.active {
+      background: #F2BC1B;
+      color: #000;
+      border-color: transparent;
+    }
+
+    .inventory-tab-bar .btn-option:not(.active) {
+      background: #171717;
+      border-color: #333;
+    }
+
+    .inventory-tab-content {
+      padding: 0;
+    }
+
+    .inventory-table-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+    }
+
+    .inventory-data-table {
+      width: 100%;
+      table-layout: auto;
+      min-width: 100%;
+    }
+
+    .inventory-data-table {
+      border-collapse: collapse;
+    }
+
+    .inventory-data-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #0a0a0a;
+    }
+
+    .inventory-data-table th {
+      padding: 12px 10px;
+      font-size: 13px;
+      text-align: center;
+      background: #0a0a0a;
+      border-bottom: 2px solid #222;
+      position: relative;
+      z-index: 15;
+      vertical-align: middle;
+    }
+
+    .inventory-data-table td {
+      padding: 10px;
+      font-size: 13px;
+      color: #ddd;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .table-scroll.inventory-table-scroll {
+      max-height: 600px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .table-scroll.inventory-table-scroll table {
+      width: 100%;
+    }
+
+    .table-scroll.inventory-table-scroll tbody {
+      display: block;
+      overflow-y: auto;
+      max-height: 540px;
+      width: 100%;
+    }
+
+    .table-scroll.inventory-table-scroll thead tr,
+    .table-scroll.inventory-table-scroll tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .inventory-controls {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #F2BC1B;
+      background: #0f0f0f;
+      color: #F2BC1B;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-clear-filters:hover:not(:disabled) {
+      background: #171717;
+      border-color: #F2BC1B;
+    }
+
+    .btn-clear-filters:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .header-with-filter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      position: relative;
+      width: 100%;
+      min-height: 24px;
+      text-align: center;
+    }
+
+    .filter-trigger {
+      min-width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: #F2BC1B;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .header-with-filter .header-label {
+      font-weight: 600;
+      color: #F2BC1B;
+      text-align: left;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .filter-trigger {
+      min-width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #F2BC1B;
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .filter-trigger:hover {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+
+    .filter-panel {
+      position: fixed;
+      min-width: 220px;
+      max-width: 280px;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      padding: 10px;
+      z-index: 10000;
+      display: none;
+    }
+
+    .filter-dropdown-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .filter-search {
+      width: 100%;
+      background: #121212;
+      border: 1px solid #333;
+      color: #F2BC1B;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      outline: none;
+      margin-bottom: 6px;
+    }
+
+    .filter-search:focus {
+      border-color: #F2BC1B;
+      box-shadow: 0 0 4px rgba(242,188,27,0.2);
+    }
+
+    .filter-options-list {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .filter-options-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .filter-options-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .filter-options-list::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+
+    .filter-option-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #ccc;
+      font-size: 11px;
+      padding: 3px 0;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .filter-option-none {
+      font-weight: 700;
+      color: #F2BC1B;
+    }
+
+    .filter-option-item:hover {
+      color: #F2BC1B;
+    }
+
+    .filter-option-item input {
+      accent-color: #F2BC1B;
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .filter-option-item.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .filter-option-item.disabled input {
+      cursor: not-allowed;
+    }
+
+    .date-range-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .date-range-row label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: #999;
+    }
+
+    .date-range-row input {
+      width: 100%;
+      background: #121212;
+      border: 1px solid #333;
+      color: #F2BC1B;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .date-range-row input:focus {
+      border-color: #F2BC1B;
+      box-shadow: 0 0 4px rgba(242,188,27,0.2);
+    }
+
+    .date-range-row input {
+      width: 100%;
+    }
+
+    .inventory-management-dashboard .section-title {
+      margin-bottom: 0;
+      border-bottom: none;
+      font-size: 16px;
+    }
+
+    .btn-back.compact {
+      padding: 6px 10px;
+      font-size: 13px;
+    }
     
     .form-section.full-width {
       grid-column: 1 / -1;
@@ -2561,7 +2904,7 @@
    </main>
   </div><!-- Fullscreen Iframe Wrapper (Hidden by default) -->
   <div id="fullscreenIframeWrapper" class="fullscreen-iframe-wrapper hidden">
-   <div class="fullscreen-iframe-header"><button class="btn-back" onclick="closeFullscreenIframe()"> <span>←</span> <span>رجوع</span> </button>
+   <div class="fullscreen-iframe-header"><button class="btn-back" onclick="closeFullscreenIframe()"> <span>←</span> <span>Back</span> </button>
    </div>
    <div class="fullscreen-iframe-container" id="fullscreenIframeContainer">
    </div>
@@ -2572,7 +2915,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '2.7';
+    const SITE_VERSION = '2.8';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -3300,6 +3643,7 @@
           'balance': 'ميزان وتركيب',
           'ringRepair': 'تصليح الرنقات',
           'mechanical': 'خدمات ميكانيكية',
+          'inventoryManagement': 'إدارة المخزون',
           'staff_centers': 'مراكز الطلبات',
           'driver_status': 'جدول السائقين',
           'carwash': 'غسيل السيارات',
@@ -3351,6 +3695,9 @@
             break;
           case 'mechanical':
             renderMechanicalInterface();
+            break;
+          case 'inventoryManagement':
+            renderInventoryManagementInterface();
             break;
           case 'staff_centers':
             renderStaffInterface();
@@ -7371,6 +7718,7 @@
           <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
             <button class="btn-option" data-oil-source="customer">من عند العميل</button>
             <button class="btn-option" data-oil-source="ours">من عندنا</button>
+            <button class="btn-option admin-only" data-action="inventoryManagement">Management Mechanics Stock</button>
           </div>
         </div>
 
@@ -7480,6 +7828,7 @@
         </div>
       `;
       attachResultCopyButton('[data-copy-body="#mechResultBody"]');
+      updateAdminOnlyVisibility();
       
       // Service names mapping
       const serviceNames = {
@@ -7492,6 +7841,7 @@
         'coolant': 'ماي راديتر',
         'brakefluid': 'زيت بريك',
         'transmission': 'زيت سكان',
+        'inventoryManagement': 'إدارة المخزون',
         'fuelpump': 'طرمبه بنزين',
         'waterpump': 'طرمبه ماي',
         'gaysh': 'غايش',
@@ -7635,6 +7985,11 @@
           
           formData.mechanicalService = btn.dataset.mech;
           
+          if (formData.mechanicalService === 'inventoryManagement') {
+            renderInventoryManagementInterface();
+            return;
+          }
+          
           document.getElementById('mechResultSection').classList.add('hidden');
           document.getElementById('areaSelect').value = '';
           formData.area = null;
@@ -7657,9 +8012,9 @@
               oilBtn.onclick = () => {
                 document.querySelectorAll('[data-oil-source]').forEach(b => b.classList.remove('active'));
                 oilBtn.classList.add('active');
-                
+
                 formData.oilSource = oilBtn.dataset.oilSource;
-                
+
                 if (formData.oilSource === 'customer') {
                   // Show area selection and load data from columns 8-14
                   document.getElementById('mechAreaSection').classList.remove('hidden');
@@ -7668,6 +8023,11 @@
                   // Redirect oil/filter "من عندنا" directly to the tire sheet
                   openFullscreenIframe('https://portarageoils.netlify.app/', 'زيت وفلتر');
                 }
+              };
+            });
+            document.querySelectorAll('#oilFilterSourceSection [data-action="inventoryManagement"]').forEach(btn => {
+              btn.onclick = () => {
+                renderInventoryManagementInterface();
               };
             });
             
@@ -12724,21 +13084,21 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'mortada': 'مرتضى',
       'bala': 'بالا',
       'lakshman': 'لاكشمان',
-      'sanjeewa': 'سانيجواه',
+      'sanjeewa': 'سانجيوا',
       'supun': 'سوبون',
       'patel': 'باتيل',
       'ruchira': 'روتشيرا',
       'harshan': 'هارشان',
-      'waji': 'سيثرافيل',
-      'irfan': 'محمد عرفان',
+      'waji': 'واجي',
+      'irfan': 'عرفان',
       'hari+rangan': 'هاري و رانجان',
       'senthil': 'سنتيل',
       'durga': 'دورجا',
       'albert': 'ألبرت',
-      'santo': 'سانتوش',
-      'ali': 'علي ميكانيكي',
-      'rahimah allah': 'رحمة الله ميكانيكي',
-      'mohammad': 'محمد ميكانيكي'
+      'santo': 'سانتو',
+      'ali': 'علي',
+      'rahimah allah': 'رحمة الله',
+      'mohammad': 'محمد'
     };
 
     function getDriverName(raw) {
@@ -12898,11 +13258,154 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             oilFilter_showManualCalculator();
           } else if (btn.dataset.action === 'admin') {
             window.open('https://portarageoils.netlify.app/', '_blank');
+          } else if (btn.dataset.action === 'inventoryManagement') {
+            renderInventoryManagementInterface();
           }
         };
       });
 
       oilFilter_loadData();
+    }
+
+    async function renderInventoryManagementInterface() {
+      const contentArea = document.getElementById('contentArea');
+      contentArea.innerHTML = `
+        <div class="form-section full-width inventory-management-dashboard">
+          <div class="inventory-header">
+            <div style="display:flex;align-items:center;gap:16px;flex:1;">
+              <h3 class="section-title">Management Mechanics Stock</h3>
+              <button class="btn-secondary btn-clear-filters hidden" type="button" style="padding:6px 12px;font-size:12px;">Clear All</button>
+            </div>
+            <button class="btn-back compact" onclick="renderOilFilterInterface()">← Back</button>
+          </div>
+          <div class="inventory-tab-bar">
+            <button class="btn-option admin-only active" data-inventory-tab="oils">Available Oils</button>
+            <button class="btn-option admin-only" data-inventory-tab="inventory">Inventory</button>
+            <button class="btn-option admin-only" data-inventory-tab="transactions">Transactions</button>
+          </div>
+          <div id="inventoryTabContent" class="inventory-tab-content"></div>
+        </div>
+      `;
+
+      document.querySelectorAll('[data-inventory-tab]').forEach(btn => {
+        btn.onclick = async () => {
+          document.querySelectorAll('[data-inventory-tab]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          await renderInventoryTab(btn.dataset.inventoryTab);
+        };
+      });
+
+      updateAdminOnlyVisibility();
+      await renderInventoryTab('oils');
+    }
+
+    function updateAdminOnlyVisibility() {
+      const isAdmin = currentUserRole === 'Admin';
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = isAdmin ? 'flex' : 'none';
+      });
+    }
+
+    async function loadInventoryManagementSheets() {
+      const sheetId = '1tbCZpRWmgHxJC2UT4_4Nwgz0iZ-7JP3eTbIHvHj3p5A';
+      const sheets = ['Oils', 'Inventory', 'Transactions'];
+      const result = {};
+      for (const sheet of sheets) {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
+        const res = await fetch(csvUrl, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`فشل تحميل شيت ${sheet}`);
+        }
+        const text = await res.text();
+        result[sheet] = parseCSV(text);
+      }
+      return result;
+    }
+
+    async function renderInventoryTab(tab) {
+      const container = document.getElementById('inventoryTabContent');
+      if (!container) return;
+      container.innerHTML = '<p style="color:#999;padding:16px;">جاري تحميل البيانات...</p>';
+
+      let sheets;
+      try {
+        sheets = await loadInventoryManagementSheets();
+      } catch (error) {
+        container.innerHTML = `<p style="color:#f88;padding:16px;">${escapeHtml(error.message)}</p>`;
+        return;
+      }
+
+      if (tab === 'oils') {
+        container.innerHTML = buildTableHtml(sheets['Oils'], ['Brand','Viscosity','Price','Country','Available Quantity'], [0,1,2,4,5], 'inventory');
+      } else if (tab === 'inventory') {
+        container.innerHTML = buildTableHtml(sheets['Inventory'], ['Brand','Part Number / Serial','Part Type','Available Quantity','Price'], [0,1,2,3,4], 'inventory');
+      } else if (tab === 'transactions') {
+        container.innerHTML = buildTableHtml(sheets['Transactions'], ['Date','Brand','Serial','Part Type','Qty Change','Type','Month','QR'], [0,1,2,3,4,5,6,7], 'inventory');
+      }
+      // attach advanced filters for the generated table
+      attachAdvancedTableFilters(container);
+    }
+
+    function buildTableHtml(rows, headers, cols, section = '') {
+      if (!Array.isArray(rows) || !rows.length) {
+        return '<p style="color:#999;padding:16px;">No data available.</p>';
+      }
+
+      // header row with filter triggers - compact format with arrow at end
+      const headerHtml = headers.map((h, ci) => {
+        return `<th>
+          <div class="header-with-filter">
+            <span class="header-label">${escapeHtml(h)}</span>
+            <button type="button" class="filter-trigger" data-col-index="${ci}" aria-label="Filter ${escapeHtml(h)}">▾</button>
+            <div class="filter-panel" data-col-index="${ci}" aria-hidden="true"></div>
+          </div>
+        </th>`;
+      }).join('');
+
+      const bodyRows = rows.slice(1).map(row => {
+        const cells = cols.map(colIndex => `<td>${escapeHtml(row[colIndex] || '')}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+
+      return `
+        <div class="table-scroll inventory-table-scroll">
+          <table class="data-table inventory-data-table">
+            <thead>
+              <tr>${headerHtml}</tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function attachTableFilters(container) {
+      if (!container) return;
+      const table = container.querySelector('table.inventory-data-table');
+      if (!table) return;
+      const selects = table.querySelectorAll('thead .col-filter');
+      selects.forEach(sel => {
+        sel.addEventListener('change', () => {
+          const values = Array.from(selects).map(s => s.value.trim());
+          const rows = table.querySelectorAll('tbody tr');
+          rows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            let visible = true;
+            for (let ci = 0; ci < values.length; ci++) {
+              const filterVal = values[ci];
+              if (!filterVal) continue;
+              const cell = cells[ci];
+              const cellText = cell ? cell.innerText.trim() : '';
+              if (cellText !== filterVal) { visible = false; break; }
+            }
+            r.style.display = visible ? '' : 'none';
+          });
+        });
+      });
+    }
+
+    function buildTransactionsHtml(rows) {
+      return buildTableHtml(rows, ['Date','Brand','Serial','Part Type','Qty Change','Type','Month','QR'], [0,1,2,3,4,5,6,7], 'inventory');
     }
 
     function oilFilter_loadData() {
@@ -13639,6 +14142,333 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         btn.textContent = originalText;
       }, 2000);
     }
+
+    // Advanced filters: convert simple selects into multi-select searchable panels and add date range picker
+    function attachAdvancedTableFilters(container) {
+      if (!container) return;
+      const table = container.querySelector('table.inventory-data-table');
+      if (!table) return;
+      const clearBtn = container.querySelector('.btn-clear-filters');
+      const headers = Array.from(table.querySelectorAll('thead th'));
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const allRowsData = rows.map(row => Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim()));
+      const columnFilters = {};
+
+      headers.forEach((th, ci) => {
+        const colNameEl = th.querySelector('.header-label')?.innerText.trim() || '';
+        const colName = colNameEl.replace(/\s*▾\s*$/, '').trim(); // remove arrow from display
+        const headerLabel = th.querySelector('.header-label');
+        const panel = th.querySelector('.filter-panel');
+        if (!panel) return;
+
+        panel.innerHTML = '';
+        const panelContent = document.createElement('div');
+        panelContent.className = 'filter-dropdown-content';
+        panel.appendChild(panelContent);
+
+        // attach click handler to header label to show/hide panel
+        if (headerLabel) {
+          headerLabel.style.cursor = 'pointer';
+          headerLabel.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = panel.style.display === 'block';
+            document.querySelectorAll('.filter-panel').forEach(other => {
+              if (other !== panel) other.style.display = 'none';
+            });
+            if (!isVisible) {
+              const rect = headerLabel.getBoundingClientRect();
+              panel.style.top = (rect.bottom + 8) + 'px';
+              panel.style.left = Math.max(10, rect.right - 220) + 'px';
+            }
+            panel.style.display = isVisible ? 'none' : 'block';
+          };
+        }
+
+        const trigger = th.querySelector('.filter-trigger');
+        if (trigger) {
+          trigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = panel.style.display === 'block';
+            document.querySelectorAll('.filter-panel').forEach(other => {
+              if (other !== panel) other.style.display = 'none';
+            });
+            if (!isVisible && headerLabel) {
+              const rect = headerLabel.getBoundingClientRect();
+              panel.style.top = (rect.bottom + 8) + 'px';
+              panel.style.left = Math.max(10, rect.right - 220) + 'px';
+            }
+            panel.style.display = isVisible ? 'none' : 'block';
+          };
+        }
+
+        if (colName === 'Date') {
+          panelContent.innerHTML = `
+            <div class="date-range-row">
+              <label>From<input type="date" class="filter-date-from datetime-control"></label>
+              <label>To<input type="date" class="filter-date-to datetime-control"></label>
+            </div>
+          `;
+          const fromInput = panelContent.querySelector('.filter-date-from');
+          const toInput = panelContent.querySelector('.filter-date-to');
+          const updateDateFilter = () => {
+            const from = fromInput.value || '';
+            const to = toInput.value || '';
+            if (from || to) {
+              columnFilters[ci] = { type: 'date', from, to };
+            } else {
+              delete columnFilters[ci];
+            }
+            applyFilters();
+          };
+          fromInput.addEventListener('change', updateDateFilter);
+          toInput.addEventListener('change', updateDateFilter);
+        } else {
+          const valuesSet = new Set();
+          allRowsData.forEach(cells => {
+            const value = (cells[ci] || '').toString().trim();
+            if (value !== '') valuesSet.add(value);
+          });
+          const values = Array.from(valuesSet).sort((a, b) => a.localeCompare(b, undefined, {numeric:true}));
+
+          panelContent.innerHTML = `
+            <input type="text" class="filter-search form-control" placeholder="Search..." />
+            <div class="filter-options-list"></div>
+          `;
+          const searchInput = panelContent.querySelector('.filter-search');
+          const optionsList = panelContent.querySelector('.filter-options-list');
+
+          const noneLabel = document.createElement('label');
+          noneLabel.className = 'filter-option-item filter-option-none';
+          const noneCheckbox = document.createElement('input');
+          noneCheckbox.type = 'checkbox';
+          noneCheckbox.dataset.colIndex = ci;
+          noneCheckbox.dataset.value = '__NONE__';
+          noneCheckbox.style.accentColor = '#F2BC1B';
+          noneCheckbox.addEventListener('change', () => {
+            if (noneCheckbox.checked) {
+              optionsList.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                if (cb !== noneCheckbox) cb.checked = false;
+              });
+              delete columnFilters[ci];
+              applyFilters();
+              rebuildFilterOptions(ci);
+            } else {
+              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).filter(cb => cb !== noneCheckbox).map(cb => cb.dataset.value);
+              if (!checkedValues.length) {
+                delete columnFilters[ci];
+                applyFilters();
+                rebuildFilterOptions(ci);
+              }
+            }
+          });
+          noneLabel.appendChild(noneCheckbox);
+          const noneText = document.createElement('span');
+          noneText.textContent = 'None';
+          noneLabel.appendChild(noneText);
+          optionsList.appendChild(noneLabel);
+
+          values.forEach(value => {
+            const optionLabel = document.createElement('label');
+            optionLabel.className = 'filter-option-item';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.dataset.colIndex = ci;
+            checkbox.dataset.value = value;
+            checkbox.style.accentColor = '#F2BC1B';
+            checkbox.addEventListener('change', () => {
+              if (checkbox.checked) {
+                noneCheckbox.checked = false;
+              }
+              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).filter(cb => cb !== noneCheckbox).map(cb => cb.dataset.value);
+              if (checkedValues.length) {
+                columnFilters[ci] = { type: 'multi', values: checkedValues };
+              } else {
+                delete columnFilters[ci];
+              }
+              applyFilters();
+              rebuildFilterOptions(ci); // Update other filter options based on this selection
+            });
+            optionLabel.appendChild(checkbox);
+            const span = document.createElement('span');
+            span.textContent = value;
+            optionLabel.appendChild(span);
+            optionsList.appendChild(optionLabel);
+          });
+
+          searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toLowerCase();
+            optionsList.querySelectorAll('.filter-option-item').forEach(label => {
+              const text = label.innerText.trim().toLowerCase();
+              if (label.classList.contains('filter-option-none')) {
+                label.style.display = 'flex';
+              } else {
+                label.style.display = text.includes(query) ? 'flex' : 'none';
+              }
+            });
+          });
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-panel') && !e.target.closest('.header-label') && !e.target.closest('.filter-trigger')) {
+          document.querySelectorAll('.filter-panel').forEach(panel => panel.style.display = 'none');
+        }
+      });
+
+      // Reposition panels on scroll and resize to keep them aligned with headers
+      function repositionOpenPanels() {
+        headers.forEach((th, ci) => {
+          const headerLabel = th.querySelector('.header-label');
+          const panel = th.querySelector('.filter-panel');
+          if (panel && panel.style.display === 'block' && headerLabel) {
+            const rect = headerLabel.getBoundingClientRect();
+            panel.style.top = (rect.bottom + 8) + 'px';
+            panel.style.left = Math.max(10, rect.right - 220) + 'px';
+          }
+        });
+      }
+
+      window.addEventListener('resize', repositionOpenPanels);
+      table.closest('.table-scroll')?.addEventListener('scroll', repositionOpenPanels);
+      document.addEventListener('scroll', repositionOpenPanels);
+
+      // Rebuild filter options based on currently filtered data (dependent filtering)
+      function rebuildFilterOptions(excludeColIndex = null) {
+        headers.forEach((th, ci) => {
+          if (excludeColIndex === ci) return; // skip the filter being modified
+          const colNameEl = th.querySelector('.header-label')?.innerText.trim() || '';
+          const colName = colNameEl.replace(/\s*▾\s*$/, '').trim();
+          if (colName === 'Date') return; // skip date filters
+
+          const panel = th.querySelector('.filter-panel');
+          const optionsList = panel?.querySelector('.filter-options-list');
+          if (!optionsList) return;
+
+          // Get all checkboxes for this column
+          const checkboxes = Array.from(optionsList.querySelectorAll('input[type=checkbox]'));
+          const checkedValues = checkboxes.filter(cb => cb.checked).map(cb => cb.dataset.value);
+
+          // Determine which rows are visible after applying all OTHER filters
+          const visibleRows = rows.filter((row, rowIndex) => {
+            const cells = allRowsData[rowIndex];
+            for (const [key, filter] of Object.entries(columnFilters)) {
+              const index = Number(key);
+              if (index === ci) continue; // skip current column
+              const cellValue = (cells[index] || '').toString().trim();
+              if (filter.type === 'multi') {
+                if (!filter.values.length) continue;
+                if (!filter.values.includes(cellValue)) return false;
+              } else if (filter.type === 'date') {
+                const from = filter.from || '';
+                const to = filter.to || '';
+                if (!from && !to) continue;
+                const cellDateValue = cellValue.split(' ')[0];
+                const cellDate = cellDateValue ? new Date(cellDateValue) : null;
+                if (!cellDate || isNaN(cellDate.getTime())) return false;
+                if (from && cellDate < new Date(from)) return false;
+                if (to) {
+                  const toDate = new Date(to);
+                  toDate.setHours(23,59,59,999);
+                  if (cellDate > toDate) return false;
+                }
+              }
+            }
+            return true;
+          });
+
+          // Build set of available values from visible rows
+          const availableValues = new Set();
+          visibleRows.forEach(row => {
+            const rowIndex = rows.indexOf(row);
+            const value = (allRowsData[rowIndex][ci] || '').toString().trim();
+            if (value !== '') availableValues.add(value);
+          });
+
+          // Update checkbox states and disabled status
+          checkboxes.forEach(cb => {
+            const optionLabel = cb.closest('.filter-option-item');
+            if (cb.dataset.value === '__NONE__') {
+              if (optionLabel) {
+                optionLabel.classList.remove('disabled');
+              }
+              cb.disabled = false;
+              return;
+            }
+            const isAvailable = availableValues.has(cb.dataset.value);
+            if (optionLabel) {
+              optionLabel.classList.toggle('disabled', !isAvailable);
+              cb.disabled = !isAvailable;
+            }
+          });
+        });
+      }
+
+      if (clearBtn) {
+        clearBtn.onclick = () => {
+          Object.keys(columnFilters).forEach(key => delete columnFilters[key]);
+          table.querySelectorAll('.filter-panel input[type=checkbox]').forEach(cb => cb.checked = false);
+          table.querySelectorAll('.filter-panel input[type=date]').forEach(inp => inp.value = '');
+          table.querySelectorAll('.filter-panel input[type=text]').forEach(inp => inp.value = '');
+          rebuildFilterOptions();
+          applyFilters();
+        };
+      }
+
+      function applyFilters() {
+        rows.forEach((row, rowIndex) => {
+          const cells = allRowsData[rowIndex];
+          let visible = true;
+          for (const [key, filter] of Object.entries(columnFilters)) {
+            const index = Number(key);
+            const cellValue = (cells[index] || '').toString().trim();
+            if (filter.type === 'multi') {
+              if (!filter.values.length) continue;
+              if (!filter.values.includes(cellValue)) {
+                visible = false;
+                break;
+              }
+            } else if (filter.type === 'date') {
+              const from = filter.from || '';
+              const to = filter.to || '';
+              if (!from && !to) continue;
+              const cellDateValue = cellValue.split(' ')[0];
+              const cellDate = cellDateValue ? new Date(cellDateValue) : null;
+              if (!cellDate || isNaN(cellDate.getTime())) {
+                visible = false;
+                break;
+              }
+              if (from) {
+                const fromDate = new Date(from);
+                if (cellDate < fromDate) {
+                  visible = false;
+                  break;
+                }
+              }
+              if (to) {
+                const toDate = new Date(to);
+                toDate.setHours(23,59,59,999);
+                if (cellDate > toDate) {
+                  visible = false;
+                  break;
+                }
+              }
+            }
+          }
+          row.style.display = visible ? '' : 'none';
+        });
+        updateClearButton();
+      }
+
+      function updateClearButton() {
+        const active = Object.keys(columnFilters).length > 0;
+        if (clearBtn) {
+          clearBtn.classList.toggle('hidden', !active);
+          clearBtn.disabled = !active;
+        }
+      }
+
+      updateClearButton();
+    }
   </script>
   <script>
     // Oil viscosity parsing and filtering utilities
@@ -13721,3 +14551,6 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
   </script>
 </body>
 </html>==
+
+
+
