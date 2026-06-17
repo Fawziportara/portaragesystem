@@ -571,19 +571,19 @@
 
     .filter-panel {
       position: fixed;
-      min-width: 200px;
-      max-width: 250px;
-      width: 200px;
+      min-width: 240px;
+      max-width: 320px;
+      width: 240px;
       background: #0a0a0a;
       border: 1px solid #333;
       border-radius: 8px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-      padding: 10px;
-      z-index: 10000;
+      padding: 8px;
+      z-index: 99999;
       display: none;
       overflow: auto;
       box-sizing: border-box;
-      max-height: 320px;
+      max-height: 360px;
     }
 
     .filter-panel .filter-dropdown-content {
@@ -595,24 +595,34 @@
 
     .filter-panel-actions {
       display: flex;
+      flex-direction: row-reverse;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
+      gap: 8px;
       width: 100%;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #333;
     }
 
     .filter-panel-actions button {
-      background: #1a1a1a;
-      color: #F2BC1B;
-      border: 1px solid #444;
+      background: #F2BC1B;
+      color: #000;
+      border: none;
       border-radius: 4px;
-      padding: 4px 6px;
+      padding: 6px 10px;
       font-size: 11px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      flex: 1;
     }
 
     .filter-panel-actions button:hover {
-      background: #262626;
+      background: #d9a616;
+      transform: scale(1.05);
     }
 
     .filter-search {
@@ -630,6 +640,13 @@
     .filter-search:focus {
       border-color: #F2BC1B;
       box-shadow: 0 0 4px rgba(242,188,27,0.2);
+    }
+
+    /* Disable filters during loading */
+    table[data-loading="true"] .filter-trigger {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     .filter-options-list {
@@ -13367,7 +13384,6 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               <h3 class="section-title">Management Mechanics Stock</h3>
               <button class="btn-secondary btn-clear-filters hidden" type="button" style="padding:6px 12px;font-size:12px;">Clear All</button>
             </div>
-            <button class="btn-back compact" onclick="renderOilFilterInterface()">مصدر الزيت</button>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
             <div class="inventory-tab-bar">
@@ -13437,27 +13453,44 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     async function renderInventoryTab(tab) {
       const container = document.getElementById('inventoryTabContent');
       if (!container) return;
-      container.innerHTML = '<p style="color:#999;padding:16px;">Loading data...</p>';
+      
+      // Show loading message
+      container.innerHTML = `
+        <div style="color:#999;padding:20px;text-align:center;">
+          <div style="font-size:14px;margin-bottom:10px;">🔄 جاري تحميل البيانات...</div>
+          <div style="font-size:11px;color:#666;">Loading data from Google Sheets...</div>
+        </div>
+      `;
 
       let sheets;
       try {
         sheets = await loadInventoryManagementSheets();
       } catch (error) {
-        container.innerHTML = `<p style="color:#f88;padding:16px;">${escapeHtml(error.message)}</p>`;
+        container.innerHTML = `<p style="color:#f88;padding:16px;">❌ ${escapeHtml(error.message)}</p>`;
         return;
       }
 
       if (tab === 'oils') {
-        container.innerHTML = buildTableHtml(sheets['Oils'], ['Brand','Viscosity','Price','Country','Available Quantity'], [0,1,2,4,5], 'inventory');
+        container.innerHTML = buildTableHtml(sheets['Oils'], ['Brand','Viscosity','Price','Country','Current Stock'], [0,1,2,4,5], 'inventory');
       } else if (tab === 'inventory') {
         container.innerHTML = buildTableHtml(sheets['Inventory'], ['Brand','Part Number / Serial','Part Type','Available Quantity','Price'], [0,1,2,3,4], 'inventory');
       } else if (tab === 'transactions') {
         container.innerHTML = buildTableHtml(sheets['Transactions'], ['Date','Brand','Serial','Part Type','Qty Change','Type','Month','QR'], [0,1,2,3,4,5,6,7], 'inventory');
       }
+      
       // Reset the flag to allow filter panels to be populated for the new table
       container.dataset.advancedFiltersBound = 'false';
+      
+      // Mark tables as loaded - filters can now be used
+      const tables = container.querySelectorAll('table.inventory-data-table');
+      tables.forEach(t => {
+        t.removeAttribute('data-loading');
+        t.setAttribute('data-ready', 'true');
+      });
+      
       // attach advanced filters for the generated table
-      attachAdvancedTableFilters(container);
+      // Use setTimeout to ensure DOM is fully rendered before attaching filters
+      setTimeout(() => attachAdvancedTableFilters(container), 50);
     }
 
     function renderInventoryMonthlyAnalysis(sheets, selectedMonth = null) {
@@ -13570,6 +13603,14 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const summaryEl = document.getElementById('monthlyAnalysisSummary');
       const tablesEl = document.getElementById('monthlyAnalysisTables');
       if (!tablesEl || !summaryEl) return;
+      
+      // Show loading message while processing data
+      tablesEl.innerHTML = `
+        <div style="color:#999;padding:20px;text-align:center;">
+          <div style="font-size:14px;margin-bottom:10px;">🔄 جاري معالجة البيانات...</div>
+          <div style="font-size:11px;color:#666;">Processing data...</div>
+        </div>
+      `;
 
       const allTransactions = (sheets['Transactions'] || []).slice(1).map(row => ({
         brand: (row[1] || '').toString().trim(),
@@ -13727,10 +13768,18 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }
 
       tablesEl.innerHTML = renderMonthlyReportContent(reportKey, reportData);
-      const inventoryContent = document.getElementById('inventoryTabContent');
-      if (inventoryContent) {
-        inventoryContent.dataset.advancedFiltersBound = 'false';
-        attachAdvancedTableFilters(inventoryContent);
+      if (tablesEl) {
+        tablesEl.dataset.advancedFiltersBound = 'false';
+        
+        // Mark tables as loaded - filters can now be used
+        const tables = tablesEl.querySelectorAll('table.inventory-data-table');
+        tables.forEach(t => {
+          t.removeAttribute('data-loading');
+          t.setAttribute('data-ready', 'true');
+        });
+        
+        // Use setTimeout to ensure DOM is fully rendered before attaching filters
+        setTimeout(() => attachAdvancedTableFilters(tablesEl), 50);
       }
     }
 
@@ -14116,7 +14165,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const bodyHtml = rows.map(cells => `<tr>${cells.map(cell => `<td>${escapeHtml(formatTableCellValue(cell))}</td>`).join('')}</tr>`).join('');
       return `
         <div class="table-scroll inventory-table-scroll">
-          <table class="data-table inventory-data-table">
+          <table class="data-table inventory-data-table" data-loading="true">
             <thead><tr>${headerHtml}</tr></thead>
             <tbody>${bodyHtml}</tbody>
           </table>
@@ -14150,7 +14199,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
 
       return `
         <div class="table-scroll inventory-table-scroll">
-          <table class="data-table inventory-data-table">
+          <table class="data-table inventory-data-table" data-loading="true">
             <thead>
               <tr>${headerHtml}</tr>
             </thead>
@@ -14934,6 +14983,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
 
       const closeAllPanels = () => {
         container.querySelectorAll('.filter-panel').forEach(panel => {
+          panel.classList.remove('open');
           panel.style.display = 'none';
         });
       };
@@ -14944,18 +14994,34 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
 
         if (trigger || headerLabel) {
           e.stopPropagation();
-          const panel = (trigger || headerLabel)?.closest('th')?.querySelector('.filter-panel');
-          if (!panel) return;
-          const isVisible = panel.style.display === 'block';
+          const th = (trigger || headerLabel)?.closest('th');
+          const panel = th?.querySelector('.filter-panel');
+          const table = th?.closest('table');
+          
+          if (!panel || !th || !table) return;
+          
+          // Check if table has data loaded - must have tbody rows
+          const tbody = table.querySelector('tbody');
+          if (!tbody || tbody.querySelectorAll('tr').length === 0) {
+            console.warn('Filter attempted before data is loaded');
+            return; // Prevent opening filter if no data
+          }
+          
+          // Use reliable state checking with computed style
+          const isVisible = getComputedStyle(panel).display !== 'none' && panel.classList.contains('open');
           closeAllPanels();
+          
           if (!isVisible) {
             const label = (trigger || headerLabel);
             const rect = label.getBoundingClientRect();
-            const panelWidth = 220;
-            let left = rect.left;
+            const thRect = th.getBoundingClientRect();
+            const panelWidth = 240;
+            
+            // Center panel between current column and next column
+            let left = thRect.left + thRect.width / 2 - panelWidth / 2;
             
             // Ensure panel stays within viewport bounds
-            if (left + panelWidth > window.innerWidth) {
+            if (left + panelWidth > window.innerWidth - 10) {
               left = window.innerWidth - panelWidth - 10;
             }
             if (left < 10) {
@@ -14965,6 +15031,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             panel.style.top = (rect.bottom + 8) + 'px';
             panel.style.left = left + 'px';
             panel.style.display = 'block';
+            panel.classList.add('open');
             panel.style.visibility = 'visible';
             panel.style.opacity = '1';
           }
@@ -14975,11 +15042,17 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
 
       tables.forEach(table => {
         const headers = Array.from(table.querySelectorAll('thead th'));
-        const rows = Array.from(table.querySelectorAll('tbody tr'));
-        const allRowsData = rows.map(row => Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim()));
         const columnFilters = {};
 
+        // Helper function to get all row data dynamically
+        const getAllRowsData = () => {
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+          return rows.map(row => Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim()));
+        };
+
         const getVisibleRows = () => {
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+          const allRowsData = getAllRowsData();
           return rows.filter((row, rowIndex) => {
             const cells = allRowsData[rowIndex] || [];
             let visible = true;
@@ -15025,9 +15098,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         };
 
         const applyFilters = () => {
+          const allRows = Array.from(table.querySelectorAll('tbody tr'));
           const visibleRows = getVisibleRows();
           const visibleSet = new Set(visibleRows);
-          rows.forEach(row => {
+          allRows.forEach(row => {
             row.style.display = visibleSet.has(row) ? '' : 'none';
           });
           updateClearButton();
@@ -15066,26 +15140,21 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
                 delete columnFilters[ci];
               }
               applyFilters();
+              updateAllFilterOptions();
             };
             fromInput.addEventListener('change', updateDateFilter);
             toInput.addEventListener('change', updateDateFilter);
             return;
           }
 
-          const valuesSet = new Set();
-          allRowsData.forEach(cells => {
-            const value = (cells[ci] || '').toString().trim();
-            if (value) valuesSet.add(value);
-          });
-          const values = Array.from(valuesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
+          // Build panel with select all/none and search
           panel.innerHTML = `
             <div class="filter-dropdown-content">
               <div class="filter-panel-actions">
-                <button type="button" class="filter-select-all">Select All</button>
-                <button type="button" class="filter-select-none">None</button>
+                <button type="button" class="filter-select-all" title="Select All">Select All</button>
+                <button type="button" class="filter-select-none" title="None">None</button>
               </div>
-              <input type="text" class="filter-search form-control" placeholder="Search..." />
+              <input type="text" class="filter-search form-control" placeholder="ابحث..." />
               <div class="filter-options-list"></div>
             </div>
           `;
@@ -15093,6 +15162,21 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           const searchInput = panel.querySelector('.filter-search');
           const selectAllBtn = panel.querySelector('.filter-select-all');
           const selectNoneBtn = panel.querySelector('.filter-select-none');
+
+          // Function to get available values for this column based on current filters
+          const getAvailableValues = () => {
+            const visibleRows = getVisibleRows();
+            const availableSet = new Set();
+            const allRows = Array.from(table.querySelectorAll('tbody tr'));
+            const allRowsData = getAllRowsData();
+            visibleRows.forEach(row => {
+              const rowIndex = allRows.indexOf(row);
+              const cells = allRowsData[rowIndex] || [];
+              const value = (cells[ci] || '').toString().trim();
+              if (value) availableSet.add(value);
+            });
+            return Array.from(availableSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+          };
 
           const renderOptions = () => {
             const query = searchInput.value.trim().toLowerCase();
@@ -15102,12 +15186,56 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             });
           };
 
-          selectAllBtn.addEventListener('click', () => {
-            optionsList.querySelectorAll('input[type=checkbox]').forEach(cb => {
-              cb.checked = true;
+          const populateOptions = () => {
+            optionsList.innerHTML = '';
+            const availableValues = getAvailableValues();
+            const currentFilter = columnFilters[ci] || { type: 'multi', values: [] };
+            const currentValues = currentFilter.values || [];
+            
+            availableValues.forEach(value => {
+              const label = document.createElement('label');
+              label.className = 'filter-option-item';
+              label.style.display = 'flex';
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.dataset.value = value;
+              checkbox.checked = currentValues.includes(value);
+              checkbox.style.accentColor = '#F2BC1B';
+              checkbox.addEventListener('change', () => {
+                const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.dataset.value);
+                if (checkedValues.length) {
+                  columnFilters[ci] = { type: 'multi', values: checkedValues };
+                } else {
+                  delete columnFilters[ci];
+                }
+                applyFilters();
+                // Update other filters but NOT this one to allow multiple selections
+                headers.forEach((h, idx) => {
+                  if (idx !== ci && h.populateFilterOptions) {
+                    h.populateFilterOptions();
+                  }
+                });
+              });
+              const span = document.createElement('span');
+              span.textContent = value;
+              label.appendChild(checkbox);
+              label.appendChild(span);
+              optionsList.appendChild(label);
             });
-            columnFilters[ci] = { type: 'multi', values };
+          };
+
+          selectAllBtn.addEventListener('click', () => {
+            const allCheckboxes = optionsList.querySelectorAll('input[type=checkbox]');
+            allCheckboxes.forEach(cb => { cb.checked = true; });
+            const allValues = Array.from(allCheckboxes).map(cb => cb.dataset.value);
+            columnFilters[ci] = { type: 'multi', values: allValues };
             applyFilters();
+            // Update other filters only
+            headers.forEach((h, idx) => {
+              if (idx !== ci && h.populateFilterOptions) {
+                h.populateFilterOptions();
+              }
+            });
           });
 
           selectNoneBtn.addEventListener('click', () => {
@@ -15116,34 +15244,43 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             });
             delete columnFilters[ci];
             applyFilters();
-          });
-
-          values.forEach(value => {
-            const label = document.createElement('label');
-            label.className = 'filter-option-item';
-            label.style.display = 'flex';
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.dataset.value = value;
-            checkbox.style.accentColor = '#F2BC1B';
-            checkbox.addEventListener('change', () => {
-              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.dataset.value);
-              if (checkedValues.length) {
-                columnFilters[ci] = { type: 'multi', values: checkedValues };
-              } else {
-                delete columnFilters[ci];
+            // Update other filters only
+            headers.forEach((h, idx) => {
+              if (idx !== ci && h.populateFilterOptions) {
+                h.populateFilterOptions();
               }
-              applyFilters();
             });
-            const span = document.createElement('span');
-            span.textContent = value;
-            label.appendChild(checkbox);
-            label.appendChild(span);
-            optionsList.appendChild(label);
           });
 
           searchInput.addEventListener('input', renderOptions);
+          
+          // Store the populate function for dynamic updates
+          panel.dataset.populateOptions = 'true';
+          th.populateFilterOptions = populateOptions;
+          
+          populateOptions();
         });
+
+        // Function to update all filter options dynamically
+        const updateAllFilterOptions = () => {
+          headers.forEach(th => {
+            if (th.populateFilterOptions) {
+              try {
+                th.populateFilterOptions();
+              } catch (e) {
+                console.error('Error updating filter options:', e);
+              }
+            }
+          });
+        };
+
+        // Add month change listener for Monthly Analysis
+        const monthSelect = container.closest('[id*="monthly"], [class*="monthly"]')?.querySelector('select[aria-label*="Month"]');
+        if (monthSelect) {
+          monthSelect.addEventListener('change', () => {
+            updateAllFilterOptions();
+          });
+        }
 
         applyFilters();
         updateClearButton();
