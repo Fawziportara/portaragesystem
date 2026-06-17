@@ -343,8 +343,61 @@
       border-color: #333;
     }
 
+    .monthly-report-option.active {
+      background: #F2BC1B;
+      border-color: #F2BC1B;
+      color: #000;
+      font-weight: 700;
+    }
+
     .inventory-tab-content {
       padding: 0;
+    }
+
+    .monthly-report-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .monthly-report-picker-label {
+      color: #ddd;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .monthly-report-chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .monthly-report-option {
+      background: #1c1c1c;
+      color: #f3f3f3;
+      border: 1px solid #3a3a3a;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .monthly-report-option:hover {
+      background: #2a2a2a;
+      border-color: #F2BC1B;
+      color: #fff;
+    }
+
+    .monthly-report-option.active {
+      background: #F2BC1B;
+      border-color: #F2BC1B;
+      color: #000;
+      font-weight: 700;
     }
 
     .inventory-table-scroll {
@@ -377,8 +430,9 @@
       background: #0a0a0a;
       border-bottom: 2px solid #222;
       position: relative;
-      z-index: 15;
+      z-index: 10;
       vertical-align: middle;
+      overflow: visible;
     }
 
     .inventory-data-table td {
@@ -395,6 +449,10 @@
       position: relative;
       z-index: 1;
       overflow: visible;
+    }
+    
+    .table-scroll.inventory-table-scroll thead {
+      overflow: visible !important;
     }
 
     .table-scroll.inventory-table-scroll table {
@@ -455,6 +513,12 @@
       width: 100%;
       min-height: 24px;
       text-align: center;
+      overflow: visible;
+    }
+    
+    .data-table th {
+      position: relative;
+      overflow: visible;
     }
 
     .filter-trigger {
@@ -507,8 +571,9 @@
 
     .filter-panel {
       position: fixed;
-      min-width: 220px;
-      max-width: 280px;
+      min-width: 200px;
+      max-width: 250px;
+      width: 200px;
       background: #0a0a0a;
       border: 1px solid #333;
       border-radius: 8px;
@@ -516,12 +581,38 @@
       padding: 10px;
       z-index: 10000;
       display: none;
+      overflow: auto;
+      box-sizing: border-box;
+      max-height: 320px;
     }
 
-    .filter-dropdown-content {
+    .filter-panel .filter-dropdown-content {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .filter-panel-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .filter-panel-actions button {
+      background: #1a1a1a;
+      color: #F2BC1B;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .filter-panel-actions button:hover {
+      background: #262626;
     }
 
     .filter-search {
@@ -13272,16 +13363,19 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       contentArea.innerHTML = `
         <div class="form-section full-width inventory-management-dashboard">
           <div class="inventory-header">
-            <div style="display:flex;align-items:center;gap:16px;flex:1;">
+            <div style="display:flex;align-items:center;gap:16px;flex:1;flex-wrap:wrap;">
               <h3 class="section-title">Management Mechanics Stock</h3>
               <button class="btn-secondary btn-clear-filters hidden" type="button" style="padding:6px 12px;font-size:12px;">Clear All</button>
             </div>
-            <button class="btn-back compact" onclick="renderOilFilterInterface()">← Back</button>
+            <button class="btn-back compact" onclick="renderOilFilterInterface()">مصدر الزيت</button>
           </div>
-          <div class="inventory-tab-bar">
-            <button class="btn-option admin-only active" data-inventory-tab="oils">Available Oils</button>
-            <button class="btn-option admin-only" data-inventory-tab="inventory">Inventory</button>
-            <button class="btn-option admin-only" data-inventory-tab="transactions">Transactions</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div class="inventory-tab-bar">
+              <button class="btn-option admin-only active" data-inventory-tab="oils">Available Oils</button>
+              <button class="btn-option admin-only" data-inventory-tab="inventory">Inventory</button>
+              <button class="btn-option admin-only" data-inventory-tab="transactions">Transactions</button>
+              <button id="btnMonthlyAnalysis" class="btn-option admin-only" data-inventory-tab="monthly">Monthly Analysis</button>
+            </div>
           </div>
           <div id="inventoryTabContent" class="inventory-tab-content"></div>
         </div>
@@ -13291,7 +13385,25 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         btn.onclick = async () => {
           document.querySelectorAll('[data-inventory-tab]').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          await renderInventoryTab(btn.dataset.inventoryTab);
+          const target = btn.dataset.inventoryTab;
+          const container = document.getElementById('inventoryTabContent');
+          if (target === 'monthly') {
+            if (container) {
+              container.innerHTML = '<p style="color:#999;padding:16px;">Loading data...</p>';
+            }
+            let sheets;
+            try {
+              sheets = await loadInventoryManagementSheets();
+            } catch (error) {
+              if (container) {
+                container.innerHTML = `<p style="color:#f88;padding:16px;">${escapeHtml(error.message)}</p>`;
+              }
+              return;
+            }
+            renderInventoryMonthlyAnalysis(sheets);
+          } else {
+            await renderInventoryTab(target);
+          }
         };
       });
 
@@ -13308,13 +13420,13 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
 
     async function loadInventoryManagementSheets() {
       const sheetId = '1tbCZpRWmgHxJC2UT4_4Nwgz0iZ-7JP3eTbIHvHj3p5A';
-      const sheets = ['Oils', 'Inventory', 'Transactions'];
+      const sheets = ['Oils', 'Inventory', 'Transactions', 'Snapshots'];
       const result = {};
       for (const sheet of sheets) {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
         const res = await fetch(csvUrl, { cache: 'no-store' });
         if (!res.ok) {
-          throw new Error(`فشل تحميل شيت ${sheet}`);
+          throw new Error(`Failed to load sheet ${sheet}`);
         }
         const text = await res.text();
         result[sheet] = parseCSV(text);
@@ -13325,7 +13437,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     async function renderInventoryTab(tab) {
       const container = document.getElementById('inventoryTabContent');
       if (!container) return;
-      container.innerHTML = '<p style="color:#999;padding:16px;">جاري تحميل البيانات...</p>';
+      container.innerHTML = '<p style="color:#999;padding:16px;">Loading data...</p>';
 
       let sheets;
       try {
@@ -13342,8 +13454,674 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       } else if (tab === 'transactions') {
         container.innerHTML = buildTableHtml(sheets['Transactions'], ['Date','Brand','Serial','Part Type','Qty Change','Type','Month','QR'], [0,1,2,3,4,5,6,7], 'inventory');
       }
+      // Reset the flag to allow filter panels to be populated for the new table
+      container.dataset.advancedFiltersBound = 'false';
       // attach advanced filters for the generated table
       attachAdvancedTableFilters(container);
+    }
+
+    function renderInventoryMonthlyAnalysis(sheets, selectedMonth = null) {
+      const container = document.getElementById('inventoryTabContent');
+      if (!container) return;
+
+      const months = getUniqueMonthLabels(sheets['Transactions'] || [], 6);
+      if (!months.length) {
+        container.innerHTML = '<p style="color:#999;padding:16px;">No transaction months found.</p>';
+        return;
+      }
+
+      const monthOptions = months.map(month => `<option value="${escapeHtml(month)}"${month === selectedMonth ? ' selected' : ''}>${escapeHtml(month)}</option>`).join('');
+      const selected = selectedMonth || months[0];
+      const reportOptions = getMonthlyReportOptions();
+      const reportButtons = reportOptions.map(option => `<button type="button" class="monthly-report-option" data-report-key="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>`).join('');
+
+      container.innerHTML = `
+        <div class="form-section full-width">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:14px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;">
+                Month:
+                <select id="inventoryMonthSelect" class="form-control" style="min-width:180px;max-width:240px;">${monthOptions}</select>
+              </label>
+              <button id="btnExportSelectedReport" type="button" class="btn-secondary btn-small" style="padding:6px 10px;font-size:12px;">Export Selected</button>
+              <button id="btnExportAllReports" type="button" class="btn-secondary btn-small" style="padding:6px 10px;font-size:12px;">Export All</button>
+            </div>
+          </div>
+          <div id="monthlyReportPicker" class="monthly-report-picker">
+            <span class="monthly-report-picker-label">Select quick report:</span>
+            <div class="monthly-report-chip-group">${reportButtons}</div>
+          </div>
+          <div id="monthlyAnalysisSummary" style="margin-top:16px;color:#ccc;font-size:13px;"></div>
+          <div id="monthlyAnalysisTables" style="margin-top:18px;"></div>
+        </div>
+      `;
+
+      const monthSelect = document.getElementById('inventoryMonthSelect');
+      if (monthSelect) {
+        monthSelect.addEventListener('change', () => {
+          const activeReport = container.querySelector('.monthly-report-option.active');
+          const activeKey = activeReport?.dataset.reportKey || null;
+          if (activeKey) {
+            renderInventoryMonthlyAnalysisForMonth(sheets, monthSelect.value, activeKey);
+          } else {
+            const tablesEl = document.getElementById('monthlyAnalysisTables');
+            if (tablesEl) {
+              tablesEl.innerHTML = '<div style="color:#999;padding:16px;">Please select a report to view data.</div>';
+            }
+          }
+        });
+      }
+
+      const reportButtonsEls = Array.from(container.querySelectorAll('.monthly-report-option'));
+      const selectReport = (reportKey) => {
+        reportButtonsEls.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.reportKey === reportKey);
+        });
+        if (reportKey) {
+          renderInventoryMonthlyAnalysisForMonth(sheets, monthSelect?.value || selected, reportKey);
+        } else {
+          const tablesEl = document.getElementById('monthlyAnalysisTables');
+          if (tablesEl) {
+            tablesEl.innerHTML = '<div style="color:#999;padding:16px;">Please select a report to view data.</div>';
+          }
+        }
+      };
+
+      reportButtonsEls.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const reportKey = btn.dataset.reportKey;
+          if (reportKey) {
+            selectReport(reportKey);
+          }
+        });
+      });
+
+      if (reportButtonsEls.length) {
+        reportButtonsEls.forEach(btn => btn.classList.remove('active'));
+        const tablesEl = document.getElementById('monthlyAnalysisTables');
+        if (tablesEl) {
+          tablesEl.innerHTML = '<div style="color:#999;padding:16px;">Please select a report to view data.</div>';
+        }
+      }
+
+      const exportSelectedBtn = document.getElementById('btnExportSelectedReport');
+      const exportAllBtn = document.getElementById('btnExportAllReports');
+      if (exportSelectedBtn) {
+        exportSelectedBtn.onclick = () => {
+          const selectedMonthValue = monthSelect?.value || selected;
+          const activeReport = container.querySelector('.monthly-report-option.active');
+          const activeKey = activeReport?.dataset.reportKey;
+          if (!activeKey) {
+            alert('Please select a report to export.');
+            return;
+          }
+          exportMonthlyReport(sheets, selectedMonthValue, activeKey);
+        };
+      }
+      if (exportAllBtn) {
+        exportAllBtn.onclick = () => {
+          const selectedMonthValue = monthSelect?.value || selected;
+          exportAllMonthlyReports(sheets, selectedMonthValue);
+        };
+      }
+    }
+
+    function renderInventoryMonthlyAnalysisForMonth(sheets, monthLabel, reportKey = 'oils') {
+      const summaryEl = document.getElementById('monthlyAnalysisSummary');
+      const tablesEl = document.getElementById('monthlyAnalysisTables');
+      if (!tablesEl || !summaryEl) return;
+
+      const allTransactions = (sheets['Transactions'] || []).slice(1).map(row => ({
+        brand: (row[1] || '').toString().trim(),
+        serial: (row[2] || '').toString().trim(),
+        partType: (row[3] || '').toString().trim(),
+        qtyChange: toNumber(row[4]),
+        month: (row[6] || '').toString().trim()
+      }));
+      const transactions = allTransactions.filter(tx => tx.month === monthLabel);
+
+      const oilSnapshotRows = (sheets['Oils'] || []).slice(1);
+      const inventorySnapshotRows = (sheets['Inventory'] || []).slice(1);
+      const snapshotRows = (sheets['Snapshots'] || []).slice(1);
+
+      // Build snapshot map keyed by brand|type|month => originalStock
+      const snapshotMap = new Map();
+      snapshotRows.forEach(r => {
+        const keyRaw = (r[0] || '').toString().replace(/"/g, '').trim();
+        const orig = toNumber(r[1]);
+        if (!keyRaw) return;
+        const parts = keyRaw.split('|').map(p => (p||'').toString().trim());
+        const brand = parts[0] || '';
+        const type = parts[1] || '';
+        const monthKey = parts[2] || '';
+        const mapKey = `${brand}|${type}|${monthKey}`.toLowerCase().trim();
+        snapshotMap.set(mapKey, orig);
+      });
+
+      const oilMap = new Map();
+      const inventoryMap = new Map();
+
+      oilSnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const viscosity = (row[1] || '').toString().trim();
+        const vendorName = (row[12] || '').toString().trim();
+        // prefer snapshot value for this month if present
+        const mapKey = `${brand}|${viscosity}|${monthLabel}`.toLowerCase().trim();
+        const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[5]);
+        if (!brand || !viscosity) return;
+        const key = `${brand}|${viscosity}`;
+        if (!oilMap.has(key)) {
+          oilMap.set(key, { brand, viscosity, vendorName, openingStock, received: 0, issued: 0 });
+        } else {
+          const existing = oilMap.get(key);
+          existing.openingStock += openingStock;
+          if (!existing.vendorName && vendorName) existing.vendorName = vendorName;
+        }
+      });
+
+      inventorySnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const partNumber = (row[1] || '').toString().trim();
+        const partType = (row[2] || '').toString().trim();
+        if (!brand || (!partNumber && !partType)) return;
+        const effectivePart = partNumber || partType || 'Unknown';
+        const mapKey = `${brand}|${effectivePart}|${monthLabel}`.toLowerCase().trim();
+        const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[3]);
+        const key = `${brand}|${effectivePart}`;
+        if (!inventoryMap.has(key)) {
+          inventoryMap.set(key, { brand, partNumber, partType, openingStock, received: 0, issued: 0 });
+        } else {
+          const existing = inventoryMap.get(key);
+          existing.openingStock += openingStock;
+          if (!existing.partType && partType) existing.partType = partType;
+          if (!existing.partNumber && partNumber) existing.partNumber = partNumber;
+        }
+      });
+
+      const oilTransactions = new Map();
+      const inventoryTransactions = new Map();
+
+      transactions.forEach(tx => {
+        const qty = tx.qtyChange;
+        const received = qty > 0 ? qty : 0;
+        const issued = qty < 0 ? Math.abs(qty) : 0;
+        if (isOilTransaction(tx.partType)) {
+          const oilKey = `${tx.brand}|${tx.serial || tx.partType}`;
+          if (tx.brand && (tx.serial || tx.partType)) {
+            if (!oilTransactions.has(oilKey)) {
+              oilTransactions.set(oilKey, { brand: tx.brand, viscosity: tx.serial || tx.partType, received: 0, issued: 0 });
+            }
+            const existing = oilTransactions.get(oilKey);
+            existing.received += received;
+            existing.issued += issued;
+          }
+        } else {
+          const inventoryKey = `${tx.brand}|${tx.serial || tx.partType || 'Unknown'}`;
+          if (tx.brand && (tx.serial || tx.partType)) {
+            if (!inventoryTransactions.has(inventoryKey)) {
+              inventoryTransactions.set(inventoryKey, { brand: tx.brand, partNumber: tx.serial || '', partType: tx.partType || '', received: 0, issued: 0 });
+            }
+            const existingInv = inventoryTransactions.get(inventoryKey);
+            existingInv.received += received;
+            existingInv.issued += issued;
+            if (!existingInv.partType && tx.partType) existingInv.partType = tx.partType;
+            if (!existingInv.partNumber && tx.serial) existingInv.partNumber = tx.serial;
+          }
+        }
+      });
+
+      const oilKeys = new Set([...oilMap.keys(), ...oilTransactions.keys()]);
+      const inventoryKeys = new Set([...inventoryMap.keys(), ...inventoryTransactions.keys()]);
+
+      const oilRows = Array.from(oilKeys).map(key => {
+        const snapshot = oilMap.get(key) || { openingStock: 0, brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendorName: '' };
+        const tx = oilTransactions.get(key) || { received: 0, issued: 0 };
+        const currentStock = snapshot.openingStock + tx.received - tx.issued;
+        return { brand: snapshot.brand, viscosity: snapshot.viscosity, vendorName: snapshot.vendorName || '', openingStock: snapshot.openingStock, received: tx.received, issued: tx.issued, currentStock };
+      }).sort((a, b) => a.brand.localeCompare(b.brand) || a.viscosity.localeCompare(b.viscosity));
+
+      const inventoryRows = Array.from(inventoryKeys).map(key => {
+        const snapshot = inventoryMap.get(key) || { openingStock: 0, brand: key.split('|')[0], partNumber: key.split('|')[1] || '', partType: '' };
+        const tx = inventoryTransactions.get(key) || { received: 0, issued: 0, partType: '' };
+        const currentStock = snapshot.openingStock + tx.received - tx.issued;
+        return {
+          brand: snapshot.brand,
+          partNumber: snapshot.partNumber || tx.partNumber || '',
+          partType: snapshot.partType || tx.partType || '',
+          openingStock: snapshot.openingStock,
+          received: tx.received,
+          issued: tx.issued,
+          currentStock
+        };
+      }).sort((a, b) => a.brand.localeCompare(b.brand) || (a.partNumber || '').localeCompare(b.partNumber || '') || (a.partType || '').localeCompare(b.partType || ''));
+
+      const totalReceived = transactions.reduce((sum, tx) => sum + Math.max(tx.qtyChange, 0), 0);
+      const totalIssued = transactions.reduce((sum, tx) => sum + Math.max(-tx.qtyChange, 0), 0);
+      const totalOpening = Array.from(oilMap.values()).reduce((sum, item) => sum + item.openingStock, 0) + Array.from(inventoryMap.values()).reduce((sum, item) => sum + item.openingStock, 0);
+      const totalCurrent = totalOpening + totalReceived - totalIssued;
+
+      summaryEl.innerHTML = `
+        <div style="color:#ccc;font-size:13px;">
+          <strong>${escapeHtml(monthLabel || 'All')}</strong> • Tx: ${transactions.length} • +R: ${totalReceived} • -I: ${totalIssued} • Current: ${totalCurrent}
+        </div>
+      `;
+
+      const reportData = {
+        monthLabel,
+        transactions,
+        allTransactions: allTransactions,
+        oilRows,
+        inventoryRows,
+        totals: {
+          totalReceived,
+          totalIssued,
+          totalOpening,
+          totalCurrent
+        }
+      };
+      summaryEl.innerHTML = '';
+
+      if (!reportKey) {
+        tablesEl.innerHTML = '<div style="color:#999;padding:16px;">Please select a report to view data.</div>';
+        return;
+      }
+
+      tablesEl.innerHTML = renderMonthlyReportContent(reportKey, reportData);
+      const inventoryContent = document.getElementById('inventoryTabContent');
+      if (inventoryContent) {
+        inventoryContent.dataset.advancedFiltersBound = 'false';
+        attachAdvancedTableFilters(inventoryContent);
+      }
+    }
+
+    function getMonthlyReportOptions() {
+      return [
+        { key: 'oils', label: 'Oils Monthly Analysis' },
+        { key: 'inventory', label: 'Inventory Monthly Analysis' },
+        { key: 'salesByViscosity', label: 'Sales by Viscosity' },
+        { key: 'monthlySales', label: 'Monthly Sales — Total Liters' },
+        { key: 'topConsumed', label: 'Top Consumed Oils (by Months)' }
+      ];
+    }
+
+    function exportMonthlyReport(sheets, monthLabel, reportKey) {
+      const data = buildMonthlyReportData(sheets, monthLabel, reportKey);
+      const reportName = getMonthlyReportLabel(reportKey);
+      const workbook = XLSX.utils.book_new();
+      const sheet = createExportSheet(reportName, reportKey, data);
+      XLSX.utils.book_append_sheet(workbook, sheet, reportName);
+      const safeDate = new Date().toISOString().slice(0, 10);
+      const fileName = `${reportName.replace(/[^a-zA-Z0-9-_]/g, '_')}_${safeDate}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    }
+
+    function exportAllMonthlyReports(sheets, monthLabel) {
+      const workbook = XLSX.utils.book_new();
+      getMonthlyReportOptions().forEach(option => {
+        const reportData = buildMonthlyReportData(sheets, monthLabel, option.key);
+        const sheet = createExportSheet(option.label, option.key, reportData);
+        XLSX.utils.book_append_sheet(workbook, sheet, option.label.substring(0, 30));
+      });
+      const safeDate = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `Monthly_Analysis_All_${safeDate}.xlsx`);
+    }
+
+    function buildMonthlyReportData(sheets, monthLabel, reportKey) {
+      const allTransactions = (sheets['Transactions'] || []).slice(1).map(row => ({
+        brand: (row[1] || '').toString().trim(),
+        serial: (row[2] || '').toString().trim(),
+        partType: (row[3] || '').toString().trim(),
+        qtyChange: toNumber(row[4]),
+        month: (row[6] || '').toString().trim()
+      }));
+      const transactions = allTransactions.filter(tx => tx.month === monthLabel);
+      const oilSnapshotRows = (sheets['Oils'] || []).slice(1);
+      const inventorySnapshotRows = (sheets['Inventory'] || []).slice(1);
+      const snapshotRows = (sheets['Snapshots'] || []).slice(1);
+      const snapshotMap = new Map();
+      snapshotRows.forEach(r => {
+        const keyRaw = (r[0] || '').toString().replace(/"/g, '').trim();
+        const orig = toNumber(r[1]);
+        if (!keyRaw) return;
+        const parts = keyRaw.split('|').map(p => (p || '').toString().trim());
+        const mapKey = `${parts[0] || ''}|${parts[1] || ''}|${parts[2] || ''}`.toLowerCase().trim();
+        snapshotMap.set(mapKey, orig);
+      });
+      const oilMap = new Map();
+      const inventoryMap = new Map();
+      oilSnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const viscosity = (row[1] || '').toString().trim();
+        const vendorName = (row[12] || '').toString().trim();
+        const mapKey = `${brand}|${viscosity}|${monthLabel}`.toLowerCase().trim();
+        const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[5]);
+        if (!brand || !viscosity) return;
+        const key = `${brand}|${viscosity}`;
+        if (!oilMap.has(key)) {
+          oilMap.set(key, { brand, viscosity, vendorName, openingStock, received: 0, issued: 0 });
+        } else {
+          const existing = oilMap.get(key);
+          existing.openingStock += openingStock;
+          if (!existing.vendorName && vendorName) existing.vendorName = vendorName;
+        }
+      });
+      inventorySnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const partNumber = (row[1] || '').toString().trim();
+        const partType = (row[2] || '').toString().trim();
+        if (!brand || (!partNumber && !partType)) return;
+        const effectivePart = partNumber || partType || 'Unknown';
+        const mapKey = `${brand}|${effectivePart}|${monthLabel}`.toLowerCase().trim();
+        const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[3]);
+        const key = `${brand}|${effectivePart}`;
+        if (!inventoryMap.has(key)) {
+          inventoryMap.set(key, { brand, partNumber, partType, openingStock, received: 0, issued: 0 });
+        } else {
+          const existing = inventoryMap.get(key);
+          existing.openingStock += openingStock;
+          if (!existing.partType && partType) existing.partType = partType;
+          if (!existing.partNumber && partNumber) existing.partNumber = partNumber;
+        }
+      });
+      const oilTransactions = new Map();
+      const inventoryTransactions = new Map();
+      transactions.forEach(tx => {
+        const qty = tx.qtyChange;
+        const received = qty > 0 ? qty : 0;
+        const issued = qty < 0 ? Math.abs(qty) : 0;
+        if (isOilTransaction(tx.partType)) {
+          const oilKey = `${tx.brand}|${tx.serial || tx.partType}`;
+          if (tx.brand && (tx.serial || tx.partType)) {
+            if (!oilTransactions.has(oilKey)) {
+              oilTransactions.set(oilKey, { brand: tx.brand, viscosity: tx.serial || tx.partType, received: 0, issued: 0 });
+            }
+            const existing = oilTransactions.get(oilKey);
+            existing.received += received;
+            existing.issued += issued;
+          }
+        } else {
+          const inventoryKey = `${tx.brand}|${tx.serial || tx.partType || 'Unknown'}`;
+          if (tx.brand && (tx.serial || tx.partType)) {
+            if (!inventoryTransactions.has(inventoryKey)) {
+              inventoryTransactions.set(inventoryKey, { brand: tx.brand, partNumber: tx.serial || '', partType: tx.partType || '', received: 0, issued: 0 });
+            }
+            const existingInv = inventoryTransactions.get(inventoryKey);
+            existingInv.received += received;
+            existingInv.issued += issued;
+            if (!existingInv.partType && tx.partType) existingInv.partType = tx.partType;
+            if (!existingInv.partNumber && tx.serial) existingInv.partNumber = tx.serial;
+          }
+        }
+      });
+
+      const oilRows = Array.from(new Set([...oilMap.keys(), ...oilTransactions.keys()])).map(key => {
+        const snapshot = oilMap.get(key) || { brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendorName: '', openingStock: 0 };
+        const tx = oilTransactions.get(key) || { received: 0, issued: 0 };
+        const currentStock = snapshot.openingStock + tx.received - tx.issued;
+        return {
+          brand: snapshot.brand,
+          viscosity: snapshot.viscosity,
+          vendorName: snapshot.vendorName || '',
+          openingStock: snapshot.openingStock,
+          received: tx.received,
+          issued: tx.issued,
+          currentStock
+        };
+      }).sort((a, b) => a.brand.localeCompare(b.brand) || a.viscosity.localeCompare(b.viscosity));
+
+      const inventoryRows = Array.from(new Set([...inventoryMap.keys(), ...inventoryTransactions.keys()])).map(key => {
+        const snapshot = inventoryMap.get(key) || { brand: key.split('|')[0], partNumber: key.split('|')[1] || '', partType: '', openingStock: 0 };
+        const tx = inventoryTransactions.get(key) || { received: 0, issued: 0, partType: '' };
+        const currentStock = snapshot.openingStock + tx.received - tx.issued;
+        return {
+          brand: snapshot.brand,
+          partNumber: snapshot.partNumber,
+          partType: snapshot.partType || tx.partType || '',
+          openingStock: snapshot.openingStock,
+          received: tx.received,
+          issued: tx.issued,
+          currentStock
+        };
+      }).sort((a, b) => a.brand.localeCompare(b.brand) || (a.partNumber || '').localeCompare(b.partNumber || '') || (a.partType || '').localeCompare(b.partType || ''));
+
+      const totalReceived = transactions.reduce((sum, tx) => sum + Math.max(tx.qtyChange, 0), 0);
+      const totalIssued = transactions.reduce((sum, tx) => sum + Math.max(-tx.qtyChange, 0), 0);
+      const totalOpening = Array.from(oilMap.values()).reduce((sum, item) => sum + item.openingStock, 0) + Array.from(inventoryMap.values()).reduce((sum, item) => sum + item.openingStock, 0);
+      const totalCurrent = totalOpening + totalReceived - totalIssued;
+
+      return {
+        monthLabel,
+        transactions,
+        allTransactions,
+        oilRows,
+        inventoryRows,
+        totals: { totalReceived, totalIssued, totalOpening, totalCurrent }
+      };
+    }
+
+    function getMonthlyReportLabel(reportKey) {
+      const map = {
+        oils: 'Oils Monthly Analysis',
+        inventory: 'Inventory Monthly Analysis',
+        salesByViscosity: 'Sales by Viscosity',
+        monthlySales: 'Monthly Sales — Total Liters',
+        topConsumed: 'Top Consumed Oils (by Months)'
+      };
+      return map[reportKey] || 'Monthly Analysis';
+    }
+
+    function createExportSheet(sheetName, reportKey, data) {
+      const rows = [];
+      if (reportKey === 'oils') {
+        rows.push(['Brand', 'Viscosity', 'Vendor Name', 'Original Stock', 'Received', 'Issued', 'Current Stock']);
+        data.oilRows.forEach(row => rows.push([row.brand, row.viscosity, row.vendorName, row.openingStock, row.received, row.issued, row.currentStock]));
+      } else if (reportKey === 'inventory') {
+        rows.push(['Brand', 'Part Number / Serial', 'Part Type', 'Original Stock', 'Received', 'Issued', 'Current Stock']);
+        data.inventoryRows.forEach(row => rows.push([row.brand, row.partNumber, row.partType || '', row.openingStock, row.received, row.issued, row.currentStock]));
+      } else if (reportKey === 'salesByViscosity') {
+        rows.push(['Viscosity', 'Issued (Filtered Month)']);
+        const grouped = new Map();
+        data.transactions.filter(tx => isOilTransaction(tx.partType)).forEach(tx => {
+          const viscosity = tx.serial || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          grouped.set(viscosity, (grouped.get(viscosity) || 0) + issued);
+        });
+        Array.from(grouped.entries()).forEach(([viscosity, issued]) => rows.push([viscosity, issued]));
+      } else if (reportKey === 'monthlySales') {
+        rows.push(['Month', 'Total Liters Issued']);
+        const monthTotals = new Map();
+        (data.allTransactions || []).forEach(tx => {
+          const m = tx.month || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          monthTotals.set(m, (monthTotals.get(m) || 0) + issued);
+        });
+        Array.from(monthTotals.entries()).sort((a, b) => (parseMonthLabel(a[0]) || 0) - (parseMonthLabel(b[0]) || 0)).forEach(([m, total]) => rows.push([m, total]));
+      } else if (reportKey === 'topConsumed') {
+        rows.push(['Brand (Oil Model)', 'Total Issued (Selected Month)']);
+        const grouped = new Map();
+        (data.transactions || []).filter(tx => isOilTransaction(tx.partType)).forEach(tx => {
+          const key = `${tx.brand}${tx.serial ? ' / ' + tx.serial : ''}`.trim() || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          grouped.set(key, (grouped.get(key) || 0) + issued);
+        });
+        Array.from(grouped.entries()).sort((a, b) => b[1] - a[1]).forEach(([name, issued]) => rows.push([name, issued]));
+      }
+      const sheet = XLSX.utils.aoa_to_sheet(rows);
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!sheet[cell]) continue;
+          sheet[cell].s = {
+            font: { name: 'Arial', sz: 11, color: { rgb: '000000' } },
+            fill: { fgColor: { rgb: R === range.s.r ? 'F2BC1B' : (R % 2 === 1 ? 'FFFFFF' : 'F7F3D0') } },
+            border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } }
+          };
+        }
+      }
+      sheet['!cols'] = Array.from({ length: Math.max(1, range.e.c + 1) }, () => ({ width: 18 }));
+      return sheet;
+    }
+
+    function isOilTransaction(partType) {
+      const normalized = (partType || '').toString().trim().toLowerCase();
+      if (!normalized) return false;
+      const exactOilTypes = new Set([
+        'oil',
+        'oils',
+        'engine oil',
+        'lubricating oil',
+        'lubricant oil',
+        'gear oil',
+        'transmission oil',
+        'motor oil',
+        'زيت',
+        'زيوت',
+        'زيت المحرك',
+        'زيت التروس',
+        'زيت المحركات',
+        'زيوت المحرك',
+        'زيوت التروس'
+      ]);
+      if (exactOilTypes.has(normalized)) return true;
+      const oilRegex = /(?:^|\b)(engine|gear|transmission|motor|synthetic|diesel|hydraulic|brake|lubricating|lubricant|oil|زيت|زيوت)(?:\s|\b|$)/i;
+      const excludeRegex = /(filter|kit|battery|air|coolant|grease|فيلتر|بطارية|هواء|مبرد|شحم|جريس)/i;
+      return oilRegex.test(normalized) && !excludeRegex.test(normalized);
+    }
+
+    function renderMonthlyReportContent(reportKey, data) {
+      if (!data) return '<p style="color:#999;padding:16px;">No data available.</p>';
+      const { monthLabel, transactions, oilRows, inventoryRows, totals } = data;
+      const oilsOnlyTransactions = transactions.filter(tx => isOilTransaction(tx.partType));
+      const inventoryOnlyTransactions = transactions.filter(tx => !isOilTransaction(tx.partType));
+
+      if (reportKey === 'inventory') {
+        return `
+          <h4 class="section-title" style="font-size:15px;">Inventory Monthly Analysis</h4>
+          ${buildSimpleTableHtml(['Brand','Part Number / Serial','Part Type','Original Stock','Received','Issued','Current Stock'], inventoryRows.map(row => [row.brand, row.partNumber || '', row.partType || '', row.openingStock, row.received, row.issued, row.currentStock]))}
+        `;
+      }
+
+      if (reportKey === 'salesByViscosity') {
+        const grouped = new Map();
+        oilsOnlyTransactions.forEach(tx => {
+          const viscosity = (tx.serial || '').toString().trim() || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          if (!issued) return;
+          const key = viscosity;
+          if (!grouped.has(key)) grouped.set(key, 0);
+          grouped.set(key, grouped.get(key) + issued);
+        });
+        const rows = Array.from(grouped.entries()).map(([viscosity, issued]) => [viscosity, issued]);
+        return `
+          <h4 class="section-title" style="font-size:15px;">Sales by Viscosity</h4>
+          ${buildSimpleTableHtml(['Viscosity','Issued (Filtered Month)'], rows)}
+        `;
+      }
+
+      if (reportKey === 'monthlySales') {
+        // show all months totals (independent of selected month)
+        const all = data.allTransactions || [];
+        const monthTotals = new Map();
+        all.forEach(tx => {
+          const m = tx.month || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          monthTotals.set(m, (monthTotals.get(m) || 0) + issued);
+        });
+        const rows = Array.from(monthTotals.entries()).sort((a,b) => {
+          const pa = parseMonthLabel(a[0]) || 0;
+          const pb = parseMonthLabel(b[0]) || 0;
+          return pa - pb;
+        }).map(([m, total]) => [m, total]);
+        return `
+          <h4 class="section-title" style="font-size:15px;">Monthly Sales — Total Liters (All Months)</h4>
+          ${buildSimpleTableHtml(['Month','Total Liters Issued'], rows)}
+        `;
+      }
+
+      if (reportKey === 'topConsumed') {
+        const all = (transactions || []).filter(tx => isOilTransaction(tx.partType));
+        const grouped = new Map();
+        all.forEach(tx => {
+          const name = `${(tx.brand || '').toString().trim()}${tx.serial ? ' / ' + tx.serial : ''}`.trim() || 'Unknown';
+          const issued = Math.max(-tx.qtyChange, 0);
+          if (!issued) return;
+          if (!grouped.has(name)) grouped.set(name, 0);
+          grouped.set(name, grouped.get(name) + issued);
+        });
+        const rows = Array.from(grouped.entries())
+          .map(([name, issued]) => [name, issued])
+          .sort((a, b) => b[1] - a[1]);
+        return `
+          <h4 class="section-title" style="font-size:15px;">Top Consumed Oils (by Months)</h4>
+          ${buildSimpleTableHtml(['Brand (Oil Model)','Total Issued (Selected Month)'], rows)}
+        `;
+      }
+
+      return `
+        <h4 class="section-title" style="font-size:15px;">Oils Monthly Analysis</h4>
+        ${buildSimpleTableHtml(['Brand','Viscosity','Vendor Name','Original Stock','Received','Issued','Current Stock'], oilRows.map(row => [row.brand, row.viscosity, row.vendorName || '', row.openingStock, row.received, row.issued, row.currentStock]))}
+      `;
+    }
+
+    function getUniqueMonthLabels(rows, monthIndex) {
+      const values = new Set();
+      rows.slice(1).forEach(row => {
+        const month = (row[monthIndex] || '').toString().trim();
+        if (month) values.add(month);
+      });
+      return Array.from(values).sort((a, b) => {
+        const da = parseMonthLabel(a);
+        const db = parseMonthLabel(b);
+        if (da && db) return da - db;
+        if (da) return -1;
+        if (db) return 1;
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    }
+
+    function parseMonthLabel(label) {
+      if (!label) return null;
+      const normalized = label.toString().trim();
+      const parsed = new Date('1 ' + normalized);
+      if (!isNaN(parsed.getTime())) return parsed.getTime();
+      const parts = normalized.match(/([A-Za-z]+)\s*(\d{4})/);
+      if (parts) {
+        const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const monthIndex = monthNames.indexOf(parts[1].substr(0,3).toLowerCase());
+        const year = Number(parts[2]);
+        if (monthIndex >= 0 && year) {
+          return new Date(year, monthIndex, 1).getTime();
+        }
+      }
+      return null;
+    }
+
+    function formatTableCellValue(value) {
+      if (value === undefined || value === null) return '';
+      if (typeof value === 'string') return value;
+      return String(value);
+    }
+
+    function buildSimpleTableHtml(headers, rows) {
+      const headerHtml = headers.map((h, ci) => `
+        <th>
+          <div class="header-with-filter">
+            <span class="header-label">${escapeHtml(h)}</span>
+            <button type="button" class="filter-trigger" data-col-index="${ci}" aria-label="Filter ${escapeHtml(h)}">▾</button>
+            <div class="filter-panel" data-col-index="${ci}" aria-hidden="true"></div>
+          </div>
+        </th>
+      `).join('');
+      const bodyHtml = rows.map(cells => `<tr>${cells.map(cell => `<td>${escapeHtml(formatTableCellValue(cell))}</td>`).join('')}</tr>`).join('');
+      return `
+        <div class="table-scroll inventory-table-scroll">
+          <table class="data-table inventory-data-table">
+            <thead><tr>${headerHtml}</tr></thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </div>
+      `;
     }
 
     function buildTableHtml(rows, headers, cols, section = '') {
@@ -13363,7 +14141,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }).join('');
 
       const bodyRows = rows.slice(1).map(row => {
-        const cells = cols.map(colIndex => `<td>${escapeHtml(row[colIndex] || '')}</td>`).join('');
+        const cells = cols.map(colIndex => {
+          const displayValue = formatTableCellValue(row[colIndex]);
+          return `<td>${escapeHtml(displayValue)}</td>`;
+        }).join('');
         return `<tr>${cells}</tr>`;
       }).join('');
 
@@ -14143,331 +14924,230 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }, 2000);
     }
 
-    // Advanced filters: convert simple selects into multi-select searchable panels and add date range picker
+    // Advanced filters: keep the table filtering logic simple and reliable for monthly analysis output.
     function attachAdvancedTableFilters(container) {
-      if (!container) return;
-      const table = container.querySelector('table.inventory-data-table');
-      if (!table) return;
-      const clearBtn = container.querySelector('.btn-clear-filters');
-      const headers = Array.from(table.querySelectorAll('thead th'));
-      const rows = Array.from(table.querySelectorAll('tbody tr'));
-      const allRowsData = rows.map(row => Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim()));
-      const columnFilters = {};
+      if (!container || container.dataset.advancedFiltersBound === 'true') return;
+      container.dataset.advancedFiltersBound = 'true';
 
-      headers.forEach((th, ci) => {
-        const colNameEl = th.querySelector('.header-label')?.innerText.trim() || '';
-        const colName = colNameEl.replace(/\s*▾\s*$/, '').trim(); // remove arrow from display
-        const headerLabel = th.querySelector('.header-label');
-        const panel = th.querySelector('.filter-panel');
-        if (!panel) return;
+      const tables = Array.from(container.querySelectorAll('table.inventory-data-table'));
+      if (!tables.length) return;
 
-        panel.innerHTML = '';
-        const panelContent = document.createElement('div');
-        panelContent.className = 'filter-dropdown-content';
-        panel.appendChild(panelContent);
+      const closeAllPanels = () => {
+        container.querySelectorAll('.filter-panel').forEach(panel => {
+          panel.style.display = 'none';
+        });
+      };
 
-        // attach click handler to header label to show/hide panel
-        if (headerLabel) {
-          headerLabel.style.cursor = 'pointer';
-          headerLabel.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = panel.style.display === 'block';
-            document.querySelectorAll('.filter-panel').forEach(other => {
-              if (other !== panel) other.style.display = 'none';
-            });
-            if (!isVisible) {
-              const rect = headerLabel.getBoundingClientRect();
-              panel.style.top = (rect.bottom + 8) + 'px';
-              panel.style.left = Math.max(10, rect.right - 220) + 'px';
+      container.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.filter-trigger');
+        const headerLabel = e.target.closest('.header-label');
+
+        if (trigger || headerLabel) {
+          e.stopPropagation();
+          const panel = (trigger || headerLabel)?.closest('th')?.querySelector('.filter-panel');
+          if (!panel) return;
+          const isVisible = panel.style.display === 'block';
+          closeAllPanels();
+          if (!isVisible) {
+            const label = (trigger || headerLabel);
+            const rect = label.getBoundingClientRect();
+            const panelWidth = 220;
+            let left = rect.left;
+            
+            // Ensure panel stays within viewport bounds
+            if (left + panelWidth > window.innerWidth) {
+              left = window.innerWidth - panelWidth - 10;
             }
-            panel.style.display = isVisible ? 'none' : 'block';
-          };
+            if (left < 10) {
+              left = 10;
+            }
+            
+            panel.style.top = (rect.bottom + 8) + 'px';
+            panel.style.left = left + 'px';
+            panel.style.display = 'block';
+            panel.style.visibility = 'visible';
+            panel.style.opacity = '1';
+          }
+        } else if (!e.target.closest('.filter-panel')) {
+          closeAllPanels();
         }
+      });
 
-        const trigger = th.querySelector('.filter-trigger');
-        if (trigger) {
-          trigger.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = panel.style.display === 'block';
-            document.querySelectorAll('.filter-panel').forEach(other => {
-              if (other !== panel) other.style.display = 'none';
-            });
-            if (!isVisible && headerLabel) {
-              const rect = headerLabel.getBoundingClientRect();
-              panel.style.top = (rect.bottom + 8) + 'px';
-              panel.style.left = Math.max(10, rect.right - 220) + 'px';
-            }
-            panel.style.display = isVisible ? 'none' : 'block';
-          };
-        }
+      tables.forEach(table => {
+        const headers = Array.from(table.querySelectorAll('thead th'));
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+        const allRowsData = rows.map(row => Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim()));
+        const columnFilters = {};
 
-        if (colName === 'Date') {
-          panelContent.innerHTML = `
-            <div class="date-range-row">
-              <label>From<input type="date" class="filter-date-from datetime-control"></label>
-              <label>To<input type="date" class="filter-date-to datetime-control"></label>
-            </div>
-          `;
-          const fromInput = panelContent.querySelector('.filter-date-from');
-          const toInput = panelContent.querySelector('.filter-date-to');
-          const updateDateFilter = () => {
-            const from = fromInput.value || '';
-            const to = toInput.value || '';
-            if (from || to) {
-              columnFilters[ci] = { type: 'date', from, to };
-            } else {
-              delete columnFilters[ci];
+        const getVisibleRows = () => {
+          return rows.filter((row, rowIndex) => {
+            const cells = allRowsData[rowIndex] || [];
+            let visible = true;
+            for (const key of Object.keys(columnFilters)) {
+              const filter = columnFilters[key];
+              const index = Number(key);
+              const cellValue = (cells[index] || '').toString().trim();
+              if (filter.type === 'date') {
+                const from = filter.from || '';
+                const to = filter.to || '';
+                if (!from && !to) continue;
+                const cellDateValue = cellValue.split(' ')[0];
+                const date = cellDateValue ? new Date(cellDateValue) : null;
+                if (!date || isNaN(date.getTime())) {
+                  visible = false;
+                  break;
+                }
+                if (from) {
+                  const fromDate = new Date(from);
+                  if (date < fromDate) {
+                    visible = false;
+                    break;
+                  }
+                }
+                if (to) {
+                  const toDate = new Date(to);
+                  toDate.setHours(23, 59, 59, 999);
+                  if (date > toDate) {
+                    visible = false;
+                    break;
+                  }
+                }
+              } else if (filter.type === 'multi') {
+                if (!filter.values.length) continue;
+                if (!filter.values.includes(cellValue)) {
+                  visible = false;
+                  break;
+                }
+              }
             }
-            applyFilters();
-          };
-          fromInput.addEventListener('change', updateDateFilter);
-          toInput.addEventListener('change', updateDateFilter);
-        } else {
+            return visible;
+          });
+        };
+
+        const applyFilters = () => {
+          const visibleRows = getVisibleRows();
+          const visibleSet = new Set(visibleRows);
+          rows.forEach(row => {
+            row.style.display = visibleSet.has(row) ? '' : 'none';
+          });
+          updateClearButton();
+        };
+
+        const updateClearButton = () => {
+          const active = Object.keys(columnFilters).length > 0;
+          const clearBtn = container.querySelector('.btn-clear-filters');
+          if (clearBtn) {
+            clearBtn.classList.toggle('hidden', !active);
+            clearBtn.disabled = !active;
+          }
+        };
+
+        headers.forEach((th, ci) => {
+          const headerLabel = th.querySelector('.header-label');
+          const panel = th.querySelector('.filter-panel');
+          if (!panel) return;
+          const colName = (headerLabel?.textContent || '').replace(/\s*▾\s*$/, '').trim();
+
+          if (colName === 'Date') {
+            panel.innerHTML = `
+              <div class="date-range-row">
+                <label>From<input type="date" class="filter-date-from datetime-control"></label>
+                <label>To<input type="date" class="filter-date-to datetime-control"></label>
+              </div>
+            `;
+            const fromInput = panel.querySelector('.filter-date-from');
+            const toInput = panel.querySelector('.filter-date-to');
+            const updateDateFilter = () => {
+              const from = fromInput.value || '';
+              const to = toInput.value || '';
+              if (from || to) {
+                columnFilters[ci] = { type: 'date', from, to };
+              } else {
+                delete columnFilters[ci];
+              }
+              applyFilters();
+            };
+            fromInput.addEventListener('change', updateDateFilter);
+            toInput.addEventListener('change', updateDateFilter);
+            return;
+          }
+
           const valuesSet = new Set();
           allRowsData.forEach(cells => {
             const value = (cells[ci] || '').toString().trim();
-            if (value !== '') valuesSet.add(value);
+            if (value) valuesSet.add(value);
           });
-          const values = Array.from(valuesSet).sort((a, b) => a.localeCompare(b, undefined, {numeric:true}));
+          const values = Array.from(valuesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
-          panelContent.innerHTML = `
-            <input type="text" class="filter-search form-control" placeholder="Search..." />
-            <div class="filter-options-list"></div>
+          panel.innerHTML = `
+            <div class="filter-dropdown-content">
+              <div class="filter-panel-actions">
+                <button type="button" class="filter-select-all">Select All</button>
+                <button type="button" class="filter-select-none">None</button>
+              </div>
+              <input type="text" class="filter-search form-control" placeholder="Search..." />
+              <div class="filter-options-list"></div>
+            </div>
           `;
-          const searchInput = panelContent.querySelector('.filter-search');
-          const optionsList = panelContent.querySelector('.filter-options-list');
+          const optionsList = panel.querySelector('.filter-options-list');
+          const searchInput = panel.querySelector('.filter-search');
+          const selectAllBtn = panel.querySelector('.filter-select-all');
+          const selectNoneBtn = panel.querySelector('.filter-select-none');
 
-          const noneLabel = document.createElement('label');
-          noneLabel.className = 'filter-option-item filter-option-none';
-          const noneCheckbox = document.createElement('input');
-          noneCheckbox.type = 'checkbox';
-          noneCheckbox.dataset.colIndex = ci;
-          noneCheckbox.dataset.value = '__NONE__';
-          noneCheckbox.style.accentColor = '#F2BC1B';
-          noneCheckbox.addEventListener('change', () => {
-            if (noneCheckbox.checked) {
-              optionsList.querySelectorAll('input[type=checkbox]').forEach(cb => {
-                if (cb !== noneCheckbox) cb.checked = false;
-              });
-              delete columnFilters[ci];
-              applyFilters();
-              rebuildFilterOptions(ci);
-            } else {
-              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).filter(cb => cb !== noneCheckbox).map(cb => cb.dataset.value);
-              if (!checkedValues.length) {
-                delete columnFilters[ci];
-                applyFilters();
-                rebuildFilterOptions(ci);
-              }
-            }
+          const renderOptions = () => {
+            const query = searchInput.value.trim().toLowerCase();
+            optionsList.querySelectorAll('.filter-option-item').forEach(label => {
+              const text = label.textContent.trim().toLowerCase();
+              label.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+          };
+
+          selectAllBtn.addEventListener('click', () => {
+            optionsList.querySelectorAll('input[type=checkbox]').forEach(cb => {
+              cb.checked = true;
+            });
+            columnFilters[ci] = { type: 'multi', values };
+            applyFilters();
           });
-          noneLabel.appendChild(noneCheckbox);
-          const noneText = document.createElement('span');
-          noneText.textContent = 'None';
-          noneLabel.appendChild(noneText);
-          optionsList.appendChild(noneLabel);
+
+          selectNoneBtn.addEventListener('click', () => {
+            optionsList.querySelectorAll('input[type=checkbox]').forEach(cb => {
+              cb.checked = false;
+            });
+            delete columnFilters[ci];
+            applyFilters();
+          });
 
           values.forEach(value => {
-            const optionLabel = document.createElement('label');
-            optionLabel.className = 'filter-option-item';
+            const label = document.createElement('label');
+            label.className = 'filter-option-item';
+            label.style.display = 'flex';
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.dataset.colIndex = ci;
             checkbox.dataset.value = value;
             checkbox.style.accentColor = '#F2BC1B';
             checkbox.addEventListener('change', () => {
-              if (checkbox.checked) {
-                noneCheckbox.checked = false;
-              }
-              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).filter(cb => cb !== noneCheckbox).map(cb => cb.dataset.value);
+              const checkedValues = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.dataset.value);
               if (checkedValues.length) {
                 columnFilters[ci] = { type: 'multi', values: checkedValues };
               } else {
                 delete columnFilters[ci];
               }
               applyFilters();
-              rebuildFilterOptions(ci); // Update other filter options based on this selection
             });
-            optionLabel.appendChild(checkbox);
             const span = document.createElement('span');
             span.textContent = value;
-            optionLabel.appendChild(span);
-            optionsList.appendChild(optionLabel);
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            optionsList.appendChild(label);
           });
 
-          searchInput.addEventListener('input', () => {
-            const query = searchInput.value.trim().toLowerCase();
-            optionsList.querySelectorAll('.filter-option-item').forEach(label => {
-              const text = label.innerText.trim().toLowerCase();
-              if (label.classList.contains('filter-option-none')) {
-                label.style.display = 'flex';
-              } else {
-                label.style.display = text.includes(query) ? 'flex' : 'none';
-              }
-            });
-          });
-        }
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-panel') && !e.target.closest('.header-label') && !e.target.closest('.filter-trigger')) {
-          document.querySelectorAll('.filter-panel').forEach(panel => panel.style.display = 'none');
-        }
-      });
-
-      // Reposition panels on scroll and resize to keep them aligned with headers
-      function repositionOpenPanels() {
-        headers.forEach((th, ci) => {
-          const headerLabel = th.querySelector('.header-label');
-          const panel = th.querySelector('.filter-panel');
-          if (panel && panel.style.display === 'block' && headerLabel) {
-            const rect = headerLabel.getBoundingClientRect();
-            panel.style.top = (rect.bottom + 8) + 'px';
-            panel.style.left = Math.max(10, rect.right - 220) + 'px';
-          }
+          searchInput.addEventListener('input', renderOptions);
         });
-      }
 
-      window.addEventListener('resize', repositionOpenPanels);
-      table.closest('.table-scroll')?.addEventListener('scroll', repositionOpenPanels);
-      document.addEventListener('scroll', repositionOpenPanels);
-
-      // Rebuild filter options based on currently filtered data (dependent filtering)
-      function rebuildFilterOptions(excludeColIndex = null) {
-        headers.forEach((th, ci) => {
-          if (excludeColIndex === ci) return; // skip the filter being modified
-          const colNameEl = th.querySelector('.header-label')?.innerText.trim() || '';
-          const colName = colNameEl.replace(/\s*▾\s*$/, '').trim();
-          if (colName === 'Date') return; // skip date filters
-
-          const panel = th.querySelector('.filter-panel');
-          const optionsList = panel?.querySelector('.filter-options-list');
-          if (!optionsList) return;
-
-          // Get all checkboxes for this column
-          const checkboxes = Array.from(optionsList.querySelectorAll('input[type=checkbox]'));
-          const checkedValues = checkboxes.filter(cb => cb.checked).map(cb => cb.dataset.value);
-
-          // Determine which rows are visible after applying all OTHER filters
-          const visibleRows = rows.filter((row, rowIndex) => {
-            const cells = allRowsData[rowIndex];
-            for (const [key, filter] of Object.entries(columnFilters)) {
-              const index = Number(key);
-              if (index === ci) continue; // skip current column
-              const cellValue = (cells[index] || '').toString().trim();
-              if (filter.type === 'multi') {
-                if (!filter.values.length) continue;
-                if (!filter.values.includes(cellValue)) return false;
-              } else if (filter.type === 'date') {
-                const from = filter.from || '';
-                const to = filter.to || '';
-                if (!from && !to) continue;
-                const cellDateValue = cellValue.split(' ')[0];
-                const cellDate = cellDateValue ? new Date(cellDateValue) : null;
-                if (!cellDate || isNaN(cellDate.getTime())) return false;
-                if (from && cellDate < new Date(from)) return false;
-                if (to) {
-                  const toDate = new Date(to);
-                  toDate.setHours(23,59,59,999);
-                  if (cellDate > toDate) return false;
-                }
-              }
-            }
-            return true;
-          });
-
-          // Build set of available values from visible rows
-          const availableValues = new Set();
-          visibleRows.forEach(row => {
-            const rowIndex = rows.indexOf(row);
-            const value = (allRowsData[rowIndex][ci] || '').toString().trim();
-            if (value !== '') availableValues.add(value);
-          });
-
-          // Update checkbox states and disabled status
-          checkboxes.forEach(cb => {
-            const optionLabel = cb.closest('.filter-option-item');
-            if (cb.dataset.value === '__NONE__') {
-              if (optionLabel) {
-                optionLabel.classList.remove('disabled');
-              }
-              cb.disabled = false;
-              return;
-            }
-            const isAvailable = availableValues.has(cb.dataset.value);
-            if (optionLabel) {
-              optionLabel.classList.toggle('disabled', !isAvailable);
-              cb.disabled = !isAvailable;
-            }
-          });
-        });
-      }
-
-      if (clearBtn) {
-        clearBtn.onclick = () => {
-          Object.keys(columnFilters).forEach(key => delete columnFilters[key]);
-          table.querySelectorAll('.filter-panel input[type=checkbox]').forEach(cb => cb.checked = false);
-          table.querySelectorAll('.filter-panel input[type=date]').forEach(inp => inp.value = '');
-          table.querySelectorAll('.filter-panel input[type=text]').forEach(inp => inp.value = '');
-          rebuildFilterOptions();
-          applyFilters();
-        };
-      }
-
-      function applyFilters() {
-        rows.forEach((row, rowIndex) => {
-          const cells = allRowsData[rowIndex];
-          let visible = true;
-          for (const [key, filter] of Object.entries(columnFilters)) {
-            const index = Number(key);
-            const cellValue = (cells[index] || '').toString().trim();
-            if (filter.type === 'multi') {
-              if (!filter.values.length) continue;
-              if (!filter.values.includes(cellValue)) {
-                visible = false;
-                break;
-              }
-            } else if (filter.type === 'date') {
-              const from = filter.from || '';
-              const to = filter.to || '';
-              if (!from && !to) continue;
-              const cellDateValue = cellValue.split(' ')[0];
-              const cellDate = cellDateValue ? new Date(cellDateValue) : null;
-              if (!cellDate || isNaN(cellDate.getTime())) {
-                visible = false;
-                break;
-              }
-              if (from) {
-                const fromDate = new Date(from);
-                if (cellDate < fromDate) {
-                  visible = false;
-                  break;
-                }
-              }
-              if (to) {
-                const toDate = new Date(to);
-                toDate.setHours(23,59,59,999);
-                if (cellDate > toDate) {
-                  visible = false;
-                  break;
-                }
-              }
-            }
-          }
-          row.style.display = visible ? '' : 'none';
-        });
+        applyFilters();
         updateClearButton();
-      }
-
-      function updateClearButton() {
-        const active = Object.keys(columnFilters).length > 0;
-        if (clearBtn) {
-          clearBtn.classList.toggle('hidden', !active);
-          clearBtn.disabled = !active;
-        }
-      }
-
-      updateClearButton();
+      });
     }
   </script>
   <script>
