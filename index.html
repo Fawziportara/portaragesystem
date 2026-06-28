@@ -2827,6 +2827,31 @@
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
     const SITE_VERSION = '3.1';
+
+    function installFrontendProtection() {
+      const handleShortcut = (event) => {
+        const key = event.key ? event.key.toUpperCase() : '';
+        const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+        const blocked = event.key === 'F12' ||
+          (isCtrlOrMeta && event.shiftKey && ['I', 'J', 'C'].includes(key)) ||
+          (isCtrlOrMeta && key === 'U') ||
+          (isCtrlOrMeta && key === 'S');
+
+        if (blocked) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        }
+        return true;
+      };
+
+      document.addEventListener('keydown', handleShortcut, true);
+      document.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+      }, true);
+    }
+
+    installFrontendProtection();
     
     let usersData = [];
     let isAuthenticated = false;
