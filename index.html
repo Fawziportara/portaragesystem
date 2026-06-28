@@ -670,29 +670,32 @@
     .form-field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
     
     .form-field label {
       font-size: 13px;
-      color: #999;
-      font-weight: 600;
+      color: #f2bc1b;
+      font-weight: 700;
+      padding-right: 2px;
     }
     
     .form-control {
-      background: #262626;
-      border: 1px solid #404040;
-      border-radius: 4px;
-      padding: 8px 12px;
+      background: linear-gradient(135deg, #1f1f1f 0%, #161616 100%);
+      border: 1px solid rgba(242, 188, 27, 0.28);
+      border-radius: 10px;
+      padding: 10px 12px;
       color: #fff;
       font-size: 14px;
       transition: all 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
     
     .form-control:focus {
       outline: none;
-      border-color: #F2BC1B;
-      background: #2d2d2d;
+      border-color: rgba(242, 188, 27, 0.28);
+      background: #242424;
+      box-shadow: none;
     }
     
     .form-control::placeholder {
@@ -848,6 +851,48 @@
       width: 100%;
       justify-items: stretch;
     }
+
+    .battery-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+      gap: 12px;
+      justify-content: center;
+      align-items: stretch;
+      max-width: 720px;
+      margin: 0 auto 12px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      background: #121212;
+      border: 1px solid rgba(242, 188, 27, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .battery-mode-option {
+      min-height: 56px;
+      padding: 12px 14px;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
+      border: 1px solid rgba(242, 188, 27, 0.35);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+    }
+
+    .battery-mode-option .mode-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .battery-mode-option .mode-label {
+      font-size: 14px;
+      line-height: 1.3;
+      text-align: center;
+    }
     
     .btn-option {
       background: #1f1f1f;
@@ -874,10 +919,11 @@
     .btn-option:hover {
       background: #353535;
       border-color: #F2BC1B;
+      transform: translateY(-1px);
     }
     
     .btn-option.active {
-      background: #F2BC1B;
+      background: linear-gradient(135deg, #f5c64e 0%, #f2bc1b 100%);
       border-color: #F2BC1B;
       color: #000;
       font-weight: 700;
@@ -1205,6 +1251,12 @@
 .battery-size-group-count {
   color: #ddd;
   font-size: 13px;
+}
+.battery-size-group-summary {
+  font-size: 13px;
+  color: #aaa;
+  margin-top: 4px;
+  line-height: 1.6;
 }
 .battery-size-group-button {
   background: #F2BC1B;
@@ -2685,9 +2737,9 @@
     <div class="service-submenu" id="staffSubmenu">
      <div class="service-item submenu-item" data-service="staff_centers"><span class="label">مراكز الطلبات</span>
      </div>
-     <div class="service-item submenu-item" data-service="staff_scheduling"><span class="label">جدولة الموظفين</span>
+     <div class="service-item submenu-item" data-service="staff_scheduling"><span class="label">جدول الموظفين</span>
      </div>
-      <div class="service-item submenu-item" data-service="driver_status"><span class="label">جدولة السائقين</span>
+      <div class="service-item submenu-item" data-service="driver_status"><span class="label">جدول السائقين</span>
       </div>
     </div>
     <div class="service-item" data-service="coords"><span class="icon">📍</span> <span class="label">الاحداثيات</span>
@@ -2733,7 +2785,7 @@
     <div class="service-submenu" id="otherSubmenu">
      <div class="service-item submenu-item" data-service="protection"><span class="label">الحمايه والتغيم</span>
      </div>
-     <div class="service-item submenu-item" data-service="insurance"><span class="label">تأمينات</span>
+     <div class="service-item submenu-item" data-service="insurance"><span class="label">شركات التأمين</span>
      </div>
      <div class="service-item submenu-item" data-service="annualSubscription"><span class="label">الاشتراك السنوي</span>
      </div>
@@ -2741,6 +2793,8 @@
      </div>
       <div class="service-item submenu-item" data-service="installments"><span class="label">الاقساط</span>
          </div>
+     <div class="service-item submenu-item" data-service="siteLinks"><span class="label">روابط المواقع</span>
+     </div>
     </div>
    </aside><!-- Main Content -->
    <main class="main-content"><!-- Header Bar -->
@@ -3060,8 +3114,8 @@
       'فولت قاراج': 'Vault Garage',
       'جيلي': 'Geely',
       'اوتو كابيتال': 'Auto Capital',
-      'Carbath': 'Carbath',
-      'revamp': 'revamp'
+      'كارباث': 'Carbath',
+      'ريفامب': 'revamp'
     };
     
     const companies = Object.keys(companyMapping);
@@ -3458,11 +3512,12 @@
           'mechanical': 'خدمات ميكانيكية',
           'inventoryManagement': 'إدارة المخزون',
           'staff_centers': 'مراكز الطلبات',
-          'staff_scheduling': 'جدولة الموظفين',
-          'driver_status': 'جدولة السائقين',
+          'staff_scheduling': 'جدول الموظفين',
+          'driver_status': 'جدول السائقين',
           'carwash': 'غسيل السيارات',
           'protection': 'الحمايه والتغيم',
-          'insurance': 'تأمينات',
+          'insurance': 'شركات التأمين',
+          'siteLinks': 'روابط المواقع',
           'annualSubscription': 'الاشتراك السنوي',
           'glassCare': 'العناية بالزجاج',
           'installments': 'الاقساط',
@@ -3531,6 +3586,9 @@
             break;
           case 'insurance':
             renderInsuranceInterface();
+            break;
+          case 'siteLinks':
+            renderSiteLinksInterface();
             break;
           case 'annualSubscription':
             renderAnnualSubscriptionInterface();
@@ -3802,7 +3860,7 @@
       contentArea.innerHTML = `
         <div class="form-section full-width">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-            <h3 class="section-title" style="margin:0;">جدولة الموظفين</h3>
+            <h3 class="section-title" style="margin:0;">جدول الموظفين</h3>
             <div id="staffSchedulingActionArea"></div>
           </div>
           <div id="staffSchedulingTitleWrapper" style="display:none; justify-content:center; align-items:center; margin-bottom:16px;">
@@ -3851,15 +3909,22 @@
       const actionArea = document.getElementById('staffSchedulingActionArea');
       if (isAdmin && actionArea) {
         actionArea.innerHTML = `
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button id="btnStaffSchedulingEdit" class="btn-back" style="padding:6px 12px; font-size:12px; font-weight:bold; cursor:pointer; background:#4CAF50; color:#fff; border:none; border-radius:4px;">تعديل الجدول</button>
             <button id="btnStaffSchedulingDownload" class="btn-back" style="padding:6px 12px; font-size:12px; font-weight:bold; cursor:pointer; background:#F2BC1B; color:#000; border:none; border-radius:4px;">تحميل كصورة</button>
+            <button id="btnStaffSchedulingDownloadExcel" class="btn-back" style="padding:6px 12px; font-size:12px; font-weight:bold; cursor:pointer; background:#2563EB; color:#fff; border:none; border-radius:4px;">تحميل كإكسل</button>
           </div>
         `;
         const downloadBtn = document.getElementById('btnStaffSchedulingDownload');
         if (downloadBtn) {
           downloadBtn.onclick = async () => {
             await exportStaffTableAsImage();
+          };
+        }
+        const downloadExcelBtn = document.getElementById('btnStaffSchedulingDownloadExcel');
+        if (downloadExcelBtn) {
+          downloadExcelBtn.onclick = async () => {
+            await exportStaffTableAsExcel();
           };
         }
         const editBtn = document.getElementById('btnStaffSchedulingEdit');
@@ -3872,23 +3937,11 @@
         }
       }
       const sheetId = '14hnMvfWGz8O-BicyzaPjORQaMst4W_3hPnGTs7pl_AU';
-      const htmlUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:html&sheet=THIS%20WEEK&_=${Date.now()}`;
       const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=THIS%20WEEK&_=${Date.now()}`;
       try {
         if (statusEl) statusEl.textContent = 'جاري جلب البيانات من Google Sheets...';
         const rows = await fetchVisualizerData();
         async function fetchVisualizerData() {
-          // 1. Fetch HTML to verify sheet title is THIS WEEK
-          const htmlRes = await fetch(htmlUrl, { cache: 'no-store' });
-          if (!htmlRes.ok) throw new Error('فشل الاتصال بـ Google Sheets');
-          const htmlText = await htmlRes.text();
-          // Extract <title> content
-          const titleMatch = htmlText.match(/<title>([^<]+)<\/title>/i);
-          const sheetTitle = titleMatch ? titleMatch[1].trim() : '';
-          if (sheetTitle !== 'THIS WEEK') {
-            throw new Error('اسم الشيت غير مطابق (يجب أن يكون THIS WEEK)');
-          }
-          // 2. Fetch CSV data
           const csvRes = await fetch(csvUrl, { cache: 'no-store' });
           if (!csvRes.ok) throw new Error('فشل تحميل بيانات الجدول');
           const csvText = await csvRes.text();
@@ -3975,7 +4028,7 @@
         const headers = rows[headerRowIndex];
         // 3. Setup dynamic centered title
         const firstDate = headers[1] || '';
-        let titleText = 'جدولة الموظفين';
+        let titleText = 'جدول الموظفين';
         if (firstDate && firstDate.includes('/')) {
           const parts = firstDate.split('/');
           if (parts.length >= 3) {
@@ -4081,7 +4134,7 @@
         console.error(err);
         if (statusEl) statusEl.style.display = 'none';
         containerEl.style.display = 'none';
-        errorEl.textContent = 'حدث خطأ أثناء تحميل جدولة الموظفين: ' + err.message;
+        errorEl.textContent = 'حدث خطأ أثناء تحميل جدول الموظفين: ' + err.message;
         errorEl.style.display = 'block';
       }
     }
@@ -4095,7 +4148,7 @@
       const titleEl = document.getElementById('staffSchedulingMainTitle');
       const exportHeading = document.createElement('div');
       exportHeading.style.cssText = 'color:#F2BC1B; background:#0a0a0a; padding:16px 12px; font-size:24px; font-weight:bold; text-align:center; font-family:"Cairo", sans-serif;';
-      exportHeading.textContent = titleEl ? titleEl.textContent : 'جدولة الموظفين';
+      exportHeading.textContent = titleEl ? titleEl.textContent : 'جدول الموظفين';
 
       const exportWrapper = document.createElement('div');
       exportWrapper.style.cssText = 'position:fixed; left:-9999px; top:0; z-index:-1; background:#0a0a0a; padding:16px; box-sizing:border-box;';
@@ -4154,6 +4207,78 @@
         container.style.overflowX = previousOverflowX;
         if (exportWrapper && exportWrapper.parentNode) exportWrapper.parentNode.removeChild(exportWrapper);
       }
+    }
+    async function exportStaffTableAsExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('مكتبة تصدير الاكسل غير محملة بعد، الرجاء الانتظار ثانية والمحاولة مجدداً.');
+        return;
+      }
+      const tableEl = document.getElementById('staffSchedulingTable');
+      if (!tableEl) return;
+      const headers = Array.from(tableEl.querySelectorAll('thead th')).map(th => th.innerText.trim());
+      const bodyRows = Array.from(tableEl.querySelectorAll('tbody tr')).map(tr => Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim()));
+      const data = [headers, ...bodyRows];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const borderStyle = { style: 'thin', color: { rgb: '000000' } };
+      const colorToHex = (color) => {
+        if (!color || color === 'transparent') return null;
+        const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)$/);
+        if (!match) return null;
+        const alpha = match[4] ? parseFloat(match[4]) : 1;
+        if (!alpha) return null;
+        return [match[1], match[2], match[3]].map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('').toUpperCase();
+      };
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        const rowEl = R === 0 ? tableEl.querySelector('thead tr') : tableEl.querySelectorAll('tbody tr')[R - 1];
+        if (!rowEl) continue;
+        const cells = Array.from(rowEl.children);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+          const cell = ws[cellRef];
+          if (!cell) continue;
+          const cellEl = cells[C];
+          const compStyle = cellEl ? window.getComputedStyle(cellEl) : null;
+          const cellStyle = {
+            font: { name: 'Calibri', sz: 11, color: { rgb: '000000' } },
+            alignment: { vertical: 'center', horizontal: 'center', wrapText: true },
+            border: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle }
+          };
+          if (compStyle) {
+            const fontColor = colorToHex(compStyle.color);
+            if (fontColor) cellStyle.font.color = { rgb: fontColor };
+            if (compStyle.fontWeight === 'bold' || parseInt(compStyle.fontWeight, 10) >= 700) {
+              cellStyle.font.bold = true;
+            }
+            const bgColor = colorToHex(compStyle.backgroundColor);
+            if (bgColor) {
+              cellStyle.fill = { fgColor: { rgb: bgColor } };
+            }
+            const textAlign = compStyle.textAlign;
+            if (['left', 'center', 'right'].includes(textAlign)) {
+              cellStyle.alignment.horizontal = textAlign;
+            }
+          }
+          cell.s = cellStyle;
+        }
+      }
+      const cols = [];
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maxLength = 10;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+          const cell = ws[cellRef];
+          if (cell && cell.v != null) {
+            maxLength = Math.max(maxLength, String(cell.v).length);
+          }
+        }
+        cols.push({ wch: Math.min(maxLength + 4, 40) });
+      }
+      ws['!cols'] = cols;
+      XLSX.utils.book_append_sheet(wb, ws, 'جدول الموظفين');
+      const fileName = `staff-schedule-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
     }
     // Render Driver Status Interface (جدول السائقين)
     function renderDriverStatusInterface() {
@@ -5287,9 +5412,13 @@
             <strong>ملاحظة ونش:</strong>
             <br>في حال العميل طلب ونش تبلّغون العميل: نقدر نوفر لك سيارة فولفو مع سايق يوصلك لأي منطقة داخل الكويت، السعر الخدمة 10 د.ك لأي منطقة (باستثناء المناطق اللي بعد الأحمدي 18 د.ك).
             <br>في حال العميل سأل عن مدة الوصول: 15 إلى 25 دقيقة أقصى مدة، والخدمة متوفرة 24 ساعة على مدار اليوم.
-            <br>ضروري تبلغون العميل أنه في حال انتظار للسايق أول ربع ساعة مجانية، وبعد الربع ساعة 0.150 فلس لكل دقيقة، ويدفعها وهو بالطريق قبل ما يوصل وجهته.
+            <br>ضروري تبلغون العميل أنه في حال انتظار السائق أول ربع ساعة مجانية، وبعد الربع ساعة 0.150 فلس لكل دقيقة، ويدفعها وهو بالطريق قبل ما يوصل وجهته.
           </div>
-          <div id="towPortarageNote" class="info-box hidden" style="margin-top: 10px;">
+          <div id="towAdditionalNote" class="info-box hidden" style="margin-top: 10px;">
+            <strong>ملاحظات إضافية:</strong>
+            <br>١- السعر هذا في حال كان المنتج قديم ولكن في حال المنتج جديد سيكون السعر 30 د.ك من وإلى أي منطقة بالكويت.
+            <br>٢- الجت بوت رسوم النقل ستكون دوما 100 د.ك.
+            <br>٣- جميع طلبات ياماها التي يتم استلامها تكون حالة الطلب على الحساب.
           </div>
         </div>
       `;
@@ -5817,104 +5946,55 @@
       if (!rows || rows.length < 3) return [];
       
       const routes = [];
+      const createRoute = (row, from, to, price, cancelCol) => {
+        if (!from || !to || !price) return null;
+        const cancelValue = (cancelCol !== undefined && cancelCol !== null) ? row[cancelCol] : null;
+        const parsedCancel = cancelValue !== null && cancelValue !== '' ? parseFloat(cancelValue) : NaN;
+        const cancelPrice = Number.isFinite(parsedCancel) ? `${parsedCancel.toFixed(2)} ${config.currency}` : null;
+        return { from, to, price, cancelCol, cancelPrice };
+      };
       
       for (let i = 2; i < rows.length; i++) {
         const row = rows[i];
         
         if (sheetName === 'portarage towtruk') {
           if (towType === 'normal') {
-            const from = row[3];
-            const to = row[2];
-            const price = row[1];
-            const cancelCol = 0;
-            if (from && to && price) {
-              routes.push({ from, to, price, cancelCol });
-            }
+            const route = createRoute(row, row[3], row[2], row[1], 0);
+            if (route) routes.push(route);
           } else if (towType === 'flatbed') {
-            const from = row[8];
-            const to = row[7];
-            const price = row[6];
-            const cancelCol = 5;
-            if (from && to && price) {
-              routes.push({ from, to, price, cancelCol });
-            }
+            const route = createRoute(row, row[8], row[7], row[6], 5);
+            if (route) routes.push(route);
           } else if (towType === 'flatbedClose') {
-            const from = row[13];
-            const to = row[12];
-            const price = row[11];
-            const cancelCol = 10;
-            if (from && to && price) {
-              routes.push({ from, to, price, cancelCol });
-            }
+            const route = createRoute(row, row[13], row[12], row[11], 10);
+            if (route) routes.push(route);
           } else if (towType === 'jetSki') {
             if (qalsSize === 'less27') {
-              const from = row[18];
-              const to = row[17];
-              const price = row[16];
-              const cancelCol = 15;
-              if (from && to && price) {
-                routes.push({ from, to, price, cancelCol });
-              }
+              const route = createRoute(row, row[18], row[17], row[16], 15);
+              if (route) routes.push(route);
             } else if (qalsSize === '28plus') {
-              const from = row[23];
-              const to = row[22];
-              const price = row[21];
-              const cancelCol = 20;
-              if (from && to && price) {
-                routes.push({ from, to, price, cancelCol });
-              }
+              const route = createRoute(row, row[23], row[22], row[21], 20);
+              if (route) routes.push(route);
             }
           } else if (towType === 'jetskiBaqi') {
-            const from = row[8];
-            const to = row[7];
-            const price = row[6];
-            const cancelCol = 5;
-            if (from && to && price) {
-              routes.push({ from, to, price, cancelCol });
-            }
+            const route = createRoute(row, row[8], row[7], row[6], 5);
+            if (route) routes.push(route);
           }
         } else {
           if (towType === 'normal') {
-            const from = row[6];
-            const toF = row[5];
-            const toC = row[2];
-            const priceE = row[4];
-            const priceB = row[1];
-            
-            if (from && toF && priceE) {
-              routes.push({ from, to: toF, price: priceE, cancelCol: 3 });
-            }
-            if (from && toC && priceB) {
-              routes.push({ from, to: toC, price: priceB, cancelCol: 0 });
-            }
+            const routeE = createRoute(row, row[6], row[5], row[4], 3);
+            if (routeE) routes.push(routeE);
+            const routeB = createRoute(row, row[6], row[2], row[1], 0);
+            if (routeB) routes.push(routeB);
           } else if (towType === 'flatbed') {
-            const from = row[14];
-            const toN = row[13];
-            const toK = row[10];
-            const priceM = row[12];
-            const priceJ = row[9];
-            
-            if (from && toN && priceM) {
-              routes.push({ from, to: toN, price: priceM, cancelCol: 11 });
-            }
-            if (from && toK && priceJ) {
-              routes.push({ from, to: toK, price: priceJ, cancelCol: 8 });
-            }
+            const routeN = createRoute(row, row[14], row[13], row[12], 11);
+            if (routeN) routes.push(routeN);
+            const routeK = createRoute(row, row[14], row[10], row[9], 8);
+            if (routeK) routes.push(routeK);
           } else if (towType === 'flatbedClose' || towType === 'jetSki') {
-            const from = row[22];
-            const toU = row[21];
-            const priceU = row[20];
-            const cancelU = row[19];
-            const toReturn = row[18];
-            const priceReturn = row[17];
-            const cancelReturn = row[16];
-            
-            if (from && toU && priceU) {
-              routes.push({ from, to: toU, price: priceU, cancelCol: 19 });
-            }
-            if (from && toReturn && priceReturn) {
-              routes.push({ from, to: toReturn, price: priceReturn, cancelCol: 16 });
-            }
+            const routeU = createRoute(row, row[22], row[21], row[20], 19);
+            if (routeU) routes.push(routeU);
+            const routeReturn = createRoute(row, row[22], row[18], row[17], 16);
+            if (routeReturn) routes.push(routeReturn);
           }
         }
       }
@@ -5934,6 +6014,7 @@
       }
       
       let companyPrice = parseFloat(route.price) || 0;
+      const cancellationPrice = route.cancelPrice || null;
       
       let extraCharges = 0;
       
@@ -5976,6 +6057,14 @@
             </tr>
           `;
         }
+        if (cancellationPrice) {
+          rows += `
+            <tr>
+              <td>رسوم الإلغاء</td>
+              <td class="highlight">${cancellationPrice}</td>
+            </tr>
+          `;
+        }
       } else {
         rows = `
           <tr>
@@ -5991,6 +6080,16 @@
               <td class="highlight">${extraCharges.toFixed(2)} ${config.currency}</td>
             </tr>
           `;
+        }
+        if (cancellationPrice) {
+          rows += `
+            <tr>
+              <td>رسوم الإلغاء</td>
+              <td class="highlight">${cancellationPrice}</td>
+            </tr>
+          `;
+        }
+        if (extraCharges > 0) {
           const total = companyPrice + extraCharges;
           rows += `
             <tr style="background: #262626;">
@@ -6022,17 +6121,19 @@
       }
       const towRequestNoteEl = document.getElementById('towRequestNote');
       if (towRequestNoteEl) {
-        if (formData.towType === 'normal' || formData.towType === 'flatbed' || formData.towType === 'flatbedClose') {
+        if (formData.companyArabic === 'بورتراج' && (formData.towType === 'normal' || formData.towType === 'flatbed' || formData.towType === 'flatbedClose')) {
           towRequestNoteEl.classList.remove('hidden');
         } else {
           towRequestNoteEl.classList.add('hidden');
         }
       }
-      if (portarageNote) {
-        if (formData.companyArabic === 'بورتراج' && (formData.towType === 'normal' || formData.towType === 'flatbed' || formData.towType === 'flatbedClose')) {
-          portarageNote.classList.remove('hidden');
+      const towAdditionalNoteEl = document.getElementById('towAdditionalNote');
+      if (towAdditionalNoteEl) {
+        const shouldShowAdditionalNote = formData.companyArabic !== 'بورتراج' && (formData.towType === 'normal' || formData.towType === 'flatbed' || formData.towType === 'flatbedClose');
+        if (shouldShowAdditionalNote) {
+          towAdditionalNoteEl.classList.remove('hidden');
         } else {
-          portarageNote.classList.add('hidden');
+          towAdditionalNoteEl.classList.add('hidden');
         }
       }
       
@@ -6082,6 +6183,8 @@
     function getTowResultCopyText() {
       const from = formData.from || 'غير محدد';
       const to = formData.to || 'غير محدد';
+      const fromKey = (formData.from || '').trim();
+      const toKey = (formData.to || '').trim();
       const towTypeLabels = {
         normal: 'ونش عادي',
         flatbed: 'ونش فل داون',
@@ -6094,8 +6197,21 @@
       const totalLine = [...rows].find(row => row.innerText.includes('الإجمالي'));
       const total = totalLine ? totalLine.querySelector('td:last-child').innerText.trim() : '';
       const priceText = total || (rows[0] ? rows[0].querySelector('td:last-child').innerText.trim() : 'غير متوفر');
+      const routes = getTowRoutes(formData.company, formData.towType, formData.qalsSize);
+      const route = routes.find(r => (r.from || '').trim() === fromKey && (r.to || '').trim() === toKey) || null;
+      let cancelText = route && route.cancelPrice ? route.cancelPrice : null;
+      if (!cancelText) {
+        cancelText = getCancellationPrice(fromKey, toKey, formData.towType, formData.qalsSize) || null;
+      }
+      if (!cancelText) {
+        const cancelRow = [...rows].find(row => row.innerText.includes('رسوم الإلغاء'));
+        cancelText = cancelRow ? cancelRow.querySelector('td:last-child').innerText.trim() : null;
+      }
+      const cancelNote = cancelText
+        ? `\nوفي حال إلغاء الطلب والفني بالطريج، أو القير ما يتبوش، أو لأي سبب آخر، تكون هناك رسوم إلغاء بقيمة ${cancelText} والباقي يرجع بحسابك خلال 3 أيام عمل بنكية.`
+        : '';
       return normalizeCopyText(`رسوم النقل استاذي من ${from} إلى ${to} بقيمة ${priceText}.
-نوع الونش: ${typeLabel}.`);
+نوع الونش: ${typeLabel}.${cancelNote}`);
     }
     function getResultTableCopyText(tbodySelector, title = '') {
       const tbody = document.querySelector(tbodySelector);
@@ -8065,6 +8181,7 @@
         10: ['علي صباح السالم', 'الشعيبه', 'ميناء عبدالله', 'الجليعة', 'بنيدر', 'الخيران', 'النويصيب', 'الروضتين', 'المطلاع', 'العبدلي', 'الصبية', 'كبد', 'صباح الاحمد', 'الوفرة'],
         5: ['جابر الاحمد', 'سعد العبدالله', 'الجهراء', 'الفحيحيل', 'الاحمدي', 'غرب عبدالله مبارك', 'جنوب عبدلله مبارك']
       };
+      const MECHANICAL_PRICE_UPLIFT = 10;
       
       document.querySelectorAll('[data-mech]').forEach(btn => {
         btn.onclick = () => {
@@ -8206,7 +8323,7 @@
                       const tbody = document.getElementById('mechResultBody');
                       if (tbody) {
                         let html = '';
-                        if (shafayefPrice) html += `<tr><td>سعر الشفايف</td><td class="highlight">${shafayefPrice.toFixed(2)} ${config.currency}</td></tr>`;
+                        if (shafayefPrice) html += `<tr><td>سعر السفايف</td><td class="highlight">${shafayefPrice.toFixed(2)} ${config.currency}</td></tr>`;
                         if (discsPrice) html += `<tr><td>سعر الديسكات</td><td class="highlight">${discsPrice.toFixed(2)} ${config.currency}</td></tr>`;
                         if (extraTurn) html += `<tr><td>مخرطة ديسكات</td><td class="highlight">${extraTurn.toFixed(2)} ${config.currency}</td></tr>`;
                         if (regionSurcharge > 0) html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${regionSurcharge.toFixed(2)} ${config.currency}</td></tr>`;
@@ -8233,14 +8350,16 @@
                           const opt = b.dataset.brakeOpt;
                           const map = BRAKES_PRICING[formData.type] || {};
                           const row = map[opt] || {};
-                          const shafayefPrice = row[formData.origin] || 0;
+                          const originalPrice = row[formData.origin] || 0;
+                          const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                           showResult(shafayefPrice, 0, 0);
                         };
                       });
                     } else if (mode === 'discs') {
                       // Show result directly without asking for new discs or installation only
                       const row = DISCS_PRICING[formData.type] || {};
-                      const discsPrice = row[formData.origin] || 0;
+                      const originalPrice = row[formData.origin] || 0;
+                      const discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                       showResult(0, discsPrice, 0);
                       optionsSection.innerHTML = '';
                       optionsSection.classList.add('hidden');
@@ -8259,7 +8378,8 @@
                         // when a shafayef option chosen, show discs question
                         const map = BRAKES_PRICING[formData.type] || {};
                         const row = map[chosenOpt] || {};
-                        const shafayefPrice = row[formData.origin] || 0;
+                        const originalPrice = row[formData.origin] || 0;
+                        const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                         // build discs container
                         const discsContainer = document.createElement('div');
                         discsContainer.className = 'btn-grid';
@@ -8289,7 +8409,8 @@
                               discsPrice = 0;
                               turnSurcharge = 5;
                             } else {
-                              discsPrice = discsRow[formData.origin] || 0;
+                              const originalPrice = discsRow[formData.origin] || 0;
+                              discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                               turnSurcharge = 0;
                             }
                             showResult(shafayefPrice, discsPrice, turnSurcharge);
@@ -8429,7 +8550,8 @@
                         b.onclick = () => {
                           // compute price from BLOCKS_PRICING
                           const row = (BLOCKS_PRICING[formData.type] || {})[c] || {};
-                          const basePrice = row[formData.origin] || 0;
+                          const originalPrice = row[formData.origin] || 0;
+                          const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                           
                           // Check for region surcharge
                           let surcharge = 0;
@@ -8533,7 +8655,8 @@
                       formData.type = tb.dataset.fuelType;
                       // If salon, show price directly
                       if (formData.type === 'salon') {
-                        const price = AXLES_PRICING.salon[formData.origin] || 0;
+                        const originalPrice = AXLES_PRICING.salon[formData.origin] || 0;
+                        const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
                         
                         // Check for region surcharge
                         let surcharge = 0;
@@ -8588,7 +8711,8 @@
                               btn.classList.add('active');
                               
                               const dualType = btn === dualBtn ? 'dual' : 'normal';
-                              const price = formData.origin === 'german' ? AXLES_PRICING.suv.german[dualType] : 0;
+                              const originalPrice = formData.origin === 'german' ? AXLES_PRICING.suv.german[dualType] : 0;
+                              const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
                               
                               // Check for region surcharge
                               let surcharge = 0;
@@ -8627,7 +8751,8 @@
                           host.appendChild(dualContainer);
                         } else {
                           // American or Japanese: show price directly
-                          const price = formData.origin === 'american' ? 25 : 25;
+                          const originalPrice = formData.origin === 'american' ? AXLES_PRICING.suv.american : AXLES_PRICING.suv.japanese;
+                          const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
                           
                           // Check for region surcharge
                           let surcharge = 0;
@@ -8740,7 +8865,8 @@
                       typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
                       tb.classList.add('active');
                       formData.type = tb.dataset.fuelType;
-                      const basePrice = (pricingForSvc[formData.origin] && pricingForSvc[formData.origin][formData.type]) || 0;
+                      const originalPrice = (pricingForSvc[formData.origin] && pricingForSvc[formData.origin][formData.type]) || 0;
+                      const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                       // Check for region surcharge
                       let surcharge = 0;
                       if (formData.area) {
@@ -9878,7 +10004,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         special: 120,
         ultra: 180
       };
-      const travelTime = 30;
+      const travelTime = 60;
       // Last allowed START time (آخر وصول) per wash type
       const washLastArrival = {
         premium: Math.max(workStartMinutes, workEndMinutes - washDurations.premium - travelTime),
@@ -10847,18 +10973,70 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         modal.classList.add('hidden');
       };
     }
+    async function loadInsuranceSheetsData() {
+      const sheetId = config.sheet_id;
+      const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأمين إيلاف'];
+      if (!sheetsData) {
+        sheetsData = { currentSheetId: sheetId };
+      }
+      const requests = sheetNames.map(async (sheetName) => {
+        try {
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+          const response = await fetch(csvUrl, { cache: 'no-store' });
+          if (!response.ok) return;
+          const csvText = await response.text();
+          const rows = parseCSV(csvText);
+          sheetsData[sheetName] = rows;
+        } catch (err) {
+          console.log(`Could not load insurance sheet: ${sheetName}`, err);
+        }
+      });
+      await Promise.allSettled(requests);
+      sheetsData.currentSheetId = sheetId;
+    }
+    function normalizeInsuranceValue(value) {
+      return String(value ?? '').trim().toLowerCase().replace(/\s+/g, '');
+    }
+    function matchesInsuranceQuery(row, query, columns) {
+      if (!query) return false;
+      const normalizedQuery = normalizeInsuranceValue(query);
+      if (!normalizedQuery) return false;
+      return columns.some(colIndex => {
+        const value = row[colIndex];
+        if (value === undefined || value === null || value === '') return false;
+        return normalizeInsuranceValue(value) === normalizedQuery;
+      });
+    }
     // Render Insurance Interface
+    function renderSiteLinksInterface() {
+      const contentArea = document.getElementById('contentArea');
+      contentArea.innerHTML = `
+        <div class="form-section full-width">
+          <h3 class="section-title">روابط المواقع</h3>
+          <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+            <a class="btn-option" href="https://portarage.ras.yeastar.com/visual_control_panel" target="_blank" rel="noopener">سيستم المكالمات</a>
+            <a class="btn-option" href="https://portarage.app/Default.aspx" target="_blank" rel="noopener">سيستم بومهدي</a>
+            <a class="btn-option" href="https://zantrack.fm-track.com/" target="_blank" rel="noopener">زين تراك (خريطة السواقين)</a>
+            <a class="btn-option" href="https://hub.portarages.com/en/orders?page=1&status=1" target="_blank" rel="noopener">الأبلكيشن</a>
+            <a class="btn-option" href="https://app.respond.io/" target="_blank" rel="noopener">البريد الوارد 1800</a>
+            <a class="btn-option" href="https://production.trypair.ai/en-us/auth/login" target="_blank" rel="noopener">واتساب AI 2266</a>
+            <a class="btn-option" href="https://snoonu-portal.kwt.snoonu.com/dashboard/order" target="_blank" rel="noopener">سنونو</a>
+            <a class="btn-option" href="https://web.whatsapp.com/" target="_blank" rel="noopener">واتساب الشخصي</a>
+          </div>
+        </div>
+      `;
+    }
     function renderInsuranceInterface() {
       const contentArea = document.getElementById('contentArea');
       const isAdmin = currentUserRole === 'Admin';
       contentArea.innerHTML = `
         <div class="form-section full-width">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <h3 class="section-title" style="margin: 0;">البحث في التأمينات</h3>
+            <h3 class="section-title" style="margin: 0;">شركات التأمين</h3>
             <div id="insuranceActionArea"></div>
           </div>
           <div class="form-field">
-            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: #fff;">
               <span>البحث برقم اللوحة، رقم الشاصي، رقم الوثيقة، أو اسم العميل</span>
               <span id="insuranceInfoIcon" style="cursor: pointer; background: #3b82f6; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);">i</span>
             </label>
@@ -10914,6 +11092,24 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       
       const infoIcon = document.getElementById('insuranceInfoIcon');
       const infoBox = document.getElementById('insuranceInfoBox');
+      const resultsContainer = document.getElementById('insuranceResults');
+      const showInsuranceLoadingState = (message = 'جارٍ تحميل بيانات التأمينات...') => {
+        if (!resultsContainer) return;
+        resultsContainer.classList.remove('hidden');
+        resultsContainer.innerHTML = `
+          <div class="form-section full-width">
+            <div class="warning-box" style="display:flex; align-items:center; justify-content:center; gap:10px; text-align:center;">
+              <span class="spinner"></span>
+              <span>${message}</span>
+            </div>
+          </div>
+        `;
+      };
+      const hideInsuranceResults = () => {
+        if (!resultsContainer) return;
+        resultsContainer.innerHTML = '';
+        resultsContainer.classList.add('hidden');
+      };
       
       infoIcon.onclick = () => {
         if (infoBox.classList.contains('hidden')) {
@@ -10927,17 +11123,38 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       
       const searchInput = document.getElementById('insuranceSearch');
       let searchTimeout;
+      let insuranceSheetsLoading = false;
       const refreshInsuranceData = async () => {
-        if (window.isSheetsLoading) return;
+        if (insuranceSheetsLoading) return;
+        insuranceSheetsLoading = true;
         try {
-          await loadAllSheets();
+          await loadInsuranceSheetsData();
         } catch (e) {
           console.warn('Failed to refresh insurance sheets', e);
+        } finally {
+          insuranceSheetsLoading = false;
         }
       };
       const runInsuranceSearch = async (query) => {
-        await refreshInsuranceData();
-        searchInsurance(query);
+        if (!query || query.length < 2) {
+          hideInsuranceResults();
+          return;
+        }
+        showInsuranceLoadingState('جارٍ البحث في التأمينات...');
+        try {
+          await refreshInsuranceData();
+          searchInsurance(query);
+        } catch (e) {
+          console.warn('Failed to search insurance', e);
+          if (resultsContainer) {
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = `
+              <div class="form-section full-width">
+                <div class="warning-box">⚠️ تعذر تحميل بيانات التأمينات حالياً، يرجى المحاولة لاحقاً.</div>
+              </div>
+            `;
+          }
+        }
       };
       
       searchInput.oninput = () => {
@@ -10949,15 +11166,50 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           updateInsuranceSuggestions(query);
         }
         
-        searchTimeout = setTimeout(() => {
-          if (query.length >= 2) {
-            void runInsuranceSearch(query);
-          } else {
-            document.getElementById('insuranceResults').innerHTML = '';
-            document.getElementById('insuranceResults').classList.add('hidden');
+        if (!query) {
+          hideInsuranceResults();
+          return;
+        }
+
+        if (query.length < 2) {
+          if (resultsContainer) {
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = `
+              <div class="form-section full-width">
+                <div class="warning-box" style="text-align:center;">اكتب أكثر من حرفين للبحث...</div>
+              </div>
+            `;
           }
-        }, 300);
+          return;
+        }
+        
+        showInsuranceLoadingState();
+        searchTimeout = setTimeout(() => {
+          void runInsuranceSearch(query);
+        }, 250);
       };
+
+      void (async () => {
+        try {
+          await refreshInsuranceData();
+          const currentQuery = searchInput.value.trim();
+          if (currentQuery.length >= 2) {
+            searchInsurance(currentQuery);
+          } else {
+            hideInsuranceResults();
+          }
+        } catch (e) {
+          console.warn('Initial insurance preload failed', e);
+          if (resultsContainer) {
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = `
+              <div class="form-section full-width">
+                <div class="warning-box">⚠️ لا يمكن تحميل بيانات التأمينات حالياً.</div>
+              </div>
+            `;
+          }
+        }
+      })();
       
     }
     // Render Protection & Coverage Interface (الحمايه والتغيم)
@@ -11412,75 +11664,53 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         let chassisCol = -1;
         let policyCol = -1;
         let toDateCol = -1;
+        const searchableColumns = [];
         
         for (let i = 0; i < headers.length; i++) {
           const header = (headers[i] || '').toLowerCase().trim();
           if (header.includes('customer') && header.includes('name')) {
             customerNameCol = i;
+            searchableColumns.push(i);
           }
           if (header.includes('plate') && header.includes('number')) {
             plateNumberCol = i;
+            searchableColumns.push(i);
           }
           if (header.includes('chassis') || header.includes('chassis no') || header.includes('chassis number') || header.includes('رقم الهيكل') || header.includes('هيكل')) {
             chassisCol = i;
+            searchableColumns.push(i);
           }
           if (header.includes('policy') || header.includes('policy no') || header.includes('policy number') || header.includes('رقم البوليصة') || header.includes('بوليصة')) {
             policyCol = i;
+            searchableColumns.push(i);
           }
           if (header.includes('to date') || header.includes('تاريخ النهاية') || header.includes('نهاية') || header.includes('expiry') || header === 'to') {
             toDateCol = i;
           }
         }
         
+        const matchingRows = [];
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
           
-          // Skip if expired
           if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
             continue;
           }
           
-          let match = false;
+          const hasData = row.some(cell => cell && cell.toString().trim() !== '');
+          if (!hasData) continue;
           
-          if (customerNameCol !== -1 && row[customerNameCol]) {
-            const customerName = (row[customerNameCol] || '').toString().toLowerCase();
-            if (customerName.includes(query.toLowerCase())) {
-              match = true;
-            }
+          if (matchesInsuranceQuery(row, query, searchableColumns)) {
+            matchingRows.push(row);
           }
-          
-          if (plateNumberCol !== -1 && row[plateNumberCol]) {
-            const plateNumber = (row[plateNumberCol] || '').toString().toLowerCase();
-            if (plateNumber.includes(query.toLowerCase())) {
-              match = true;
-            }
-          }
-          
-          if (chassisCol !== -1 && row[chassisCol]) {
-            const chassis = (row[chassisCol] || '').toString().toLowerCase();
-            if (chassis.includes(query.toLowerCase())) {
-              match = true;
-            }
-          }
-          
-          if (policyCol !== -1 && row[policyCol]) {
-            const policy = (row[policyCol] || '').toString().toLowerCase();
-            if (policy.includes(query.toLowerCase())) {
-              match = true;
-            }
-          }
-          
-          if (match) {
-            // Check if row has any non-empty data
-            const hasData = row.some(cell => cell && cell.toString().trim() !== '');
-            if (hasData) {
-              foundResults.push({
-                sheetName: sheet.displayName,
-                headers: headers,
-                rowData: row
-              });
-            }
-          }
+        }
+        
+        if (matchingRows.length > 0) {
+          foundResults.push({
+            sheetName: sheet.displayName,
+            headers: headers,
+            rows: matchingRows
+          });
         }
       });
       
@@ -11498,42 +11728,47 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       
       let html = '';
       
-      foundResults.forEach((result, index) => {
+      foundResults.forEach((result) => {
         html += `
           <div class="data-table-container" style="margin-bottom: 15px; grid-column: 1 / -1;">
-            <div class="table-header">${result.sheetName}</div>
+            <div class="table-header">${escapeHtml(result.sheetName)}</div>
             <div style="overflow-x: auto; width: 100%;">
               <table class="data-table" style="width: 100%; table-layout: auto;">
                 <thead>
                   <tr>
         `;
         
-        // Filter headers to show only those with data
         const columnsWithData = [];
         result.headers.forEach((header, idx) => {
-          if (header && result.rowData[idx] && result.rowData[idx].toString().trim() !== '') {
+          const hasData = result.rows.some(rowData => {
+            const value = rowData[idx];
+            return value !== undefined && value !== null && value.toString().trim() !== '';
+          });
+          if (header && hasData) {
             columnsWithData.push({ header, idx });
           }
         });
         
         columnsWithData.forEach(col => {
-          html += `<th style="white-space: nowrap; padding: 11px 16px;">${col.header}</th>`;
+          html += `<th style="white-space: nowrap; padding: 11px 16px;">${escapeHtml(col.header)}</th>`;
         });
         
         html += `
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
         `;
         
-        columnsWithData.forEach(col => {
-          const value = result.rowData[col.idx] || '-';
-          html += `<td style="white-space: nowrap; padding: 10px 16px;">${value}</td>`;
+        result.rows.forEach(rowData => {
+          html += '<tr>';
+          columnsWithData.forEach(col => {
+            const value = rowData[col.idx] ?? '-';
+            html += `<td style="white-space: nowrap; padding: 10px 16px;">${escapeHtml(value)}</td>`;
+          });
+          html += '</tr>';
         });
         
         html += `
-                  </tr>
                 </tbody>
               </table>
             </div>
@@ -12525,10 +12760,23 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const isAdmin = currentUserRole === 'Admin';
       contentArea.innerHTML = `
         <div class="form-section full-width">
-          <div style="display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:24px; margin-bottom:12px;">
-            <button id="batteryModeSizeBtn" class="btn-option active">🔋 البحث بمقاس البطارية</button>
-            <button id="batteryModeCarBtn" class="btn-option">🚗 البحث بأسماء السيارات</button>
-            <button type="button" class="btn btn-secondary btn-small" style="display:${isAdmin ? 'inline-flex' : 'none'};" onclick="window.open('https://docs.google.com/spreadsheets/d/1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk/edit?usp=sharing', '_blank', 'noopener')">📋 فتح لوحة التحكم (الشيت)</button>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:24px; margin-bottom:12px; flex-wrap:wrap;">
+            <h3 class="section-title" style="margin:0;">بطارية جديدة</h3>
+            <button id="batteryDealerLocationBtn" type="button" class="btn-option" style="padding:8px 12px; font-size:13px;">📍 مواقع الوكلاء</button>
+          </div>
+          <div class="battery-mode-grid" style="margin-bottom:12px;">
+            <button id="batteryModeSizeBtn" type="button" class="btn-option battery-mode-option active">
+              <span class="mode-icon">🔋</span>
+              <span class="mode-label">البحث بمقاس البطارية</span>
+            </button>
+            <button id="batteryModeCarBtn" type="button" class="btn-option battery-mode-option">
+              <span class="mode-icon">🚗</span>
+              <span class="mode-label">البحث بأسماء السيارات</span>
+            </button>
+            <button type="button" class="btn-option battery-mode-option" style="display:${isAdmin ? 'flex' : 'none'};" onclick="window.open('https://docs.google.com/spreadsheets/d/1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk/edit?usp=sharing', '_blank', 'noopener')">
+              <span class="mode-icon">📋</span>
+              <span class="mode-label">فتح لوحة التحكم (الشيت)</span>
+            </button>
           </div>
           <div id="batteryLoader" style="display:flex;align-items:center;gap:10px;color:#F2BC1B;font-size:14px; margin-top:10px;">
             <span class="spinner"></span> جاري تحميل بيانات البطاريات...
@@ -12579,6 +12827,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         </div>
       `;
       bindBatteryModeButtons();
+      const dealerLocationBtn = document.getElementById('batteryDealerLocationBtn');
+      if (dealerLocationBtn) {
+        dealerLocationBtn.onclick = openBatteryDealerLocationModal;
+      }
       renderBatteryModeSection('size');
       initializeBatterySearchData();
     }
@@ -12588,6 +12840,42 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (!sizeBtn || !carBtn) return;
       sizeBtn.onclick = () => renderBatteryModeSection('size');
       carBtn.onclick = () => renderBatteryModeSection('car');
+    }
+    function openBatteryDealerLocationModal() {
+      let modal = document.getElementById('batteryDealerLocationModal');
+      if (!modal) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+          <div id="batteryDealerLocationModal" class="modal-overlay hidden">
+            <div class="modal" style="max-width: 420px; max-height: 80vh; overflow-y: auto;">
+              <button type="button" class="modal-close" aria-label="إغلاق">×</button>
+              <h3 style="color: #F2BC1B; text-align: center; margin-bottom: 12px;">مواقع الوكلاء</h3>
+              <div id="batteryDealerLocationList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </div>`;
+        document.body.appendChild(wrapper.firstElementChild);
+        modal = document.getElementById('batteryDealerLocationModal');
+        const listEl = document.getElementById('batteryDealerLocationList');
+        const dealers = [
+          { name: 'فورد الغانم - شرق', link: 'https://maps.app.goo.gl/1e6UrkTCP37C8eW57' },
+          { name: 'فورد الغانم - الفحيحيل', link: 'https://maps.app.goo.gl/DUdqgEPV1sy5m5Xf7' },
+          { name: 'افتخار-شويخ', link: 'https://maps.app.goo.gl/R4z3YtzMeZhdyFJR9' },
+          { name: 'البابطين-الري', link: 'https://maps.app.goo.gl/GUFZDVSB8uboL47DA' },
+          { name: ' الفتو انترنشلن', link: 'https://maps.app.goo.gl/crWVEDkuGzBVibuL6' } 
+         ];
+
+        listEl.innerHTML = dealers.map(item => `<button class="btn-option" type="button" data-link="${item.link}" style="text-align:right;">${item.name}</button>`).join('');
+        listEl.querySelectorAll('button').forEach(btn => {
+          btn.onclick = async () => {
+            await copyBatteryTextToClipboard(btn.dataset.link);
+            showToast('تم نسخ رابط الموقع ✅');
+            modal.classList.add('hidden');
+          };
+        });
+        modal.querySelector('.modal-close').onclick = () => modal.classList.add('hidden');
+        modal.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
+      }
+      modal.classList.remove('hidden');
     }
     function renderBatteryModeSection(mode) {
       batterySearchMode = mode;
@@ -12767,8 +13055,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
     function highlightMatch(text, query) {
       if (!query) return escapeHtml(text);
-      const escaped = escapeRegExp(query);
-      return escapeHtml(text).replace(new RegExp(escaped, 'gi'), match => `<mark style="background:#F2BC1B;color:#000">${match}</mark>`);
+      return escapeHtml(text);
     }
     function getUniqueBatterySizes() {
       if (!batterySheetData) return [];
@@ -13046,12 +13333,17 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         acc[size] = (acc[size] || 0) + numericCount;
         return acc;
       }, {});
-      const sortedSizes = Object.keys(sizeCounts).sort((a, b) => a.localeCompare(b, 'ar', { sensitivity: 'base' }));
+      const sortedSizes = Object.entries(sizeCounts)
+        .sort((a, b) => {
+          const countDiff = b[1] - a[1];
+          return countDiff !== 0 ? countDiff : a[0].localeCompare(b[0], 'ar', { sensitivity: 'base' });
+        })
+        .map(([size]) => size);
       if (!sortedSizes.length) {
         renderEmptyBatteryResultsMessage();
         return;
       }
-      const sizeSummary = sortedSizes.map(size => `${size} (${sizeCounts[size]})`).join(' • ');
+      const sizeSummary = `الاحتمالات: ${sortedSizes.map(size => `${size} (${sizeCounts[size]})`).join('، ')}`;
       const title = `${make} - ${model} - ${year}`;
       
       const groups = sortedSizes.map(size => {
@@ -13095,9 +13387,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       { label: 'waji', fkIndex: 29, mIndex: 30 },
       { label: 'irfan', fkIndex: 31, mIndex: 32 },
       { label: 'hari+rangan', fkIndex: 33, mIndex: 34 },
-      { label: 'senthil', fkIndex: 35, mIndex: 36 },
+      { label: 'Mayura', fkIndex: 35, mIndex: 36 },
       { label: 'durga', fkIndex: 37, mIndex: 38 },
-      { label: 'albert', fkIndex: 39, mIndex: 40 },
+      { label: 'Senthil', fkIndex: 39, mIndex: 40 },
       { label: 'santo', fkIndex: 41, mIndex: 42 },
       { label: 'Ali', fkIndex: 43, mIndex: 44 },
       { label: 'rahimah allah', fkIndex: 45, mIndex: 46 },
@@ -13237,7 +13529,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           <div class="battery-size-group-header" style="margin-bottom:10px;">
             <div>
               <h4 class="battery-size-group-title">${escapeHtml(title)}</h4>
-              ${summary ? `<div style="font-size:13px; color:#aaa; margin-top:4px;">${summary}</div>` : ''}
+              ${summary ? `<div class="battery-size-group-summary">${summary}</div>` : ''}
             </div>
           </div>
           ${rowsHtml}
@@ -13309,7 +13601,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           <div class="battery-size-group-header" style="margin-bottom:10px;">
             <div>
               <h4 class="battery-size-group-title">${escapeHtml(title)}</h4>
-              ${summary ? `<div style="font-size:13px; color:#aaa; margin-top:4px;">${summary}</div>` : ''}
+              ${summary ? `<div class="battery-size-group-summary">${summary}</div>` : ''}
             </div>
           </div>
           ${groupsHtml}
@@ -13499,25 +13791,26 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'mortada': 'مرتضى',
       'bala': 'بالا',
       'lakshman': 'لاكشمان',
-      'sanjeewa': 'سانجيوا',
+      'sanjeewa': 'سنيجواه',
       'supun': 'سوبون',
       'patel': 'باتيل',
-      'ruchira': 'روتشيرا',
+      'ruchira': 'روشيرا',
       'harshan': 'هارشان',
-      'waji': 'واجي',
-      'irfan': 'عرفان',
+      'waji': 'سيثرافيل',
+      'irfan': 'محمد عرفان',
+      'mayura': 'مايورا',
       'hari+rangan': 'هاري و رانجان',
-      'senthil': 'سنتيل',
       'durga': 'دورجا',
-      'albert': 'ألبرت',
-      'santo': 'سانتو',
+      'senthil': 'سنثيل',
+      'santo': 'سانتوش',
       'ali': 'علي',
       'rahimah allah': 'رحمة الله',
+      'yusuf': 'يوسف',
       'mohammad': 'محمد'
     };
     function getDriverName(raw) {
       const key = normalizeText(raw);
-      return BATTERY_DRIVER_MAP[key] || raw || '';
+      return BATTERY_DRIVER_MAP[key] || BATTERY_DRIVER_MAP[String(raw || '').trim()] || raw || '';
     }
     function renderDriverStock(row) {
       if (!batterySheetHeaders || !batterySheetHeaders.length) return '<span class="battery-count-badge" style="background:rgba(212,53,53,0.2); border-color:rgba(239,68,68,0.3); color:#ef4444;">غير متوفرة</span>';
