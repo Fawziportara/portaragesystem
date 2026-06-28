@@ -2830,6 +2830,8 @@
 
     function installFrontendProtection() {
       let pageClosed = false;
+      let alerted = false;
+      let lastDetectionTime = 0;
 
       const closePage = () => {
         if (pageClosed) return;
@@ -2846,6 +2848,17 @@
         try {
           window.location.replace('about:blank');
         } catch (e) {}
+      };
+
+      const alertAndClose = () => {
+        const now = Date.now();
+        if (now - lastDetectionTime < 800) return;
+        lastDetectionTime = now;
+        if (!alerted) {
+          alerted = true;
+          alert('Developer tools are open! Please close them for the best experience.');
+        }
+        closePage();
       };
 
       const detectExtension = () => {
@@ -2894,7 +2907,7 @@
         if (isRightClick || isMacControlClick) {
           event.preventDefault();
           event.stopPropagation();
-          closePage();
+          alertAndClose();
           return false;
         }
         return true;
@@ -2911,7 +2924,7 @@
         if (blocked) {
           event.preventDefault();
           event.stopPropagation();
-          closePage();
+          alertAndClose();
           return false;
         }
         return true;
@@ -2920,7 +2933,7 @@
       const handleContextMenu = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        closePage();
+        alertAndClose();
         return false;
       };
 
@@ -2934,13 +2947,23 @@
 
       const observer = new MutationObserver(() => {
         if (detectExtension()) {
-          closePage();
+          alertAndClose();
         }
       });
       observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'id'] });
 
+      const checkDevTools = () => {
+        const widthDelta = window.outerWidth - window.innerWidth;
+        const heightDelta = window.outerHeight - window.innerHeight;
+        if ((widthDelta > 140 || heightDelta > 140) && !pageClosed) {
+          alertAndClose();
+        }
+      };
+
+      setInterval(checkDevTools, 100);
+
       if (detectExtension()) {
-        closePage();
+        alertAndClose();
       }
     }
 
