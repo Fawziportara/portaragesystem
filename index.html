@@ -2837,16 +2837,28 @@
         if (pageClosed) return;
         pageClosed = true;
         try {
-          window.close();
+          document.documentElement.style.display = 'none';
+          document.body.style.display = 'none';
+          document.body.innerHTML = '';
         } catch (e) {}
         try {
           window.stop();
         } catch (e) {}
         try {
-          document.documentElement.innerHTML = '';
+          window.close();
         } catch (e) {}
         try {
           window.location.replace('about:blank');
+        } catch (e) {}
+      };
+
+      const freezeDevTools = () => {
+        try {
+          const loop = () => {
+            debugger;
+            setTimeout(loop, 0);
+          };
+          setInterval(loop, 0);
         } catch (e) {}
       };
 
@@ -2856,7 +2868,11 @@
         lastDetectionTime = now;
         if (!alerted) {
           alerted = true;
-          alert('Developer tools are open! Please close them for the best experience.');
+          closePage();
+          try {
+            freezeDevTools();
+            alert('Developer tools are open! Please close them for the best experience.');
+          } catch (e) {}
         }
         closePage();
       };
