@@ -2829,6 +2829,77 @@
     const SITE_VERSION = '3.1';
 
     function installFrontendProtection() {
+      let pageClosed = false;
+
+      const closePage = () => {
+        if (pageClosed) return;
+        pageClosed = true;
+        try {
+          window.close();
+        } catch (e) {}
+        try {
+          window.stop();
+        } catch (e) {}
+        try {
+          document.documentElement.innerHTML = '';
+        } catch (e) {}
+        try {
+          window.location.replace('about:blank');
+        } catch (e) {}
+      };
+
+      const detectExtension = () => {
+        const flagNames = [
+          '__REACT_DEVTOOLS_GLOBAL_HOOK__',
+          '__VUE_DEVTOOLS_GLOBAL_HOOK__',
+          '__REDUX_DEVTOOLS_EXTENSION__',
+          '__REDUX_DEVTOOLS_EXTENSION_COMPOSE__',
+          '__SPECTORJS_DEVTOOLS_GLOBAL_HOOK__',
+          '__ALPHA_DEVTOOLS_GLOBAL_HOOK__',
+          '__NG_DEVTOOLS_GLOBAL_HOOK__'
+        ];
+        for (const name of flagNames) {
+          if (window[name]) {
+            return true;
+          }
+        }
+
+        if (window.chrome && window.chrome.webstore && window.chrome.webstore.install) {
+          const scripts = document.scripts;
+          for (const script of scripts) {
+            if (script.src && /(chrome-extension|moz-extension|safari-extension|edge-extension):\/\//i.test(script.src)) {
+              return true;
+            }
+          }
+        }
+
+        const extSelectors = [
+          '[id^="react-devtools"]',
+          '[id^="redux-devtools"]',
+          '[id^="vue-devtools"]',
+          '[id^="spectorjs"]'
+        ];
+        for (const selector of extSelectors) {
+          if (document.querySelector(selector)) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      const closeOnRightClick = (event) => {
+        const isRightClick = event.button === 2;
+        const isMacControlClick = event.button === 0 && event.ctrlKey;
+        if (isRightClick || isMacControlClick) {
+          event.preventDefault();
+          event.stopPropagation();
+          closePage();
+          return false;
+        }
+        return true;
+      };
+
       const handleShortcut = (event) => {
         const key = event.key ? event.key.toUpperCase() : '';
         const isCtrlOrMeta = event.ctrlKey || event.metaKey;
@@ -2840,15 +2911,37 @@
         if (blocked) {
           event.preventDefault();
           event.stopPropagation();
+          closePage();
           return false;
         }
         return true;
       };
 
-      document.addEventListener('keydown', handleShortcut, true);
-      document.addEventListener('contextmenu', (event) => {
+      const handleContextMenu = (event) => {
         event.preventDefault();
-      }, true);
+        event.stopPropagation();
+        closePage();
+        return false;
+      };
+
+      document.addEventListener('keydown', handleShortcut, true);
+      document.addEventListener('mousedown', closeOnRightClick, true);
+      document.addEventListener('auxclick', closeOnRightClick, true);
+      document.addEventListener('contextmenu', handleContextMenu, true);
+      window.addEventListener('contextmenu', handleContextMenu, true);
+      document.documentElement.oncontextmenu = handleContextMenu;
+      document.body.oncontextmenu = handleContextMenu;
+
+      const observer = new MutationObserver(() => {
+        if (detectExtension()) {
+          closePage();
+        }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'id'] });
+
+      if (detectExtension()) {
+        closePage();
+      }
     }
 
     installFrontendProtection();
