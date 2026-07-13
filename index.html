@@ -1293,7 +1293,7 @@
 }
 .battery-result-row-compact {
   display: grid;
-  grid-template-columns: minmax(160px, 2fr) minmax(90px, 0.8fr) minmax(100px, 0.9fr) minmax(120px, 1fr) minmax(100px, 0.8fr) minmax(110px, 0.9fr) minmax(140px, 1.2fr) minmax(90px, 90px);
+  grid-template-columns: 1.8fr 0.9fr 1fr 1.25fr 0.9fr 1.1fr 1.4fr 92px;
   gap: 8px;
   padding: 10px;
   border-radius: 14px;
@@ -1301,6 +1301,8 @@
   border: 1px solid #1a1a1a;
   align-items: start;
   margin-bottom: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .battery-result-row-col-main,
 .battery-result-row-col-mid,
@@ -2826,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.2';
+    const SITE_VERSION = '3.3';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -4605,11 +4607,13 @@
       const map = {
         'NORMAL TOWTRUK': 'ونش عادي',
         'BIG TOWTRUK': 'ونش العريض',
+        'SMALL TOWTRUK': 'ونش صغير',
         'FULL DOWN': 'فل داون',
         'FULL DOWN CLOSE': 'فل داون مصكر',
         'BATTERY BUS': 'باص البطاريات',
         'TIER BUS': 'باص التواير',
-        'TIER BUS 2': 'باص التواير (الجديد) ',
+        'TIER BUS 2': 'باص التواير (الجديد)',
+        'TIER TRUCK': 'باص التواير (الجديد)',
         'MECHANIC BUS': 'باص المكانيكيه',
         'WASH BUS': 'باص الغسيل',
         'STORE': 'امين المخزن',
@@ -4621,7 +4625,7 @@
     function buildDriverTypeFilterOptions(rawTypes, lang) {
       const options = [];
       const upperTypes = rawTypes.map(t => t.toString().trim().toUpperCase());
-      const hasTow = upperTypes.includes('NORMAL TOWTRUK') || upperTypes.includes('BIG TOWTRUK');
+      const hasTow = upperTypes.includes('NORMAL TOWTRUK') || upperTypes.includes('BIG TOWTRUK') || upperTypes.includes('SMALL TOWTRUK');
       const hasFullDown = upperTypes.includes('FULL DOWN') || upperTypes.includes('FULL DOWN CLOSE');
       if (hasTow) {
         options.push({
@@ -4635,7 +4639,7 @@
           label: lang === 'en' ? 'Full Down' : 'فل داون'
         });
       }
-      const grouped = new Set(['NORMAL TOWTRUK', 'BIG TOWTRUK', 'FULL DOWN', 'FULL DOWN CLOSE', 'TIER BUS 2']);
+      const grouped = new Set(['NORMAL TOWTRUK', 'BIG TOWTRUK', 'SMALL TOWTRUK', 'FULL DOWN', 'FULL DOWN CLOSE', 'TIER BUS 2', 'TIER TRUCK']);
       const otherTypes = rawTypes
         .filter(t => !grouped.has(t.toString().trim().toUpperCase()))
         .sort((a, b) => a.localeCompare(b, 'ar'))
@@ -4646,13 +4650,13 @@
       if (!rowType) return false;
       const typeKey = rowType.toString().trim().toUpperCase();
       if (filterValue === 'group_tow') {
-        return typeKey === 'NORMAL TOWTRUK' || typeKey === 'BIG TOWTRUK';
+        return typeKey === 'NORMAL TOWTRUK' || typeKey === 'BIG TOWTRUK' || typeKey === 'SMALL TOWTRUK';
       }
       if (filterValue === 'group_full_down') {
         return typeKey === 'FULL DOWN' || typeKey === 'FULL DOWN CLOSE';
       }
       if (filterValue === 'TIER BUS') {
-        return typeKey === 'TIER BUS' || typeKey === 'TIER BUS 2';
+        return typeKey === 'TIER BUS' || typeKey === 'TIER BUS 2' || typeKey === 'TIER TRUCK';
       }
       return rowType === filterValue;
     }
@@ -11022,6 +11026,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             <a class="btn-option" href="https://production.trypair.ai/en-us/auth/login" target="_blank" rel="noopener">واتساب AI 2266</a>
             <a class="btn-option" href="https://snoonu-portal.kwt.snoonu.com/dashboard/order" target="_blank" rel="noopener">سنونو</a>
             <a class="btn-option" href="https://web.whatsapp.com/" target="_blank" rel="noopener">واتساب الشخصي</a>
+            <a class="btn-option" href="https://translate.google.com/?sl=ar&tl=en&op=translate" target="_blank" rel="noopener">المترجم</a>
           </div>
         </div>
       `;
@@ -13305,12 +13310,79 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       setBatteryError('');
       const matching = (batterySheetData || []).filter(row => normalizeText(row[0]) === normalizeText(sizeValue));
       if (!matching.length) {
-        renderEmptyBatteryResultsMessage(`لم نوجد نتائج للمقاس: ${sizeValue}`);
+        renderBatteryUnavailable([sizeValue], `النتائج لمقاس البطارية: ${sizeValue}`);
         return;
       }
       const grouped = groupDuplicateRows(matching);
-      renderBatteryResultsList(grouped, `النتائج لمقاس البطارية: ${sizeValue}`, '', '', '', '');
+      const filteredGrouped = filterBatteryItemsForRole(grouped);
+      if (!filteredGrouped.length) {
+        renderBatteryUnavailable([sizeValue], `النتائج لمقاس البطارية: ${sizeValue}`);
+        return;
+      }
+      renderBatteryResultsList(grouped, `النتائج لمقاس البطارية: ${sizeValue}`, '', '', '', '', [sizeValue]);
     }
+    function getAllAvailableBatterySizes() {
+      if (!batterySheetData) return [];
+      const available = new Set();
+      const driverGroups = getDriverColumnGroups();
+      
+      batterySheetData.forEach(row => {
+        const size = (row[0] || '').trim();
+        if (!size) return;
+        
+        const fkQty = Number(row[5]) || 0;
+        const mQty = Number(row[6]) || 0;
+        let hasDriverStock = false;
+        driverGroups.forEach(group => {
+          const fkQtyDriver = Number(row[group.fkIndex]) || 0;
+          const mQtyDriver = Number(row[group.mIndex]) || 0;
+          if (fkQtyDriver || mQtyDriver) hasDriverStock = true;
+        });
+        
+        if (fkQty + mQty > 0 || hasDriverStock) {
+          available.add(size);
+        }
+      });
+      return Array.from(available).sort((a, b) => a.localeCompare(b, 'ar', { sensitivity: 'base' }));
+    }
+
+    window.selectAndSearchBatterySize = (size) => {
+      renderBatteryModeSection('size'); // Switch tab first
+      const sizeInput = document.getElementById('batterySizeInput');
+      if (sizeInput) {
+        sizeInput.value = size;
+      }
+      renderBatteryResultsForSize(size);
+    };
+
+    function renderBatteryUnavailable(sortedSizes, title) {
+      const container = document.getElementById('batteryResultsContainer');
+      const scroll = document.getElementById('batteryResultsScroll');
+      if (!container || !scroll) return;
+
+      const requestedSizesText = sortedSizes.join(' أو ');
+      const possibilitiesCount = sortedSizes.length || 0;
+
+      scroll.innerHTML = `
+        <div class="battery-results-card" style="padding: 24px; border: 1px dashed rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.04); border-radius: 16px; margin-bottom: 12px;">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <h4 class="battery-size-group-title" style="font-size: 18px; color: #F2BC1B; margin-bottom: 8px;">
+              🚗 ${escapeHtml(title)}
+            </h4>
+            <div style="font-size: 15px; color: #ddd; margin-bottom: 12px;">
+              المقاس المطلوب للسيارة: <strong style="color: #F2BC1B; font-size: 16px;">${escapeHtml(requestedSizesText)}</strong>
+              <span style="color: #F2BC1B; font-size: 14px; margin-right: 6px;">(عدد الاحتمالات: ${possibilitiesCount})</span>
+            </div>
+            <div style="color: #ef4444; font-weight: 700; font-size: 16px; margin: 12px 0;">
+              ⚠️ .(مقاس البطارية المطلوب غير متوفر في المخزن أو لدى السائقين حالياً)
+            </div>
+          </div>
+        </div>
+      `;
+      container.classList.remove('hidden');
+      showBatteryFeeNotice(false);
+    }
+
     function renderBatteryResultsForCar(make, model, year) {
       if (!make || !model || !year) {
         renderEmptyBatteryResultsMessage();
@@ -13353,16 +13425,23 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           count: sizeCounts[size],
           items: groupDuplicateRows(items)
         };
-      }).filter(group => group.items.length > 0);
-      if (!groups.length) {
-        renderEmptyBatteryResultsMessage();
+      });
+
+      const filteredGroups = groups.map(group => {
+        const filteredItems = filterBatteryItemsForRole(group.items);
+        return { ...group, items: filteredItems, count: filteredItems.length };
+      }).filter(g => g.items.length > 0);
+
+      if (!filteredGroups.length) {
+        renderBatteryUnavailable(sortedSizes, title);
         return;
       }
-      if (groups.length > 1) {
-        renderBatterySizeGroups(groups, title, sizeSummary);
+
+      if (filteredGroups.length > 1) {
+        renderBatterySizeGroups(filteredGroups, title, sizeSummary, make, model, year);
         return;
       }
-      renderBatteryResultsList(groups[0].items, title, sizeSummary, make, model, year);
+      renderBatteryResultsList(filteredGroups[0].items, title, sizeSummary, make, model, year, sortedSizes);
     }
     function renderEmptyBatteryResultsMessage(message = 'اختر السيارة أو مقاس البطارية لعرض النتائج') {
       const container = document.getElementById('batteryResultsContainer');
@@ -13414,6 +13493,26 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       });
       return fkQty + mQty + driverQty > 0;
     }
+    function getBatteryStockState(row) {
+      const fkQty = Number(row[5]) || 0;
+      const mQty = Number(row[6]) || 0;
+      let hasDriverStock = false;
+      const driverGroups = getDriverColumnGroups();
+      driverGroups.forEach(group => {
+        const fkQtyDriver = Number(row[group.fkIndex]) || 0;
+        const mQtyDriver = Number(row[group.mIndex]) || 0;
+        if (fkQtyDriver || mQtyDriver) {
+          hasDriverStock = true;
+        }
+      });
+      return (fkQty + mQty > 0) || hasDriverStock;
+    }
+    function filterBatteryItemsForRole(items) {
+      if (currentUserRole !== 'Call Center') {
+        return items;
+      }
+      return items.filter(item => getBatteryStockState(item.row));
+    }
     function groupDuplicateRows(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -13446,32 +13545,15 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         notice.classList.toggle('hidden', !show);
       }
     }
-    function renderBatteryResultsList(items, title, summary = '', carMake = '', carModel = '', carYear = '') {
+    function renderBatteryResultsList(items, title, summary = '', carMake = '', carModel = '', carYear = '', requestedSizes = []) {
       const container = document.getElementById('batteryResultsContainer');
       const scroll = document.getElementById('batteryResultsScroll');
       if (!container || !scroll) return;
       
-      // Filter items: if Call Center, hide items with no stock
-      let filteredItems = items;
-      if (currentUserRole === 'Call Center') {
-        filteredItems = items.filter(item => {
-          const row = item.row;
-          const fkQty = Number(row[5]) || 0;
-          const mQty = Number(row[6]) || 0;
-          let hasDriverStock = false;
-          const driverGroups = getDriverColumnGroups();
-          driverGroups.forEach(group => {
-            const fkQtyDriver = Number(row[group.fkIndex]) || 0;
-            const mQtyDriver = Number(row[group.mIndex]) || 0;
-            if (fkQtyDriver || mQtyDriver) hasDriverStock = true;
-          });
-          return (fkQty + mQty > 0) || hasDriverStock;
-        });
-      }
+      const filteredItems = filterBatteryItemsForRole(items);
       
       if (!filteredItems.length) {
-        scroll.innerHTML = `<div class="battery-results-message">لا توجد بطاريات متاحة</div>`;
-        container.classList.remove('hidden');
+        renderBatteryUnavailable(requestedSizes.length ? requestedSizes : [title], title);
         return;
       }
       
@@ -13486,6 +13568,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const brandInfo = getBrandInfo(normalizedBrand);
         const duplicateBadge = `<span class="battery-count-badge">${escapeHtml(size)}</span>`;
         const driverStockHtml = renderDriverStock(row);
+        const copyMessage = buildBatteryMessage(row);
         return `
           <div class="battery-result-row-compact">
             <div class="battery-result-row-col-main">
@@ -13513,12 +13596,12 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               <div class="battery-result-row-value">${renderMainStock(row)}</div>
             </div>
             <div class="battery-result-row-col-mid">
-              ${driverStockHtml ? '<div class="battery-result-row-header">كمية السائقين</div>' : ''}
+              <div class="battery-result-row-header">كمية السائقين</div>
               <div class="battery-result-row-value">${driverStockHtml}</div>
             </div>
             <div class="battery-result-row-col-actions">
               <div class="battery-result-row-value-actions">
-                <button type="button" class="copy-btn-small" data-copy-index="${index}">نسخ</button>
+                <button type="button" class="copy-btn-small" data-copy-message="${escapeAttribute(copyMessage)}">نسخ</button>
               </div>
             </div>
           </div>
@@ -13539,10 +13622,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       showBatteryFeeNotice(true);
       scroll.querySelectorAll('.copy-btn-small').forEach(btn => {
         btn.onclick = async () => {
-          const index = Number(btn.dataset.copyIndex);
-          const selected = filteredItems[index];
-          if (!selected) return;
-          await copyBatteryTextToClipboard(buildBatteryMessage(selected.row));
+          const msg = btn.dataset.copyMessage;
+          if (!msg) return;
+          await copyBatteryTextToClipboard(msg);
           showToast('تم نسخ الرسالة');
         };
       });
@@ -13552,30 +13634,14 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const scroll = document.getElementById('batteryResultsScroll');
       if (!container || !scroll) return;
       
-      // Filter groups for Call Center
-      let filteredGroups = groups;
-      if (currentUserRole === 'Call Center') {
-        filteredGroups = groups.map(group => {
-          const filteredItems = group.items.filter(item => {
-            const row = item.row;
-            const fkQty = Number(row[5]) || 0;
-            const mQty = Number(row[6]) || 0;
-            let hasDriverStock = false;
-            const driverGroups = getDriverColumnGroups();
-            driverGroups.forEach(driverGroup => {
-              const fkQtyDriver = Number(row[driverGroup.fkIndex]) || 0;
-              const mQtyDriver = Number(row[driverGroup.mIndex]) || 0;
-              if (fkQtyDriver || mQtyDriver) hasDriverStock = true;
-            });
-            return (fkQty + mQty > 0) || hasDriverStock;
-          });
-          return { ...group, items: filteredItems, count: filteredItems.length };
-        }).filter(g => g.count > 0);
-      }
+      const filteredGroups = groups.map(group => ({
+        ...group,
+        items: filterBatteryItemsForRole(group.items),
+        count: filterBatteryItemsForRole(group.items).length
+      })).filter(g => g.items.length > 0);
       
       if (!filteredGroups.length) {
-        scroll.innerHTML = `<div class="battery-results-message">لا توجد بطاريات متاحة</div>`;
-        container.classList.remove('hidden');
+        renderBatteryUnavailable(groups.map(group => group.size), title);
         return;
       }
       
@@ -13623,13 +13689,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       });
       scroll.querySelectorAll('.copy-btn-small').forEach(btn => {
         btn.onclick = async () => {
-          const groupKey = btn.dataset.copyGroup;
-          const index = Number(btn.dataset.copyIndex);
-          const group = groups.find(g => g.size === groupKey);
-          if (!group) return;
-          const selected = group.items[index];
-          if (!selected) return;
-          await copyBatteryTextToClipboard(buildBatteryMessage(selected.row));
+          const msg = btn.dataset.copyMessage;
+          if (!msg) return;
+          await copyBatteryTextToClipboard(msg);
           showToast('تم نسخ الرسالة');
         };
       });
@@ -13648,20 +13710,12 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const brandInfo = getBrandInfo(normalizedBrand);
         const duplicateBadge = `<span class="battery-count-badge">${escapeHtml(groupSize)}</span>`;
         const driverStockHtml = renderDriverStock(row);
+        const copyMessage = buildBatteryMessage(row);
         return `
           <div class="battery-result-row-compact">
             <div class="battery-result-row-col-main">
               <div class="battery-result-row-header">الماركة</div>
               <div class="battery-result-row-value">${escapeHtml(brand)} ${duplicateBadge}</div>
-            </div>
-            <div class="battery-result-row-col-small battery-result-row-placeholder"></div>
-            <div class="battery-result-row-col-small">
-              <div class="battery-result-row-header">السعر</div>
-              <div class="battery-result-row-value">${escapeHtml(salePrice)} د.ك</div>
-            </div>
-            <div class="battery-result-row-col-stock">
-              <div class="battery-result-row-header">كمية المخزون</div>
-              <div class="battery-result-row-value">${renderMainStock(row)}${driverStockHtml ? '<br>' + driverStockHtml : ''}</div>
             </div>
             <div class="battery-result-row-col-small">
               <div class="battery-result-row-header">البلد</div>
@@ -13675,9 +13729,21 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               <div class="battery-result-row-header">الوكيل</div>
               <div class="battery-result-row-value">${escapeHtml(brandInfo.dealer)}</div>
             </div>
+            <div class="battery-result-row-col-small">
+              <div class="battery-result-row-header">السعر</div>
+              <div class="battery-result-row-value">${escapeHtml(salePrice)} د.ك</div>
+            </div>
+            <div class="battery-result-row-col-small">
+              <div class="battery-result-row-header">كمية المخزون</div>
+              <div class="battery-result-row-value">${renderMainStock(row)}</div>
+            </div>
+            <div class="battery-result-row-col-mid">
+              <div class="battery-result-row-header">كمية السائقين</div>
+              <div class="battery-result-row-value">${driverStockHtml}</div>
+            </div>
             <div class="battery-result-row-col-actions">
               <div class="battery-result-row-value-actions">
-                <button type="button" class="copy-btn-small" data-copy-group="${escapeHtml(groupSize)}" data-copy-index="${index}">نسخ</button>
+                <button type="button" class="copy-btn-small" data-copy-message="${escapeAttribute(copyMessage)}">نسخ</button>
               </div>
             </div>
           </div>
@@ -13721,23 +13787,26 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'Motorcraft': { country: 'أمريكية', warranty: { default: '3 سنوات', special: { '95AGM': 'سنة واحدة', 'DA100': 'سنة واحدة' } }, dealer: 'فورد الغانم' },
       'Varta': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'Hankook': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
-      'Booster': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'Oakley': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'Motorfit': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
+      'Booster': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'Oakley': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'Motorfit': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'Amtra': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'البابطين' },
       'Emtrac': { country: 'تركية', warranty: { default: 'سنة' }, dealer: 'البابطين' },
       'EmtracPlus': { country: 'هندية', warranty: { default: 'سنتان' }, dealer: 'البابطين' },
       'ABM': { country: 'ماليزيا', warranty: { default: 'سنة' }, dealer: 'اف كي' },
+      'START-X': { country: 'سعودية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'Black Panther': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'Century': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'Yuasa': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
       'Exide': { country: 'أمريكية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'موتر كرافت': { country: 'أمريكية', warranty: { default: '3 سنوات', special: { '95AGM': 'سنتين', 'DA100': 'سنتين' } }, dealer: 'فورد الغانم' },
       'فارتا': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'هانكوك': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
-      'بوستر': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'اوكلي': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'موتو رفت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'ايفريدي': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
+      'بوستر': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'اوكلي': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'موتو رفت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'ايفريدي': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'بلاك بانثر': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'سنشري': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'امتراك بلس': { country: 'هندية', warranty: { default: 'سنتان' }, dealer: 'البابطين' },
       'يواسا': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
@@ -13760,6 +13829,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (upperBrand.includes('OAKLEY')) return 'اوكلي';
       if (upperBrand.includes('AMTRA')) return 'امترا';
       if (upperBrand.includes('EMTRAC PLUS') || upperBrand.includes('EMTRAC +')) return 'امتراك بلس';
+      if (upperBrand.includes('START-X') || upperBrand.includes('START X') || upperBrand.includes('STARTX') || upperBrand.includes('X STAR') || upperBrand.includes('اكس ستار')) return 'START-X';
+      if (upperBrand.includes('BLACK PANTHER') || upperBrand.includes('BLACKPANTHER') || upperBrand.includes('بلاك بانثر')) return 'Black Panther';
       if (upperBrand.includes('EMTRAC')) return 'Emtrac'; // Keep as is for now
       return brand; // Return original if no match
     }
@@ -13782,6 +13853,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (normalized === 'ايفريدي') return 'ايفريدي';
       if (normalized === 'اوكلي') return 'اوكلي';
       if (normalized === 'امترا') return 'امترا';
+      if (normalized === 'START-X') return 'ستارت اكس';
+      if (normalized === 'Black Panther') return 'بلاك بانثر';
       return brand; // Fallback to original
     }
     const BATTERY_DRIVER_MAP = {
@@ -13842,32 +13915,41 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
     function buildBatteryMessage(row) {
       const brand = (row[1] || '').trim();
+      const normalizedBrand = normalizeBrandName(brand);
+      const displayBrand = getArabicBrandName(normalizedBrand) || brand;
       const size = (row[0] || '').trim();
       const salePrice = (row[4] || row[3] || '').trim() || 'سعر غير محدد';
-      const brandKey = brand.toUpperCase();
+      const brandKey = (brand || '').toUpperCase();
+      const normalizedBrandKey = (normalizedBrand || '').toUpperCase();
       const sizeKey = size.toUpperCase();
-      if (brandKey.includes('MOTER CRAFT')) {
+      if (brandKey.includes('MOTER CRAFT') || normalizedBrandKey.includes('موتر كرافت')) {
         if (sizeKey.includes('DA100') || sizeKey.includes('95AGM')) {
           return `متوفرة بطارية موتر كرافت امريكيه 🇺🇸 كفالتها سنتين على الوكيل فورد الغانم سعرها ${salePrice} دك`;
         }
         return `متوفرة بطارية موتر كرافت امريكيه 🇺🇸 كفالتها 3 سنوات على الوكيل فورد الغانم السعر مع رسوم التركيب ${salePrice} دك`;
       }
-      if (brandKey.includes('VARTA')) {
-        return `متوفرة بطارية فارتا المانيه 🇩🇪 كفالتها سنه على الوكيل الفتو انترنشلن السعر مع رسوم التركيب ${salePrice} دك`;
+      if (brandKey.includes('VARTA') || normalizedBrandKey.includes('فارتا')) {
+        return `متوفرة بطارية فارتا المانيه 🇩🇪 كفالتها سنه على الوكيل الفتو انترنشلن السعر مع الرسوم التركيب ${salePrice} دك`;
       }
-      if (brandKey.includes('HANKOOK')) {
+      if (brandKey.includes('HANKOOK') || normalizedBrandKey.includes('هانكوك')) {
         return `متوفرة بطارية هانكوك كوريه 🇰🇷 كفالتها سنه واحده على الوكيل الفتو انترنشلن السعر مع رسوم التركيب ${salePrice} دك`;
       }
-      if (brandKey.includes('ABM')) {
+      if (brandKey.includes('ABM') || normalizedBrandKey.includes('ايه بي ام')) {
         return `متوفرة بطارية ايه بي ام ماليزيه 🇲🇾 كفالتها سنه واحده على الوكيل اف كي السعر مع رسوم التركيب ${salePrice} دك`;
       }
-      if (brandKey.includes('MOTO RAFT') || brandKey.includes('MOTORAFT')) {
-        return `متوفرة بطارية موتر رافت هنديه 🇮🇳 كفالتها سنه واحده على الوكيل افتخار السعر مع رسوم التركيب ${salePrice} دك`;
+      if (brandKey.includes('START-X') || normalizedBrandKey.includes('START-X') || normalizedBrandKey.includes('ستارت اكس')) {
+        return `متوفرة بطارية ${displayBrand} سعوديه 🇸🇦 كفالتها سنه واحده على الوكيل المشعل السعر مع رسوم التركيب ${salePrice} دك`;
       }
-      if (brandKey.includes('BOSSTER') || brandKey.includes('BOOSTER')) {
+      if (brandKey.includes('BLACK PANTHER') || brandKey.includes('BLACKPANTHER') || normalizedBrandKey.includes('بلاك بانثر')) {
+        return `متوفره بطاريه ${displayBrand} هنديه 🇮🇳 كفالتها سنه على الوكيل المشعل السعر مع رسوم التركيب ${salePrice} دك`;
+      }
+      if (brandKey.includes('MOTO RAFT') || brandKey.includes('MOTORAFT') || normalizedBrandKey.includes('موتو رفت')) {
+        return `متوفرة بطارية موتر رافت هنديه 🇮🇳 كفالتها سنه واحده على الوكيل المشعل السعر مع رسوم التركيب ${salePrice} دك`;
+      }
+      if (brandKey.includes('BOSSTER') || brandKey.includes('BOOSTER') || normalizedBrandKey.includes('بوستر')) {
         return `متوفرة بطارية (بوستر/أوكلا) صينيه 🇨🇳 كفالتها سنه واحده على الوكيل المشعل السعر مع رسوم التركيب ${salePrice} دك`;
       }
-      return `متوفرة بطارية ${brand} السعر مع رسوم التركيب ${salePrice} دك`;
+      return `متوفرة بطارية ${displayBrand} السعر مع رسوم التركيب ${salePrice} دك`;
     }
     async function copyBatteryTextToClipboard(text) {
       try {
@@ -15439,7 +15521,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               panel.style.left = Math.max(10, rect.right - 220) + 'px';
             }
             panel.style.display = isVisible ? 'none' : 'block';
-          };
+          }
         }
         if (colName === 'Date') {
           panelContent.innerHTML = `
