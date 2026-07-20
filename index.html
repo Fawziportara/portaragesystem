@@ -2828,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.3';
+    const SITE_VERSION = '3.4';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -12758,6 +12758,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     let batterySearchMode = 'size';
     let batteryModuleRefreshTimer = null;
     let batteryDataLoading = false;
+    // خريطة ترجمة أسماء السائقين: تُحمَّل من شيت names في نفس ملف الإكسيل
+    // العمود en = الاسم بالإنجليزي، العمود ar = الاسم بالعربي
+    let driverNamesMap = {}; // { 'lowercase_en': 'ar' }
     function renderNewBatteryInterface() {
       setContentAreaEmbedMode(true);
       const contentArea = document.getElementById('contentArea');
@@ -12882,6 +12885,52 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }
       modal.classList.remove('hidden');
     }
+    function isDateHeader(h) {
+      return /^\d+[\/\-]\d+[\/\-]\d+$/.test((h || '').trim());
+    }
+    // ترتيب السائقين — يُستخدم كاحتياط للأعمدة بدون اسم في الشيت
+    // الشيت أولوية: لو كتبت اسم في صف 1 من العمود → يستخدمه ويتجاهل الاحتياطي
+    const DRIVER_ORDER = [
+      'Gufran+Ali',       // col 7-8
+      'dattaram+kesavan', // col 9-10
+      'sanidu+rahama',    // col 11-12
+      'Lakshman',         // col 13-14
+      'sameera',          // col 15-16
+      'hari',             // col 17-18
+      'muthu',            // col 19-20
+      'mortada',          // col 21-22
+      'sanjeewa',         // col 23-24
+      'patel',            // col 25-26
+      'ruchira',          // col 27-28
+      'harshan',          // col 29-30
+      'irfan',            // col 31-32
+      'hari+rangan',      // col 33-34
+      'Mayura',           // col 35-36
+      'waji',             // col 37-38
+      'Senthil',          // col 39-40
+      'santo',            // col 41-42
+      'mohammad',         // col 43-44
+      'yusuf',            // col 45-46
+    ];
+    // يقرأ السائقين من رؤوس أعمدة الشيت — ديناميكي 100%
+    // لو العمود فارغ الاسم → يستخدم DRIVER_ORDER كاحتياط
+    function getDriverColumnGroups() {
+      if (!batterySheetHeaders || batterySheetHeaders.length <= 7) return [];
+      const groups = [];
+      const DRIVER_START_COL = 7;
+      let orderIdx = 0;
+      for (let i = DRIVER_START_COL; i < batterySheetHeaders.length - 1; i += 2) {
+        const fkHeader = (batterySheetHeaders[i] || '').trim();
+        if (isDateHeader(fkHeader)) break;
+        // الشيت أولاً — إذا فيه اسم يستخدمه، وإلا الاحتياطي
+        const name = (fkHeader && !isDateHeader(fkHeader))
+          ? fkHeader
+          : (DRIVER_ORDER[orderIdx] || '');
+        if (name) groups.push({ name, fkIndex: i, mIndex: i + 1 });
+        orderIdx++;
+      }
+      return groups;
+    }
     function renderBatteryModeSection(mode) {
       batterySearchMode = mode;
       const sizeSection = document.getElementById('batterySearchBySize');
@@ -12908,7 +12957,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       setBatteryLoading(true, 'جارٍ تحميل بيانات البطاريات...');
       setBatteryError('');
       try {
-        await Promise.all([loadBatterySheetData(), loadCarSheetData()]);
+        await Promise.all([loadBatterySheetData(), loadCarSheetData(), loadDriverNamesSheet()]);
         if (batterySearchMode === 'size') {
           renderBatterySizeMode();
         } else {
@@ -12932,7 +12981,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const oldBatteryData = batterySheetData ? JSON.stringify(batterySheetData.slice(0, 50)) : '';
         const oldCarData = carSheetData ? JSON.stringify(carSheetData.slice(0, 50)) : '';
         
-        await Promise.all([loadBatterySheetData(), loadCarSheetData()]);
+        await Promise.all([loadBatterySheetData(), loadCarSheetData(), loadDriverNamesSheet()]);
         
         const newBatteryData = batterySheetData ? JSON.stringify(batterySheetData.slice(0, 50)) : '';
         const newCarData = carSheetData ? JSON.stringify(carSheetData.slice(0, 50)) : '';
@@ -12993,6 +13042,34 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       batterySheetHeaders = rows[0].map(cell => (cell || '').trim());
       batterySheetData = rows.slice(1).filter(row => row.some(cell => (cell || '').trim() !== ''));
       return batterySheetData;
+    }
+    async function loadDriverNamesSheet() {
+      // يقرأ من شيت names في نفس ملف الإكسيل
+      // الأعمدة: en (الاسم بالإنجليزي) | ar (الاسم بالعربي)
+      try {
+        const sheetId = '1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk';
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('names')}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) return; // الشيت غير موجود — لا بأس، يكمل بدون ترجمة
+        const text = await response.text();
+        const rows = parseCSV(text);
+        if (!rows || rows.length < 2) return;
+        const headers = rows[0].map(c => (c || '').trim().toLowerCase());
+        const enIdx = headers.indexOf('en');
+        const arIdx = headers.indexOf('ar');
+        if (enIdx === -1 || arIdx === -1) return; // الأعمدة مو موجودة
+        const map = {};
+        rows.slice(1).forEach(row => {
+          const en = (row[enIdx] || '').trim();
+          const ar = (row[arIdx] || '').trim();
+          if (en && ar) {
+            map[en.toLowerCase()] = ar; // نحفظ lowercase عشان المطابقة
+          }
+        });
+        driverNamesMap = map;
+      } catch (e) {
+        console.warn('تحميل شيت names فشل، سيُستخدم الاسم الإنجليزي:', e);
+      }
     }
     async function loadCarSheetData() {
       const sheetId = '1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk';
@@ -13451,37 +13528,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       showBatteryFeeNotice(false);
       scroll.innerHTML = '';
     }
-    const BATTERY_DRIVER_COLUMN_CONFIGS = [
-      { label: 'Gufran', fkIndex: 7, mIndex: 8 },
-      { label: 'dattaram+kesavan', fkIndex: 9, mIndex: 10 },
-      { label: 'sanidu+niyas', fkIndex: 11, mIndex: 12 },
-      { label: 'mortada', fkIndex: 13, mIndex: 14 },
-      { label: 'bala', fkIndex: 15, mIndex: 16 },
-      { label: 'Lakshman', fkIndex: 17, mIndex: 18 },
-      { label: 'sanjeewa', fkIndex: 19, mIndex: 20 },
-      { label: 'supun', fkIndex: 21, mIndex: 22 },
-      { label: 'patel', fkIndex: 23, mIndex: 24 },
-      { label: 'ruchira', fkIndex: 25, mIndex: 26 },
-      { label: 'harshan', fkIndex: 27, mIndex: 28 },
-      { label: 'waji', fkIndex: 29, mIndex: 30 },
-      { label: 'irfan', fkIndex: 31, mIndex: 32 },
-      { label: 'hari+rangan', fkIndex: 33, mIndex: 34 },
-      { label: 'Mayura', fkIndex: 35, mIndex: 36 },
-      { label: 'durga', fkIndex: 37, mIndex: 38 },
-      { label: 'Senthil', fkIndex: 39, mIndex: 40 },
-      { label: 'santo', fkIndex: 41, mIndex: 42 },
-      { label: 'Ali', fkIndex: 43, mIndex: 44 },
-      { label: 'rahimah allah', fkIndex: 45, mIndex: 46 },
-      { label: 'mohammad', fkIndex: 47, mIndex: 48 }
-    ];
-    function getDriverColumnGroups() {
-      if (!batterySheetHeaders || batterySheetHeaders.length <= 7) return [];
-      return BATTERY_DRIVER_COLUMN_CONFIGS.map(config => ({
-        name: (batterySheetHeaders[config.fkIndex] || config.label || '').trim(),
-        fkIndex: config.fkIndex,
-        mIndex: config.mIndex
-      }));
-    }
+
     function hasAnyStock(row) {
       const fkQty = Number(row[5]) || 0;
       const mQty = Number(row[6]) || 0;
@@ -13857,33 +13904,12 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (normalized === 'Black Panther') return 'بلاك بانثر';
       return brand; // Fallback to original
     }
-    const BATTERY_DRIVER_MAP = {
-      'gufran': 'غفران',
-      'dattaram+kesavan': 'داترام و كيسافان',
-      'sanidu+niyas': 'سانيدو و نياز',
-      'mortada': 'مرتضى',
-      'bala': 'بالا',
-      'lakshman': 'لاكشمان',
-      'sanjeewa': 'سنيجواه',
-      'supun': 'سوبون',
-      'patel': 'باتيل',
-      'ruchira': 'روشيرا',
-      'harshan': 'هارشان',
-      'waji': 'سيثرافيل',
-      'irfan': 'محمد عرفان',
-      'mayura': 'مايورا',
-      'hari+rangan': 'هاري و رانجان',
-      'durga': 'دورجا',
-      'senthil': 'سنثيل',
-      'santo': 'سانتوش',
-      'ali': 'علي',
-      'rahimah allah': 'رحمة الله',
-      'yusuf': 'يوسف',
-      'mohammad': 'محمد'
-    };
+    // الأسماء تُقرأ من شيت names في الإكسيل (en | ar)
     function getDriverName(raw) {
-      const key = normalizeText(raw);
-      return BATTERY_DRIVER_MAP[key] || BATTERY_DRIVER_MAP[String(raw || '').trim()] || raw || '';
+      if (!raw || !raw.trim()) return '';
+      const key = (raw || '').trim().toLowerCase();
+      // ابحث في الشيت أولاً
+      return driverNamesMap[key] || raw.trim();
     }
     function renderDriverStock(row) {
       if (!batterySheetHeaders || !batterySheetHeaders.length) return '<span class="battery-count-badge" style="background:rgba(212,53,53,0.2); border-color:rgba(239,68,68,0.3); color:#ef4444;">غير متوفرة</span>';
