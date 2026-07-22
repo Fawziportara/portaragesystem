@@ -2828,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.4';
+    const SITE_VERSION = '3.5';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -12758,9 +12758,12 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     let batterySearchMode = 'size';
     let batteryModuleRefreshTimer = null;
     let batteryDataLoading = false;
+    let batteryLastUpdatedAt = '';
+    const BATTERY_LAST_UPDATED_COLUMN = 51; // AZ
     // خريطة ترجمة أسماء السائقين: تُحمَّل من شيت names في نفس ملف الإكسيل
     // العمود en = الاسم بالإنجليزي، العمود ar = الاسم بالعربي
-    let driverNamesMap = {}; // { 'lowercase_en': 'ar' }
+    let driverNamesMap = {}; // { 'lowercase_en_or_ar': 'ar' }
+    let driverNamesRecords = []; // [{ en, ar }] — مصدر أسماء السائقين الوحيد
     function renderNewBatteryInterface() {
       setContentAreaEmbedMode(true);
       const contentArea = document.getElementById('contentArea');
@@ -12769,7 +12772,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       contentArea.innerHTML = `
         <div class="form-section full-width">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:24px; margin-bottom:12px; flex-wrap:wrap;">
-            <h3 class="section-title" style="margin:0;">بطارية جديدة</h3>
+            <div id="batteryLastUpdated" style="min-width:220px; max-width:100%; box-sizing:border-box; padding:8px 14px; border:1px solid rgba(242,188,27,0.75); border-radius:10px; background:linear-gradient(135deg,#252525,#111111); color:#F2BC1B; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:14px; font-weight:700; line-height:1.5; text-align:center; direction:rtl;"></div>
             <button id="batteryDealerLocationBtn" type="button" class="btn-option" style="padding:8px 12px; font-size:13px;">📍 مواقع الوكلاء</button>
           </div>
           <div class="battery-mode-grid" style="margin-bottom:12px;">
@@ -12834,6 +12837,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           </ul>
         </div>
       `;
+      renderBatteryLastUpdated();
       bindBatteryModeButtons();
       const dealerLocationBtn = document.getElementById('batteryDealerLocationBtn');
       if (dealerLocationBtn) {
@@ -12841,6 +12845,67 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }
       renderBatteryModeSection('size');
       initializeBatterySearchData();
+    }
+
+    function renderBatteryLastUpdated() {
+      let updateBox = document.getElementById('batteryLastUpdated');
+      const batteryInterface = document.getElementById('batteryModeSizeBtn');
+      if (!batteryInterface) {
+        if (updateBox) updateBox.remove();
+        return;
+      }
+      if (!updateBox) {
+        updateBox = document.createElement('div');
+        updateBox.id = 'batteryLastUpdated';
+        updateBox.style.cssText = `
+          position: fixed;
+          top: 18px;
+          right: 18px;
+          z-index: 1500;
+          min-width: 220px;
+          max-width: calc(100vw - 36px);
+          box-sizing: border-box;
+          padding: 11px 16px;
+          border: 1px solid rgba(242, 188, 27, 0.75);
+          border-radius: 10px;
+          background: linear-gradient(135deg, #252525, #111111);
+          color: #F2BC1B;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.5;
+          text-align: center;
+          direction: rtl;
+        `;
+        const contentArea = document.getElementById('contentArea');
+        (contentArea || document.body).appendChild(updateBox);
+      }
+      const value = (batteryLastUpdatedAt || '').toString().trim();
+      updateBox.textContent = value
+        ? `آخر تحديث للنظام : ${formatBatteryLastUpdated(value)}`
+        : 'آخر تحديث للنظام : جاري التحميل...';
+    }
+
+    function formatBatteryLastUpdated(value) {
+      const match = value.match(/^(.+?)\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|صباحاً|مساءً)?$/i);
+      if (!match) return value;
+
+      const datePart = match[1].trim();
+      let hours = Number(match[2]);
+      const minutes = match[3];
+      const period = (match[4] || '').toLowerCase();
+      const isPm = period === 'pm' || period === 'مساءً';
+      const isAm = period === 'am' || period === 'صباحاً';
+
+      if (!isPm && !isAm) {
+        // وقت AZ1 غالباً بصيغة 24 ساعة، لذلك نحوله عند عدم وجود AM/PM.
+        const inferredPm = hours >= 12;
+        hours = hours % 12 || 12;
+        return `${datePart} ${hours}:${minutes} ${inferredPm ? 'مساءً' : 'صباحاً'}`;
+      }
+
+      hours = hours % 12 || 12;
+      return `${datePart} ${hours}:${minutes} ${isPm ? 'مساءً' : 'صباحاً'}`;
     }
     function bindBatteryModeButtons() {
       const sizeBtn = document.getElementById('batteryModeSizeBtn');
@@ -12888,48 +12953,29 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     function isDateHeader(h) {
       return /^\d+[\/\-]\d+[\/\-]\d+$/.test((h || '').trim());
     }
-    // ترتيب السائقين — يُستخدم كاحتياط للأعمدة بدون اسم في الشيت
-    // الشيت أولوية: لو كتبت اسم في صف 1 من العمود → يستخدمه ويتجاهل الاحتياطي
-    const DRIVER_ORDER = [
-      'Gufran+Ali',       // col 7-8
-      'dattaram+kesavan', // col 9-10
-      'sanidu+rahama',    // col 11-12
-      'Lakshman',         // col 13-14
-      'sameera',          // col 15-16
-      'hari',             // col 17-18
-      'muthu',            // col 19-20
-      'mortada',          // col 21-22
-      'sanjeewa',         // col 23-24
-      'patel',            // col 25-26
-      'ruchira',          // col 27-28
-      'harshan',          // col 29-30
-      'irfan',            // col 31-32
-      'hari+rangan',      // col 33-34
-      'Mayura',           // col 35-36
-      'waji',             // col 37-38
-      'Senthil',          // col 39-40
-      'santo',            // col 41-42
-      'mohammad',         // col 43-44
-      'yusuf',            // col 45-46
-    ];
-    // يقرأ السائقين من رؤوس أعمدة الشيت — ديناميكي 100%
-    // لو العمود فارغ الاسم → يستخدم DRIVER_ORDER كاحتياط
+    // يقرأ أسماء السائقين من شيت names فقط (الأعمدة en و ar).
     function getDriverColumnGroups() {
       if (!batterySheetHeaders || batterySheetHeaders.length <= 7) return [];
       const groups = [];
       const DRIVER_START_COL = 7;
-      let orderIdx = 0;
       for (let i = DRIVER_START_COL; i < batterySheetHeaders.length - 1; i += 2) {
         const fkHeader = (batterySheetHeaders[i] || '').trim();
         if (isDateHeader(fkHeader)) break;
-        // الشيت أولاً — إذا فيه اسم يستخدمه، وإلا الاحتياطي
-        const name = (fkHeader && !isDateHeader(fkHeader))
-          ? fkHeader
-          : (DRIVER_ORDER[orderIdx] || '');
+        const name = getDriverSheetName(fkHeader, (i - DRIVER_START_COL) / 2);
         if (name) groups.push({ name, fkIndex: i, mIndex: i + 1 });
-        orderIdx++;
       }
       return groups;
+    }
+
+    function getDriverSheetName(headerName, rowIndex) {
+      if (!driverNamesRecords.length) return '';
+      const normalizedHeader = normalizeText(headerName);
+      const matched = driverNamesRecords.find(record =>
+        normalizeText(record.en) === normalizedHeader || normalizeText(record.ar) === normalizedHeader
+      );
+      if (matched) return matched.en || matched.ar;
+      const record = driverNamesRecords[rowIndex];
+      return record ? (record.en || record.ar) : '';
     }
     function renderBatteryModeSection(mode) {
       batterySearchMode = mode;
@@ -13040,6 +13086,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         throw new Error('بيانات شيت البطاريات فارغة');
       }
       batterySheetHeaders = rows[0].map(cell => (cell || '').trim());
+      batteryLastUpdatedAt = (rows[0][BATTERY_LAST_UPDATED_COLUMN] || '').toString().trim();
+      renderBatteryLastUpdated();
       batterySheetData = rows.slice(1).filter(row => row.some(cell => (cell || '').trim() !== ''));
       return batterySheetData;
     }
@@ -13047,28 +13095,31 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       // يقرأ من شيت names في نفس ملف الإكسيل
       // الأعمدة: en (الاسم بالإنجليزي) | ar (الاسم بالعربي)
       try {
+        driverNamesMap = {};
+        driverNamesRecords = [];
         const sheetId = '1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk';
         const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('names')}`;
         const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) return; // الشيت غير موجود — لا بأس، يكمل بدون ترجمة
+        if (!response.ok) throw new Error('تعذر تحميل شيت names');
         const text = await response.text();
         const rows = parseCSV(text);
-        if (!rows || rows.length < 2) return;
+        if (!rows || rows.length < 2) throw new Error('شيت names فارغ');
         const headers = rows[0].map(c => (c || '').trim().toLowerCase());
         const enIdx = headers.indexOf('en');
         const arIdx = headers.indexOf('ar');
-        if (enIdx === -1 || arIdx === -1) return; // الأعمدة مو موجودة
+        if (enIdx === -1 || arIdx === -1) throw new Error('يجب أن يحتوي شيت names على العمودين en و ar');
         const map = {};
         rows.slice(1).forEach(row => {
           const en = (row[enIdx] || '').trim();
           const ar = (row[arIdx] || '').trim();
-          if (en && ar) {
-            map[en.toLowerCase()] = ar; // نحفظ lowercase عشان المطابقة
-          }
+          if (!en && !ar) return;
+          driverNamesRecords.push({ en, ar });
+          if (en) map[en.toLowerCase()] = ar || en;
+          if (ar) map[ar.toLowerCase()] = ar;
         });
         driverNamesMap = map;
       } catch (e) {
-        console.warn('تحميل شيت names فشل، سيُستخدم الاسم الإنجليزي:', e);
+        console.warn('تحميل شيت names فشل، لن يتم عرض أسماء السائقين:', e);
       }
     }
     async function loadCarSheetData() {
@@ -13908,8 +13959,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     function getDriverName(raw) {
       if (!raw || !raw.trim()) return '';
       const key = (raw || '').trim().toLowerCase();
-      // ابحث في الشيت أولاً
-      return driverNamesMap[key] || raw.trim();
+      return driverNamesMap[key] || '';
     }
     function renderDriverStock(row) {
       if (!batterySheetHeaders || !batterySheetHeaders.length) return '<span class="battery-count-badge" style="background:rgba(212,53,53,0.2); border-color:rgba(239,68,68,0.3); color:#ef4444;">غير متوفرة</span>';
