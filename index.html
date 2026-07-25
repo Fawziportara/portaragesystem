@@ -7934,6 +7934,14 @@
           </div>
         </div>
         
+        <div id="partsProviderSection" class="form-section hidden">
+          <h3 class="section-title">من سيوفر القطع؟</h3>
+          <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+            <button class="btn-option" data-parts-provider="customer">العميل</button>
+            <button class="btn-option" data-parts-provider="portarage">بورتراج</button>
+          </div>
+        </div>
+        
         <div id="oilFilterSourceSection" class="form-section hidden">
           <h3 class="section-title">مصدر الزيت</h3>
           <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
@@ -8187,55 +8195,31 @@
       };
       const MECHANICAL_PRICE_UPLIFT = 10;
       
-      document.querySelectorAll('[data-mech]').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('[data-mech]').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          
-          // Hide service type section and show back button
-          document.getElementById('mechTypeSection').style.display = 'none';
-          document.getElementById('mechBackButtonSection').style.display = 'block';
-          
-          // Display selected service name
-          const serviceName = serviceNames[btn.dataset.mech];
-          document.getElementById('mechSelectedService').textContent = serviceName;
-          
-          formData.mechanicalService = btn.dataset.mech;
-          
-          if (formData.mechanicalService === 'inventoryManagement') {
-            renderInventoryManagementInterface();
-            return;
-          }
-          
-          document.getElementById('mechResultSection').classList.add('hidden');
-          document.getElementById('areaSelect').value = '';
-          formData.area = null;
-          
-          // Hide all dynamic sections
-          document.getElementById('oilFilterSourceSection').classList.add('hidden');
-          document.getElementById('mechAreaSection').classList.add('hidden');
-          document.getElementById('alternatorSupplierPriceSection').classList.add('hidden');
-          document.getElementById('fuelpumpOriginSection').classList.add('hidden');
-          document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-          document.getElementById('brakesOptionsSection').classList.add('hidden');
-          document.getElementById('brakesModeSection').classList.add('hidden');
-          const prevBlocks = document.getElementById('blocksCylContainer'); if (prevBlocks) prevBlocks.remove();
-          
-          if (formData.mechanicalService === 'oilfilter') {
+      const COVERED_SERVICES = [
+        'brakes', 'oilfilter', 'alternator', 'coolant', 'brakefluid', 'transmission',
+        'fuelpump', 'waterpump', 'gaysh', 'airfilter', 'acfilter', 'gaysh_rollers',
+        'gaysh_shadad', 'shialat', 'assistants', 'stabilizer', 'assistant_seat',
+        'blocks', 'axles'
+      ];
+
+      function proceedToServiceFlow(svc) {
+        if (svc === 'oilfilter') {
+          if (formData.partsProvider === 'customer') {
+            formData.oilSource = 'customer';
+            document.getElementById('mechAreaSection').classList.remove('hidden');
+            loadAreaOptionsDatalist('خدمات ميكانيكية', [8, 9, 10, 12, 13, 14], calculateMechanicalPrice);
+          } else {
             // Show oil source selection
             document.getElementById('oilFilterSourceSection').classList.remove('hidden');
-            
             document.querySelectorAll('[data-oil-source]').forEach(oilBtn => {
               oilBtn.onclick = () => {
                 document.querySelectorAll('[data-oil-source]').forEach(b => b.classList.remove('active'));
                 oilBtn.classList.add('active');
                 formData.oilSource = oilBtn.dataset.oilSource;
                 if (formData.oilSource === 'customer') {
-                  // Show area selection and load data from columns 8-14
                   document.getElementById('mechAreaSection').classList.remove('hidden');
                   loadAreaOptionsDatalist('خدمات ميكانيكية', [8, 9, 10, 12, 13, 14], calculateMechanicalPrice);
                 } else if (formData.oilSource === 'ours') {
-                  // Redirect oil/filter "من عندنا" directly to the tire sheet
                   openFullscreenIframe('https://portarageoils.netlify.app/', 'زيت وفلتر');
                 }
               };
@@ -8245,236 +8229,216 @@
                 renderInventoryManagementInterface();
               };
             });
-            
-          } else if (formData.mechanicalService === 'inspection' || formData.mechanicalService === 'acgas' || formData.mechanicalService === 'sahkiya') {
-            document.getElementById('mechAreaSection').classList.remove('hidden');
-            // Use خدمات ميكانيكية for inspection areas (A,B,C and E,F,G)
-            loadAreaOptionsDatalist('خدمات ميكانيكية', [0, 1, 2, 4, 5, 6], calculateMechanicalPrice);
-          } else if (formData.mechanicalService === 'brakes') {
-            // Internal brakes/discs flow (no Google Sheet)
-            // Removed separate disk-turning checkbox; integrate surcharge into discs question.
-            // Show origin selector and hide other sections
-                // First ask for area, then proceed to origin/type/options
-                document.getElementById('mechAreaSection').classList.remove('hidden');
-                // Load area options then show origin/type UI after selection
-                loadAreaOptionsDatalist('خدمات ميكانيكية', [8, 9, 10, 12, 13, 14], () => {
-                  document.getElementById('mechAreaSection').classList.add('hidden');
-                  document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
-                  document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                  document.getElementById('brakesOptionsSection').classList.add('hidden');
-                });
-            const typesContainer = document.getElementById('fuelpumpTypeButtons');
-            const optionsSection = document.getElementById('brakesOptionsSection');
-            const modeSection = document.getElementById('brakesModeSection');
-            const makeTypeButtons = (origin) => {
-              typesContainer.innerHTML = '';
-              const createBtn = (text, value) => {
-                const b = document.createElement('button');
-                b.className = 'btn-option';
-                b.type = 'button';
-                b.textContent = text;
-                b.dataset.fuelType = value;
-                return b;
-              };
-              if (origin === 'german') {
-                typesContainer.appendChild(createBtn('صالون', 'salon'));
-                typesContainer.appendChild(createBtn('جيب', 'suv'));
-              } else {
-                typesContainer.appendChild(createBtn('صالون', 'salon'));
-                typesContainer.appendChild(createBtn('نص جيب', 'half_suv'));
-                typesContainer.appendChild(createBtn('جيب', 'suv'));
-              }
-              document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
-              typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
-                tb.onclick = () => {
-                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                  tb.classList.add('active');
-                  formData.origin = formData.origin || tb.closest('#fuelpumpTypeSection').dataset.origin;
-                  formData.type = tb.dataset.fuelType;
-                  // Clear brakes mode and options selections when type changes
-                  modeSection.querySelectorAll('[data-brakes-mode]').forEach(b => b.classList.remove('active'));
+          }
+        } else if (svc === 'inspection' || svc === 'acgas' || svc === 'sahkiya') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات ميكانيكية', [0, 1, 2, 4, 5, 6], calculateMechanicalPrice);
+        } else if (svc === 'brakes') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات ميكانيكية', [8, 9, 10, 12, 13, 14], () => {
+            document.getElementById('mechAreaSection').classList.add('hidden');
+            document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
+            document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+            document.getElementById('brakesOptionsSection').classList.add('hidden');
+          });
+          const typesContainer = document.getElementById('fuelpumpTypeButtons');
+          const optionsSection = document.getElementById('brakesOptionsSection');
+          const modeSection = document.getElementById('brakesModeSection');
+          const makeTypeButtons = (origin) => {
+            typesContainer.innerHTML = '';
+            const createBtn = (text, value) => {
+              const b = document.createElement('button');
+              b.className = 'btn-option';
+              b.type = 'button';
+              b.textContent = text;
+              b.dataset.fuelType = value;
+              return b;
+            };
+            if (origin === 'german') {
+              typesContainer.appendChild(createBtn('صالون', 'salon'));
+              typesContainer.appendChild(createBtn('جيب', 'suv'));
+            } else {
+              typesContainer.appendChild(createBtn('صالون', 'salon'));
+              typesContainer.appendChild(createBtn('نص جيب', 'half_suv'));
+              typesContainer.appendChild(createBtn('جيب', 'suv'));
+            }
+            document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
+            typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
+              tb.onclick = () => {
+                typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
+                tb.classList.add('active');
+                formData.origin = formData.origin || tb.closest('#fuelpumpTypeSection').dataset.origin;
+                formData.type = tb.dataset.fuelType;
+                modeSection.querySelectorAll('[data-brakes-mode]').forEach(b => b.classList.remove('active'));
+                optionsSection.innerHTML = '';
+                document.getElementById('mechResultSection').classList.add('hidden');
+                modeSection.classList.remove('hidden');
+                optionsSection.classList.add('hidden');
+                const renderModeFlow = (mode) => {
                   optionsSection.innerHTML = '';
                   document.getElementById('mechResultSection').classList.add('hidden');
-                  // show mode selector for brakes (سفايف / ديسكات / كلاهما)
-                  modeSection.classList.remove('hidden');
-                  optionsSection.classList.add('hidden');
-                  // render options according to chosen mode; for 'both' we show sequential questions
-                  const renderModeFlow = (mode) => {
-                    optionsSection.innerHTML = '';
-                    // Clear result when mode changes
-                    document.getElementById('mechResultSection').classList.add('hidden');
-                    const makeBtn = (text, key) => {
-                      const b = document.createElement('button');
-                      b.className = 'btn-option';
-                      b.type = 'button';
-                      b.textContent = text;
-                      b.dataset.brakeOpt = key;
-                      return b;
-                    };
-                    const showResult = (shafayefPrice, discsPrice, turnSurcharge) => {
-                      // compute region surcharge (if any)
-                      let regionSurcharge = 0;
-                      if (formData.area) {
-                        for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
-                          if (regions.includes(formData.area)) {
-                            regionSurcharge = parseInt(amount, 10) || 0;
-                            break;
-                          }
+                  const makeBtn = (text, key) => {
+                    const b = document.createElement('button');
+                    b.className = 'btn-option';
+                    b.type = 'button';
+                    b.textContent = text;
+                    b.dataset.brakeOpt = key;
+                    return b;
+                  };
+                  const showResult = (shafayefPrice, discsPrice, turnSurcharge) => {
+                    let regionSurcharge = 0;
+                    if (formData.area) {
+                      for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
+                        if (regions.includes(formData.area)) {
+                          regionSurcharge = parseInt(amount, 10) || 0;
+                          break;
                         }
                       }
-                      const extraTurn = turnSurcharge || 0;
-                      const total = (shafayefPrice || 0) + (discsPrice || 0) + extraTurn + regionSurcharge;
-                      const tbody = document.getElementById('mechResultBody');
-                      if (tbody) {
-                        let html = '';
-                        if (shafayefPrice) html += `<tr><td>سعر السفايف</td><td class="highlight">${shafayefPrice.toFixed(2)} ${config.currency}</td></tr>`;
-                        if (discsPrice) html += `<tr><td>سعر الديسكات</td><td class="highlight">${discsPrice.toFixed(2)} ${config.currency}</td></tr>`;
-                        if (extraTurn) html += `<tr><td>مخرطة ديسكات</td><td class="highlight">${extraTurn.toFixed(2)} ${config.currency}</td></tr>`;
-                        if (regionSurcharge > 0) html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${regionSurcharge.toFixed(2)} ${config.currency}</td></tr>`;
-                        html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${total.toFixed(2)} ${config.currency}</strong></td></tr>`;
-                        tbody.innerHTML = html;
-                        updateMechResultNote();
-                        document.getElementById('mechResultSection').classList.remove('hidden');
-                      }
-                    };
-                    if (mode === 'shafayef') {
-                      const container = document.createElement('div');
-                      container.className = 'btn-grid';
-                      container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-                      const tyresBtn = makeBtn('تايرين', 'tyres');
-                      const fourBtn = makeBtn('4 تواير', 'four');
-                      container.appendChild(tyresBtn);
-                      container.appendChild(fourBtn);
-                      optionsSection.appendChild(container);
-                      optionsSection.classList.remove('hidden');
-                      [tyresBtn, fourBtn].forEach(b => {
-                        b.onclick = () => {
-                          container.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
-                          b.classList.add('active');
-                          const opt = b.dataset.brakeOpt;
-                          const map = BRAKES_PRICING[formData.type] || {};
-                          const row = map[opt] || {};
-                          const originalPrice = row[formData.origin] || 0;
-                          const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                          showResult(shafayefPrice, 0, 0);
-                        };
-                      });
-                    } else if (mode === 'discs') {
-                      // Show result directly without asking for new discs or installation only
-                      const row = DISCS_PRICING[formData.type] || {};
-                      const originalPrice = row[formData.origin] || 0;
-                      const discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                      showResult(0, discsPrice, 0);
-                      optionsSection.innerHTML = '';
-                      optionsSection.classList.add('hidden');
-                    } else { // both: sequential
-                      // first: shafayef selection
-                      const shContainer = document.createElement('div');
-                      shContainer.className = 'btn-grid';
-                      shContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-                      const tyresBtn = makeBtn('تايرين', 'tyres');
-                      const fourBtn = makeBtn('4 تواير', 'four');
-                      shContainer.appendChild(tyresBtn);
-                      shContainer.appendChild(fourBtn);
-                      optionsSection.appendChild(shContainer);
-                      optionsSection.classList.remove('hidden');
-                      const onShafayefChosen = (chosenOpt) => {
-                        // when a shafayef option chosen, show discs question
-                        const map = BRAKES_PRICING[formData.type] || {};
-                        const row = map[chosenOpt] || {};
-                        const originalPrice = row[formData.origin] || 0;
-                        const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                        // build discs container
-                        const discsContainer = document.createElement('div');
-                        discsContainer.className = 'btn-grid';
-                        discsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-                        const newDiscsBtn = makeBtn('ديسكات جديدة', 'new_discs');
-                        const turnDiscsBtn = makeBtn('مخرطه ديسكات', 'discs_with_turn');
-                        discsContainer.appendChild(newDiscsBtn);
-                        discsContainer.appendChild(turnDiscsBtn);
-                        // remove previous discs area if any
-                        const existing = optionsSection.querySelector('.discs-block');
-                        if (existing) existing.remove();
-                        const holder = document.createElement('div');
-                        holder.className = 'discs-block';
-                        holder.style.marginTop = '8px';
-                        holder.appendChild(discsContainer);
-                        optionsSection.appendChild(holder);
-                        [newDiscsBtn, turnDiscsBtn].forEach(btn => {
-                          btn.onclick = () => {
-                            discsContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
-                            btn.classList.add('active');
-                            const opt = btn.dataset.brakeOpt;
-                            const discsRow = DISCS_PRICING[formData.type] || {};
-                            // If user chose "مخرطه ديسكات معاهم" we only add the +5 surcharge, do NOT add full discs price
-                            let discsPrice = 0;
-                            let turnSurcharge = 0;
-                            if (btn.dataset.brakeOpt === 'discs_with_turn') {
-                              discsPrice = 0;
-                              turnSurcharge = 5;
-                            } else {
-                              const originalPrice = discsRow[formData.origin] || 0;
-                              discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                              turnSurcharge = 0;
-                            }
-                            showResult(shafayefPrice, discsPrice, turnSurcharge);
-                          };
-                        });
-                      };
-                      [tyresBtn, fourBtn].forEach(b => {
-                        b.onclick = () => {
-                          shContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
-                          b.classList.add('active');
-                          onShafayefChosen(b.dataset.brakeOpt);
-                        };
-                      });
+                    }
+                    const extraTurn = turnSurcharge || 0;
+                    let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                    let finalShafayef = shafayefPrice ? (shafayefPrice + customerExtra) : 0;
+                    let finalDiscs = (!shafayefPrice && discsPrice) ? (discsPrice + customerExtra) : discsPrice;
+                    const total = (finalShafayef || 0) + (finalDiscs || 0) + extraTurn + regionSurcharge;
+                    const tbody = document.getElementById('mechResultBody');
+                    if (tbody) {
+                      let html = '';
+                      if (finalShafayef) html += `<tr><td>سعر السفايف</td><td class="highlight">${finalShafayef.toFixed(2)} ${config.currency}</td></tr>`;
+                      if (finalDiscs) html += `<tr><td>سعر الديسكات</td><td class="highlight">${finalDiscs.toFixed(2)} ${config.currency}</td></tr>`;
+                      if (extraTurn) html += `<tr><td>مخرطة ديسكات</td><td class="highlight">${extraTurn.toFixed(2)} ${config.currency}</td></tr>`;
+                      if (regionSurcharge > 0) html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${regionSurcharge.toFixed(2)} ${config.currency}</td></tr>`;
+                      html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${total.toFixed(2)} ${config.currency}</strong></td></tr>`;
+                      tbody.innerHTML = html;
+                      updateMechResultNote();
+                      document.getElementById('mechResultSection').classList.remove('hidden');
                     }
                   };
-                  // attach mode buttons
-                  const modeBtns = document.querySelectorAll('[data-brakes-mode]');
-                  modeBtns.forEach(mb => {
-                    mb.onclick = () => {
-                      modeBtns.forEach(x => x.classList.remove('active'));
-                      mb.classList.add('active');
-                      const mode = mb.dataset.brakesMode; // shafayef / discs / both
-                      renderModeFlow(mode);
+                  if (mode === 'shafayef') {
+                    const container = document.createElement('div');
+                    container.className = 'btn-grid';
+                    container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                    const tyresBtn = makeBtn('تايرين', 'tyres');
+                    const fourBtn = makeBtn('4 تواير', 'four');
+                    container.appendChild(tyresBtn);
+                    container.appendChild(fourBtn);
+                    optionsSection.appendChild(container);
+                    optionsSection.classList.remove('hidden');
+                    [tyresBtn, fourBtn].forEach(b => {
+                      b.onclick = () => {
+                        container.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
+                        b.classList.add('active');
+                        const opt = b.dataset.brakeOpt;
+                        const map = BRAKES_PRICING[formData.type] || {};
+                        const row = map[opt] || {};
+                        const originalPrice = row[formData.origin] || 0;
+                        const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                        showResult(shafayefPrice, 0, 0);
+                      };
+                    });
+                  } else if (mode === 'discs') {
+                    const row = DISCS_PRICING[formData.type] || {};
+                    const originalPrice = row[formData.origin] || 0;
+                    const discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                    showResult(0, discsPrice, 0);
+                    optionsSection.innerHTML = '';
+                    optionsSection.classList.add('hidden');
+                  } else {
+                    const shContainer = document.createElement('div');
+                    shContainer.className = 'btn-grid';
+                    shContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                    const tyresBtn = makeBtn('تايرين', 'tyres');
+                    const fourBtn = makeBtn('4 تواير', 'four');
+                    shContainer.appendChild(tyresBtn);
+                    shContainer.appendChild(fourBtn);
+                    optionsSection.appendChild(shContainer);
+                    optionsSection.classList.remove('hidden');
+                    const onShafayefChosen = (chosenOpt) => {
+                      const map = BRAKES_PRICING[formData.type] || {};
+                      const row = map[chosenOpt] || {};
+                      const originalPrice = row[formData.origin] || 0;
+                      const shafayefPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                      const discsContainer = document.createElement('div');
+                      discsContainer.className = 'btn-grid';
+                      discsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                      const newDiscsBtn = makeBtn('ديسكات جديدة', 'new_discs');
+                      const turnDiscsBtn = makeBtn('مخرطه ديسكات', 'discs_with_turn');
+                      discsContainer.appendChild(newDiscsBtn);
+                      discsContainer.appendChild(turnDiscsBtn);
+                      const existing = optionsSection.querySelector('.discs-block');
+                      if (existing) existing.remove();
+                      const holder = document.createElement('div');
+                      holder.className = 'discs-block';
+                      holder.style.marginTop = '8px';
+                      holder.appendChild(discsContainer);
+                      optionsSection.appendChild(holder);
+                      [newDiscsBtn, turnDiscsBtn].forEach(btn => {
+                        btn.onclick = () => {
+                          discsContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
+                          btn.classList.add('active');
+                          const discsRow = DISCS_PRICING[formData.type] || {};
+                          let discsPrice = 0;
+                          let turnSurcharge = 0;
+                          if (btn.dataset.brakeOpt === 'discs_with_turn') {
+                            discsPrice = 0;
+                            turnSurcharge = 5;
+                          } else {
+                            const originalPrice = discsRow[formData.origin] || 0;
+                            discsPrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                            turnSurcharge = 0;
+                          }
+                          showResult(shafayefPrice, discsPrice, turnSurcharge);
+                        };
+                      });
                     };
-                  });
+                    [tyresBtn, fourBtn].forEach(b => {
+                      b.onclick = () => {
+                        shContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
+                        b.classList.add('active');
+                        onShafayefChosen(b.dataset.brakeOpt);
+                      };
+                    });
+                  }
                 };
-              });
-            };
-            // attach origin buttons
-            document.querySelectorAll('[data-fuel-origin]').forEach(o => {
-              o.onclick = () => {
-                document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
-                o.classList.add('active');
-                formData.origin = o.dataset.fuelOrigin;
-                
-                // Clear other selections when origin changes
-                formData.type = null;
-                formData.brakesMode = null;
-                document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                document.getElementById('brakesModeSection').classList.add('hidden');
-                document.getElementById('brakesOptionsSection').classList.add('hidden');
-                document.getElementById('mechResultSection').classList.add('hidden');
-                // Remove previous cylinder container if exists (for blocks)
-                const prevBlocks = document.getElementById('blocksCylContainer');
-                if (prevBlocks) prevBlocks.remove();
-                
-                makeTypeButtons(formData.origin);
+                const modeBtns = document.querySelectorAll('[data-brakes-mode]');
+                modeBtns.forEach(mb => {
+                  mb.onclick = () => {
+                    modeBtns.forEach(x => x.classList.remove('active'));
+                    mb.classList.add('active');
+                    const mode = mb.dataset.brakesMode;
+                    renderModeFlow(mode);
+                  };
+                });
               };
             });
-          } else if (formData.mechanicalService === 'wipers') {
-            // تبديل المساحات — مناطق من خدمات ميكانيكية2 (أعمدة I,J,K و M,N,O)
+          };
+          document.querySelectorAll('[data-fuel-origin]').forEach(o => {
+            o.onclick = () => {
+              document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
+              o.classList.add('active');
+              formData.origin = o.dataset.fuelOrigin;
+              formData.type = null;
+              formData.brakesMode = null;
+              document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+              document.getElementById('brakesModeSection').classList.add('hidden');
+              document.getElementById('brakesOptionsSection').classList.add('hidden');
+              document.getElementById('mechResultSection').classList.add('hidden');
+              const prevBlocks = document.getElementById('blocksCylContainer');
+              if (prevBlocks) prevBlocks.remove();
+              makeTypeButtons(formData.origin);
+            };
+          });
+        } else if (svc === 'wipers') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات ميكانيكية2', [8, 9, 10, 12, 13, 14], calculateWipersPrice);
+        } else if (svc === 'alternator') {
+          if (formData.partsProvider === 'customer') {
             document.getElementById('mechAreaSection').classList.remove('hidden');
-            loadAreaOptionsDatalist('خدمات ميكانيكية2', [8, 9, 10, 12, 13, 14], calculateWipersPrice);
-          } else if (formData.mechanicalService === 'alternator') {
-            // Show area selection for alternator service from sheet 'خدمات ميكانيكية2'
+            document.getElementById('alternatorSupplierPriceSection').classList.add('hidden');
+            loadAreaOptionsDatalist('خدمات ميكانيكية2', [0, 1, 2, 4, 5, 6], calculateAlternatorPrice);
+          } else {
             document.getElementById('mechAreaSection').classList.remove('hidden');
             document.getElementById('alternatorSupplierPriceSection').classList.remove('hidden');
-            // Load areas from columns A & E from sheet 'خدمات ميكانيكية2'
             loadAreaOptionsDatalist('خدمات ميكانيكية2', [0, 1, 2, 4, 5, 6], calculateAlternatorPrice);
-            // Add listener to supplier price input — hide results if cleared
             const supplierPriceInput = document.getElementById('supplierPrice');
             const newSupplierPriceInput = supplierPriceInput.cloneNode(true);
             supplierPriceInput.parentNode.replaceChild(newSupplierPriceInput, supplierPriceInput);
@@ -8492,177 +8456,65 @@
               }
               if (formData.area) calculateAlternatorPrice();
             };
-          } else if (formData.mechanicalService === 'coolant' || formData.mechanicalService === 'brakefluid' || formData.mechanicalService === 'transmission') {
-            document.getElementById('mechAreaSection').classList.remove('hidden');
-            loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], calculateFluidPrice);
-          } else if (formData.mechanicalService === 'blocks') {
-            // بلاكات flow: ask for AREA FIRST, then choose origin -> type -> cylinders
-            document.getElementById('mechAreaSection').classList.remove('hidden');
-            loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
-              // After area is selected, show origin selection and continue with blocks flow
-              if (formData.area) {
-                document.getElementById('mechAreaSection').classList.add('hidden');
-                document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
-                document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                document.getElementById('brakesOptionsSection').classList.add('hidden');
-                const typesContainer = document.getElementById('fuelpumpTypeButtons');
-                const makeBlockTypeButtons = (origin) => {
-                  typesContainer.innerHTML = '';
-                  const createBtn = (text, value) => {
-                    const b = document.createElement('button');
-                    b.className = 'btn-option';
-                    b.type = 'button';
-                    b.textContent = text;
-                    b.dataset.fuelType = value;
-                    return b;
-                  };
-                  // types similar to others
-                  if (origin === 'german') {
-                    typesContainer.appendChild(createBtn('صالون', 'salon'));
-                    typesContainer.appendChild(createBtn('جيب', 'suv'));
-                  } else {
-                    typesContainer.appendChild(createBtn('صالون', 'salon'));
-                    typesContainer.appendChild(createBtn('نص جيب', 'half_suv'));
-                    typesContainer.appendChild(createBtn('جيب', 'suv'));
-                  }
-                  document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
-                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
-                    tb.onclick = () => {
-                      typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                      tb.classList.add('active');
-                      formData.type = tb.dataset.fuelType;
-                      // Clear previous cylinder container and result when type changes
-                      document.getElementById('mechResultSection').classList.add('hidden');
-                      const prevBlocks = document.getElementById('blocksCylContainer');
-                      if (prevBlocks) prevBlocks.remove();
-                      // show cylinder choices
-                      const cylContainer = document.createElement('div');
-                      cylContainer.className = 'btn-grid';
-                      cylContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-                      cylContainer.style.marginTop = '8px';
-                      const options = [];
-                      if (formData.type === 'salon') options.push('4','6');
-                      if (formData.type === 'suv') options.push('6','8');
-                      if (formData.type === 'half_suv') options.push('6','8');
-                      cylContainer.innerHTML = '';
-                      options.forEach(c => {
-                        const b = document.createElement('button');
-                        b.className = 'btn-option';
-                        b.type = 'button';
-                        b.textContent = c + ' سلندر';
-                        b.dataset.cyl = c;
-                        b.onclick = () => {
-                          // compute price from BLOCKS_PRICING
-                          const row = (BLOCKS_PRICING[formData.type] || {})[c] || {};
-                          const originalPrice = row[formData.origin] || 0;
-                          const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                          
-                          // Check for region surcharge
-                          let surcharge = 0;
-                          if (formData.area) {
-                            for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
-                              if (regions.includes(formData.area)) {
-                                surcharge = parseInt(amount, 10);
-                                break;
-                              }
-                            }
-                          }
-                          
-                          const totalPrice = basePrice + surcharge;
-                          const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
-                          const typeLabelMap = { salon: 'صالون', half_suv: 'نص جيب', suv: 'جيب' };
-                          const originLabel = originLabelMap[formData.origin] || formData.origin;
-                          const typeLabel = typeLabelMap[formData.type] || formData.type;
-                          const desc = `بلاكات (${originLabel} + ${typeLabel} + ${c} سلندر)`;
-                          const tbody = document.getElementById('mechResultBody');
-                          if (tbody) {
-                            let html = `
-                              <tr><td>${escapeHtml(desc)}</td><td class="highlight">${basePrice.toFixed(2)} ${config.currency}</td></tr>
-                            `;
-                            if (surcharge > 0) {
-                              html += `
-                                <tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>
-                              `;
-                            }
-                            html += `
-                              <tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>
-                            `;
-                            tbody.innerHTML = html;
-                            updateMechResultNote();
-                            document.getElementById('mechResultSection').classList.remove('hidden');
-                          }
-                        };
-                        cylContainer.appendChild(b);
-                      });
-                      // append cylinder choices below type buttons
-                      const host = document.getElementById('fuelpumpTypeSection');
-                      // remove previous if any
-                      const prev = document.getElementById('blocksCylContainer');
-                      if (prev) prev.remove();
-                      cylContainer.id = 'blocksCylContainer';
-                      host.appendChild(cylContainer);
-                    };
-                  });
+          }
+        } else if (svc === 'coolant' || svc === 'brakefluid' || svc === 'transmission') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], calculateFluidPrice);
+        } else if (svc === 'blocks') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
+            if (formData.area) {
+              document.getElementById('mechAreaSection').classList.add('hidden');
+              document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
+              document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+              document.getElementById('brakesOptionsSection').classList.add('hidden');
+              const typesContainer = document.getElementById('fuelpumpTypeButtons');
+              const makeBlockTypeButtons = (origin) => {
+                typesContainer.innerHTML = '';
+                const createBtn = (text, value) => {
+                  const b = document.createElement('button');
+                  b.className = 'btn-option';
+                  b.type = 'button';
+                  b.textContent = text;
+                  b.dataset.fuelType = value;
+                  return b;
                 };
-                document.querySelectorAll('[data-fuel-origin]').forEach(o => {
-                  o.onclick = () => {
-                    document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
-                    o.classList.add('active');
-                    formData.origin = o.dataset.fuelOrigin;
-                    
-                    // Clear other selections when origin changes
-                    formData.type = null;
-                    document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                    document.getElementById('mechResultSection').classList.add('hidden');
-                    // Remove previous cylinder container
-                    const prevBlocks = document.getElementById('blocksCylContainer');
-                    if (prevBlocks) prevBlocks.remove();
-                    // Clear type button selections
-                    typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                    typesContainer.innerHTML = '';
-                    
-                    makeBlockTypeButtons(formData.origin);
-                  };
-                });
-              }
-            });
-          } else if (formData.mechanicalService === 'axles') {
-            // اكسات flow: ask for AREA FIRST, then choose origin -> type -> dual/normal (for german SUV)
-            document.getElementById('mechAreaSection').classList.remove('hidden');
-            loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
-              // After area is selected, show origin selection
-              if (formData.area) {
-                document.getElementById('mechAreaSection').classList.add('hidden');
-                document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
-                document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                document.getElementById('brakesOptionsSection').classList.add('hidden');
-                const typesContainer = document.getElementById('fuelpumpTypeButtons');
-                const makeAxleTypeButtons = (origin) => {
-                  typesContainer.innerHTML = '';
-                  const createBtn = (text, value) => {
-                    const b = document.createElement('button');
-                    b.className = 'btn-option';
-                    b.type = 'button';
-                    b.textContent = text;
-                    b.dataset.fuelType = value;
-                    return b;
-                  };
-                  // For axles, only salon and suv are available
+                if (origin === 'german') {
                   typesContainer.appendChild(createBtn('صالون', 'salon'));
                   typesContainer.appendChild(createBtn('جيب', 'suv'));
-                  
-                  document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
-                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
-                    tb.onclick = () => {
-                      typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                      tb.classList.add('active');
-                      formData.type = tb.dataset.fuelType;
-                      // If salon, show price directly
-                      if (formData.type === 'salon') {
-                        const originalPrice = AXLES_PRICING.salon[formData.origin] || 0;
-                        const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                        
-                        // Check for region surcharge
+                } else {
+                  typesContainer.appendChild(createBtn('صالون', 'salon'));
+                  typesContainer.appendChild(createBtn('نص جيب', 'half_suv'));
+                  typesContainer.appendChild(createBtn('جيب', 'suv'));
+                }
+                document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
+                typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
+                  tb.onclick = () => {
+                    typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
+                    tb.classList.add('active');
+                    formData.type = tb.dataset.fuelType;
+                    document.getElementById('mechResultSection').classList.add('hidden');
+                    const prevBlocks = document.getElementById('blocksCylContainer');
+                    if (prevBlocks) prevBlocks.remove();
+                    const cylContainer = document.createElement('div');
+                    cylContainer.className = 'btn-grid';
+                    cylContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                    cylContainer.style.marginTop = '8px';
+                    const options = [];
+                    if (formData.type === 'salon') options.push('4','6');
+                    if (formData.type === 'suv') options.push('6','8');
+                    if (formData.type === 'half_suv') options.push('6','8');
+                    cylContainer.innerHTML = '';
+                    options.forEach(c => {
+                      const b = document.createElement('button');
+                      b.className = 'btn-option';
+                      b.type = 'button';
+                      b.textContent = c + ' سلندر';
+                      b.dataset.cyl = c;
+                      b.onclick = () => {
+                        const row = (BLOCKS_PRICING[formData.type] || {})[c] || {};
+                        const originalPrice = row[formData.origin] || 0;
+                        const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
                         let surcharge = 0;
                         if (formData.area) {
                           for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
@@ -8672,206 +8524,89 @@
                             }
                           }
                         }
-                        const totalPrice = price + surcharge;
-                        
+                        let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                        const displayBasePrice = basePrice + customerExtra;
+                        const totalPrice = displayBasePrice + surcharge;
                         const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
+                        const typeLabelMap = { salon: 'صالون', half_suv: 'نص جيب', suv: 'جيب' };
                         const originLabel = originLabelMap[formData.origin] || formData.origin;
-                        const desc = `اكسات (${originLabel} + صالون)`;
+                        const typeLabel = typeLabelMap[formData.type] || formData.type;
+                        const desc = `بلاكات (${originLabel} + ${typeLabel} + ${c} سلندر)`;
                         const tbody = document.getElementById('mechResultBody');
                         if (tbody) {
-                          let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${price.toFixed(2)} ${config.currency}</td></tr>`;
+                          let html = `
+                            <tr><td>${escapeHtml(desc)}</td><td class="highlight">${displayBasePrice.toFixed(2)} ${config.currency}</td></tr>
+                          `;
                           if (surcharge > 0) {
-                            html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
+                            html += `
+                              <tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>
+                            `;
                           }
-                          html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
+                          html += `
+                            <tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>
+                          `;
                           tbody.innerHTML = html;
                           updateMechResultNote();
                           document.getElementById('mechResultSection').classList.remove('hidden');
                         }
-                      } else if (formData.type === 'suv') {
-                        // For SUV, if german show dual/normal options, else show price directly
-                        if (formData.origin === 'german') {
-                          const dualContainer = document.createElement('div');
-                          dualContainer.className = 'btn-grid';
-                          dualContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-                          dualContainer.style.marginTop = '8px';
-                          
-                          const normalBtn = document.createElement('button');
-                          normalBtn.className = 'btn-option';
-                          normalBtn.type = 'button';
-                          normalBtn.textContent = 'عادي';
-                          
-                          const dualBtn = document.createElement('button');
-                          dualBtn.className = 'btn-option';
-                          dualBtn.type = 'button';
-                          dualBtn.textContent = 'دبل';
-                          
-                          dualContainer.appendChild(normalBtn);
-                          dualContainer.appendChild(dualBtn);
-                          
-                          [normalBtn, dualBtn].forEach(btn => {
-                            btn.onclick = () => {
-                              dualContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
-                              btn.classList.add('active');
-                              
-                              const dualType = btn === dualBtn ? 'dual' : 'normal';
-                              const originalPrice = formData.origin === 'german' ? AXLES_PRICING.suv.german[dualType] : 0;
-                              const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                              
-                              // Check for region surcharge
-                              let surcharge = 0;
-                              if (formData.area) {
-                                for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
-                                  if (regions.includes(formData.area)) {
-                                    surcharge = parseInt(amount, 10);
-                                    break;
-                                  }
-                                }
-                              }
-                              const totalPrice = price + surcharge;
-                              
-                              const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
-                              const originLabel = originLabelMap[formData.origin] || formData.origin;
-                              const dualLabel = dualType === 'dual' ? 'دبل' : 'عادي';
-                              const desc = `اكسات (${originLabel} + جيب + ${dualLabel})`;
-                              const tbody = document.getElementById('mechResultBody');
-                              if (tbody) {
-                                let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${price.toFixed(2)} ${config.currency}</td></tr>`;
-                                if (surcharge > 0) {
-                                  html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
-                                }
-                                html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
-                                tbody.innerHTML = html;
-                                updateMechResultNote();
-                                document.getElementById('mechResultSection').classList.remove('hidden');
-                              }
-                            };
-                          });
-                          
-                          const host = document.getElementById('fuelpumpTypeSection');
-                          const prevDual = document.getElementById('axlesDualContainer');
-                          if (prevDual) prevDual.remove();
-                          dualContainer.id = 'axlesDualContainer';
-                          host.appendChild(dualContainer);
-                        } else {
-                          // American or Japanese: show price directly
-                          const originalPrice = formData.origin === 'american' ? AXLES_PRICING.suv.american : AXLES_PRICING.suv.japanese;
-                          const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                          
-                          // Check for region surcharge
-                          let surcharge = 0;
-                          if (formData.area) {
-                            for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
-                              if (regions.includes(formData.area)) {
-                                surcharge = parseInt(amount, 10);
-                                break;
-                              }
-                            }
-                          }
-                          const totalPrice = price + surcharge;
-                          
-                          const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
-                          const originLabel = originLabelMap[formData.origin] || formData.origin;
-                          const desc = `اكسات (${originLabel} + جيب)`;
-                          const tbody = document.getElementById('mechResultBody');
-                          if (tbody) {
-                            let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${price.toFixed(2)} ${config.currency}</td></tr>`;
-                            if (surcharge > 0) {
-                              html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
-                            }
-                            html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
-                            tbody.innerHTML = html;
-                            updateMechResultNote();
-                            document.getElementById('mechResultSection').classList.remove('hidden');
-                          }
-                        }
-                      }
-                      
-                      // Clear previous dual container if switching to salon
-                      if (formData.type === 'salon') {
-                        const prevDual = document.getElementById('axlesDualContainer');
-                        if (prevDual) prevDual.remove();
-                      }
-                    };
-                  });
-                };
-                document.querySelectorAll('[data-fuel-origin]').forEach(o => {
-                  o.onclick = () => {
-                    document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
-                    o.classList.add('active');
-                    formData.origin = o.dataset.fuelOrigin;
-                    
-                    // Clear other selections when origin changes
-                    formData.type = null;
-                    document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-                    document.getElementById('mechResultSection').classList.add('hidden');
-                    // Remove previous dual container
-                    const prevDual = document.getElementById('axlesDualContainer');
-                    if (prevDual) prevDual.remove();
-                    // Clear type button selections
-                    typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                    typesContainer.innerHTML = '';
-                    
-                    makeAxleTypeButtons(formData.origin);
+                      };
+                      cylContainer.appendChild(b);
+                    });
+                    const host = document.getElementById('fuelpumpTypeSection');
+                    const prev = document.getElementById('blocksCylContainer');
+                    if (prev) prev.remove();
+                    cylContainer.id = 'blocksCylContainer';
+                    host.appendChild(cylContainer);
                   };
                 });
-              }
-            });
-          } else if (Object.keys(PRICING).includes(formData.mechanicalService)) {
-            const svc = formData.mechanicalService;
-            const svcDisplay = serviceNames[svc] || svc;
-            // Show back and area UI first
-            document.getElementById('mechTypeSection').style.display = 'none';
-            document.getElementById('mechBackButtonSection').style.display = 'block';
-            document.getElementById('mechSelectedService').textContent = svcDisplay;
-            document.getElementById('mechAreaSection').classList.remove('hidden');
-            document.getElementById('fuelpumpOriginSection').classList.add('hidden');
-            document.getElementById('fuelpumpTypeSection').classList.add('hidden');
-            document.getElementById('mechResultSection').classList.add('hidden');
-            // Load areas from coolant sheet (خدمات5) columns [0,1,2,4,5,6]
-            loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
-              // After area selected, show origin
-              document.getElementById('mechAreaSection').classList.add('hidden');
-              document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
-              // attach origin handlers
+              };
               document.querySelectorAll('[data-fuel-origin]').forEach(o => {
                 o.onclick = () => {
                   document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
                   o.classList.add('active');
-                  formData.origin = o.dataset.fuelOrigin; // german / american / japanese
-                  const pricingForSvc = PRICING[svc] || {};
-                  const typesForOrigin = pricingForSvc[formData.origin] || {};
-                  // prepare type buttons based on available types for this origin
-                  const typesContainer = document.getElementById('fuelpumpTypeButtons');
+                  formData.origin = o.dataset.fuelOrigin;
+                  formData.type = null;
+                  document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+                  document.getElementById('mechResultSection').classList.add('hidden');
+                  const prevBlocks = document.getElementById('blocksCylContainer');
+                  if (prevBlocks) prevBlocks.remove();
+                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
                   typesContainer.innerHTML = '';
-                  const createBtn = (text, value) => {
-                    const b = document.createElement('button');
-                    b.className = 'btn-option';
-                    b.type = 'button';
-                    b.textContent = text;
-                    b.dataset.fuelType = value;
-                    return b;
-                  };
-                  const typeMapLabel = {
-                    salon: 'صالون',
-                    half_suv: 'نص جيب',
-                    suv: 'جيب'
-                  };
-                  Object.keys(typesForOrigin).forEach(tk => {
-                    const lbl = typeMapLabel[tk] || tk;
-                    typesContainer.appendChild(createBtn(lbl, tk));
-                  });
-                  // show type section
-                  document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
-                  // attach handlers to type buttons
-                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
-                    tb.onclick = () => {
-                      typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
-                      tb.classList.add('active');
-                      formData.type = tb.dataset.fuelType;
-                      const originalPrice = (pricingForSvc[formData.origin] && pricingForSvc[formData.origin][formData.type]) || 0;
-                      const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
-                      // Check for region surcharge
+                  makeBlockTypeButtons(formData.origin);
+                };
+              });
+            }
+          });
+        } else if (svc === 'axles') {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
+            if (formData.area) {
+              document.getElementById('mechAreaSection').classList.add('hidden');
+              document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
+              document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+              document.getElementById('brakesOptionsSection').classList.add('hidden');
+              const typesContainer = document.getElementById('fuelpumpTypeButtons');
+              const makeAxleTypeButtons = (origin) => {
+                typesContainer.innerHTML = '';
+                const createBtn = (text, value) => {
+                  const b = document.createElement('button');
+                  b.className = 'btn-option';
+                  b.type = 'button';
+                  b.textContent = text;
+                  b.dataset.fuelType = value;
+                  return b;
+                };
+                typesContainer.appendChild(createBtn('صالون', 'salon'));
+                typesContainer.appendChild(createBtn('جيب', 'suv'));
+                document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
+                typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
+                  tb.onclick = () => {
+                    typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
+                    tb.classList.add('active');
+                    formData.type = tb.dataset.fuelType;
+                    if (formData.type === 'salon') {
+                      const originalPrice = AXLES_PRICING.salon[formData.origin] || 0;
+                      const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
                       let surcharge = 0;
                       if (formData.area) {
                         for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
@@ -8881,41 +8616,281 @@
                           }
                         }
                       }
-                      const totalPrice = basePrice + surcharge;
+                      let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                      const displayPrice = price + customerExtra;
+                      const totalPrice = displayPrice + surcharge;
                       const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
                       const originLabel = originLabelMap[formData.origin] || formData.origin;
-                      const typeLabel = typeMapLabel[formData.type] || formData.type;
+                      const desc = `اكسات (${originLabel} + صالون)`;
                       const tbody = document.getElementById('mechResultBody');
                       if (tbody) {
-                        document.getElementById('mechResultSection').classList.remove('hidden');
-                        let html = `
-                          <tr>
-                            <td>${escapeHtml(svcDisplay)} (${escapeHtml(originLabel)} + ${escapeHtml(typeLabel)})</td>
-                            <td class="highlight">${basePrice.toFixed(2)} ${config.currency}</td>
-                          </tr>
-                        `;
+                        let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${displayPrice.toFixed(2)} ${config.currency}</td></tr>`;
                         if (surcharge > 0) {
-                          html += `
-                            <tr>
-                              <td>زيادة منطقة (${escapeHtml(formData.area)})</td>
-                              <td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td>
-                            </tr>
-                          `;
+                          html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
                         }
-                        html += `
-                          <tr style="background: #262626;">
-                            <td><strong>الإجمالي</strong></td>
-                            <td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td>
-                          </tr>
-                        `;
+                        html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
                         tbody.innerHTML = html;
                         updateMechResultNote();
+                        document.getElementById('mechResultSection').classList.remove('hidden');
                       }
-                    };
-                  });
+                    } else if (formData.type === 'suv') {
+                      if (formData.origin === 'german') {
+                        const dualContainer = document.createElement('div');
+                        dualContainer.className = 'btn-grid';
+                        dualContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                        dualContainer.style.marginTop = '8px';
+                        const normalBtn = document.createElement('button');
+                        normalBtn.className = 'btn-option';
+                        normalBtn.type = 'button';
+                        normalBtn.textContent = 'عادي';
+                        const dualBtn = document.createElement('button');
+                        dualBtn.className = 'btn-option';
+                        dualBtn.type = 'button';
+                        dualBtn.textContent = 'دبل';
+                        dualContainer.appendChild(normalBtn);
+                        dualContainer.appendChild(dualBtn);
+                        [normalBtn, dualBtn].forEach(btn => {
+                          btn.onclick = () => {
+                            dualContainer.querySelectorAll('.btn-option').forEach(x => x.classList.remove('active'));
+                            btn.classList.add('active');
+                            const dualType = btn === dualBtn ? 'dual' : 'normal';
+                            const originalPrice = formData.origin === 'german' ? AXLES_PRICING.suv.german[dualType] : 0;
+                            const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                            let surcharge = 0;
+                            if (formData.area) {
+                              for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
+                                if (regions.includes(formData.area)) {
+                                  surcharge = parseInt(amount, 10);
+                                  break;
+                                }
+                              }
+                            }
+                            let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                            const displayPrice = price + customerExtra;
+                            const totalPrice = displayPrice + surcharge;
+                            const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
+                            const originLabel = originLabelMap[formData.origin] || formData.origin;
+                            const dualLabel = dualType === 'dual' ? 'دبل' : 'عادي';
+                            const desc = `اكسات (${originLabel} + جيب + ${dualLabel})`;
+                            const tbody = document.getElementById('mechResultBody');
+                            if (tbody) {
+                              let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${displayPrice.toFixed(2)} ${config.currency}</td></tr>`;
+                              if (surcharge > 0) {
+                                html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
+                              }
+                              html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
+                              tbody.innerHTML = html;
+                              updateMechResultNote();
+                              document.getElementById('mechResultSection').classList.remove('hidden');
+                            }
+                          };
+                        });
+                        const host = document.getElementById('fuelpumpTypeSection');
+                        const prevDual = document.getElementById('axlesDualContainer');
+                        if (prevDual) prevDual.remove();
+                        dualContainer.id = 'axlesDualContainer';
+                        host.appendChild(dualContainer);
+                      } else {
+                        const originalPrice = formData.origin === 'american' ? AXLES_PRICING.suv.american : AXLES_PRICING.suv.japanese;
+                        const price = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                        let surcharge = 0;
+                        if (formData.area) {
+                          for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
+                            if (regions.includes(formData.area)) {
+                              surcharge = parseInt(amount, 10);
+                              break;
+                            }
+                          }
+                        }
+                        let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                        const displayPrice = price + customerExtra;
+                        const totalPrice = displayPrice + surcharge;
+                        const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
+                        const originLabel = originLabelMap[formData.origin] || formData.origin;
+                        const desc = `اكسات (${originLabel} + جيب)`;
+                        const tbody = document.getElementById('mechResultBody');
+                        if (tbody) {
+                          let html = `<tr><td>${escapeHtml(desc)}</td><td class="highlight">${displayPrice.toFixed(2)} ${config.currency}</td></tr>`;
+                          if (surcharge > 0) {
+                            html += `<tr><td>زيادة منطقة (${escapeHtml(formData.area)})</td><td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td></tr>`;
+                          }
+                          html += `<tr style="background: #262626;"><td><strong>الإجمالي</strong></td><td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td></tr>`;
+                          tbody.innerHTML = html;
+                          updateMechResultNote();
+                          document.getElementById('mechResultSection').classList.remove('hidden');
+                        }
+                      }
+                    }
+                    if (formData.type === 'salon') {
+                      const prevDual = document.getElementById('axlesDualContainer');
+                      if (prevDual) prevDual.remove();
+                    }
+                  };
+                });
+              };
+              document.querySelectorAll('[data-fuel-origin]').forEach(o => {
+                o.onclick = () => {
+                  document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
+                  o.classList.add('active');
+                  formData.origin = o.dataset.fuelOrigin;
+                  formData.type = null;
+                  document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+                  document.getElementById('mechResultSection').classList.add('hidden');
+                  const prevDual = document.getElementById('axlesDualContainer');
+                  if (prevDual) prevDual.remove();
+                  typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
+                  typesContainer.innerHTML = '';
+                  makeAxleTypeButtons(formData.origin);
                 };
               });
+            }
+          });
+        } else if (Object.keys(PRICING).includes(svc)) {
+          document.getElementById('mechAreaSection').classList.remove('hidden');
+          document.getElementById('fuelpumpOriginSection').classList.add('hidden');
+          document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+          document.getElementById('mechResultSection').classList.add('hidden');
+          loadAreaOptionsDatalist('خدمات5', [0, 1, 2, 4, 5, 6], () => {
+            document.getElementById('mechAreaSection').classList.add('hidden');
+            document.getElementById('fuelpumpOriginSection').classList.remove('hidden');
+            document.querySelectorAll('[data-fuel-origin]').forEach(o => {
+              o.onclick = () => {
+                document.querySelectorAll('[data-fuel-origin]').forEach(x => x.classList.remove('active'));
+                o.classList.add('active');
+                formData.origin = o.dataset.fuelOrigin;
+                const pricingForSvc = PRICING[svc] || {};
+                const typesForOrigin = pricingForSvc[formData.origin] || {};
+                const typesContainer = document.getElementById('fuelpumpTypeButtons');
+                typesContainer.innerHTML = '';
+                const createBtn = (text, value) => {
+                  const b = document.createElement('button');
+                  b.className = 'btn-option';
+                  b.type = 'button';
+                  b.textContent = text;
+                  b.dataset.fuelType = value;
+                  return b;
+                };
+                const typeMapLabel = {
+                  salon: 'صالون',
+                  half_suv: 'نص جيب',
+                  suv: 'جيب'
+                };
+                Object.keys(typesForOrigin).forEach(tk => {
+                  const lbl = typeMapLabel[tk] || tk;
+                  typesContainer.appendChild(createBtn(lbl, tk));
+                });
+                document.getElementById('fuelpumpTypeSection').classList.remove('hidden');
+                typesContainer.querySelectorAll('[data-fuel-type]').forEach(tb => {
+                  tb.onclick = () => {
+                    typesContainer.querySelectorAll('[data-fuel-type]').forEach(b => b.classList.remove('active'));
+                    tb.classList.add('active');
+                    formData.type = tb.dataset.fuelType;
+                    const originalPrice = (pricingForSvc[formData.origin] && pricingForSvc[formData.origin][formData.type]) || 0;
+                    const basePrice = originalPrice + MECHANICAL_PRICE_UPLIFT;
+                    let surcharge = 0;
+                    if (formData.area) {
+                      for (const [amount, regions] of Object.entries(REGION_SURCHARGES)) {
+                        if (regions.includes(formData.area)) {
+                          surcharge = parseInt(amount, 10);
+                          break;
+                        }
+                      }
+                    }
+                    let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+                    const displayBasePrice = basePrice + customerExtra;
+                    const totalPrice = displayBasePrice + surcharge;
+                    const originLabelMap = { german: 'ألماني', american: 'أمريكي', japanese: 'ياباني' };
+                    const originLabel = originLabelMap[formData.origin] || formData.origin;
+                    const typeLabel = typeMapLabel[formData.type] || formData.type;
+                    const svcDisplay = serviceNames[svc] || svc;
+                    const tbody = document.getElementById('mechResultBody');
+                    if (tbody) {
+                      document.getElementById('mechResultSection').classList.remove('hidden');
+                      let html = `
+                        <tr>
+                          <td>${escapeHtml(svcDisplay)} (${escapeHtml(originLabel)} + ${escapeHtml(typeLabel)})</td>
+                          <td class="highlight">${displayBasePrice.toFixed(2)} ${config.currency}</td>
+                        </tr>
+                      `;
+                      if (surcharge > 0) {
+                        html += `
+                          <tr>
+                            <td>زيادة منطقة (${escapeHtml(formData.area)})</td>
+                            <td class="highlight">${surcharge.toFixed(2)} ${config.currency}</td>
+                          </tr>
+                        `;
+                      }
+                      html += `
+                        <tr style="background: #262626;">
+                          <td><strong>الإجمالي</strong></td>
+                          <td class="highlight"><strong>${totalPrice.toFixed(2)} ${config.currency}</strong></td>
+                        </tr>
+                      `;
+                      tbody.innerHTML = html;
+                      updateMechResultNote();
+                    }
+                  };
+                });
+              };
             });
+          });
+        }
+      }
+
+      document.querySelectorAll('[data-mech]').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('[data-mech]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // Hide service type section and show back button
+          document.getElementById('mechTypeSection').style.display = 'none';
+          document.getElementById('mechBackButtonSection').style.display = 'block';
+          
+          // Display selected service name
+          const serviceName = serviceNames[btn.dataset.mech];
+          document.getElementById('mechSelectedService').textContent = serviceName;
+          
+          formData.mechanicalService = btn.dataset.mech;
+          formData.partsProvider = null;
+          
+          if (formData.mechanicalService === 'inventoryManagement') {
+            renderInventoryManagementInterface();
+            return;
+          }
+          
+          document.getElementById('mechResultSection').classList.add('hidden');
+          document.getElementById('areaSelect').value = '';
+          formData.area = null;
+          
+          // Hide all dynamic sections
+          const partsProvSec = document.getElementById('partsProviderSection');
+          if (partsProvSec) {
+            partsProvSec.classList.add('hidden');
+            partsProvSec.querySelectorAll('[data-parts-provider]').forEach(b => b.classList.remove('active'));
+          }
+          document.getElementById('oilFilterSourceSection').classList.add('hidden');
+          document.getElementById('mechAreaSection').classList.add('hidden');
+          document.getElementById('alternatorSupplierPriceSection').classList.add('hidden');
+          document.getElementById('fuelpumpOriginSection').classList.add('hidden');
+          document.getElementById('fuelpumpTypeSection').classList.add('hidden');
+          document.getElementById('brakesOptionsSection').classList.add('hidden');
+          document.getElementById('brakesModeSection').classList.add('hidden');
+          const prevBlocks = document.getElementById('blocksCylContainer'); if (prevBlocks) prevBlocks.remove();
+          const prevDual = document.getElementById('axlesDualContainer'); if (prevDual) prevDual.remove();
+
+          if (COVERED_SERVICES.includes(formData.mechanicalService)) {
+            if (partsProvSec) partsProvSec.classList.remove('hidden');
+            partsProvSec.querySelectorAll('[data-parts-provider]').forEach(pBtn => {
+              pBtn.onclick = () => {
+                partsProvSec.querySelectorAll('[data-parts-provider]').forEach(b => b.classList.remove('active'));
+                pBtn.classList.add('active');
+                formData.partsProvider = pBtn.dataset.partsProvider;
+                partsProvSec.classList.add('hidden');
+                proceedToServiceFlow(formData.mechanicalService);
+              };
+            });
+          } else {
+            proceedToServiceFlow(formData.mechanicalService);
           }
         };
       });
@@ -8940,8 +8915,13 @@
     function updateMechResultNote() {
       const noteDiv = document.getElementById('mechNote');
       if (!noteDiv) return;
+
+      const extraClause = (formData.partsProvider === 'customer' || formData.partsProvider === 'portarage')
+        ? '<br>في حال تركيب أكثر من قطعة في نفس الزيارة، تكون رسوم الخدمة أقل من السعر المعروض.'
+        : '';
+        
       if (formData.mechanicalService === 'sahkiya') {
-        noteDiv.innerHTML = 'الفني المسؤول عن هذه الخدمة هو يوسف الميكانيكي';
+        noteDiv.innerHTML = 'الفني المسؤول عن هذه الخدمة هو يوسف الميكانيكي' + extraClause;
         noteDiv.classList.remove('hidden');
         return;
       }
@@ -8950,23 +8930,27 @@
           <div style="line-height: 1.6;">
             ١- لازم تسالون العميل لو السياره فيها حراره ولو ارتفعت الحراره بعد ما عبينا لازم توديها كراج ويشيك على التسريب لنه ما عندنا خدمه تصليح او فحص تسريب<br>
             ٢-هذا السعر في حال العميل طلب تعبئه ماي راديتر و(ليس تبديل) التبديل يختلف سعره عن التعبئه يرجى التأكد من الاداره
+            ${extraClause}
           </div>
         `;
         noteDiv.classList.remove('hidden');
         return;
       }
       if (formData.mechanicalService === 'oilfilter' && formData.oilSource === 'customer') {
-        noteDiv.textContent = 'إذا القطع من عند العميل';
+        noteDiv.innerHTML = 'إذا القطع من عند العميل' + extraClause;
         noteDiv.classList.remove('hidden');
         return;
       }
       const noteServices = new Set([
         'fuelpump', 'waterpump', 'gaysh', 'airfilter', 'acfilter', 'gaysh_rollers',
         'gaysh_shadad', 'shialat', 'assistants', 'stabilizer', 'assistant_seat',
-        'blocks', 'axles', 'brakes'
+        'blocks', 'axles', 'brakes', 'alternator', 'brakefluid', 'transmission', 'oilfilter'
       ]);
       if (noteServices.has(formData.mechanicalService)) {
-        noteDiv.innerHTML = `هذه فقط رسوم الخدمة (شغل الايد)<br>تزيد الأسعار إذا سيارة انفينيتي أو كاديلاك أو رينج روفر`;
+        noteDiv.innerHTML = `هذه فقط رسوم الخدمة (شغل الايد)<br>تزيد الأسعار إذا سيارة انفينيتي أو كاديلاك أو رينج روفر` + extraClause;
+        noteDiv.classList.remove('hidden');
+      } else if (extraClause) {
+        noteDiv.innerHTML = extraClause.replace(/^<br>/, '');
         noteDiv.classList.remove('hidden');
       } else {
         noteDiv.classList.add('hidden');
@@ -8995,14 +8979,16 @@
           surcharge = 5;
         }
         
-        const total = basePrice + surcharge;
+        let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+        let displayBasePrice = basePrice + customerExtra;
+        const total = displayBasePrice + surcharge;
         let cancellation = 'لا يوجد';
         
         const tbody = document.getElementById('mechResultBody');
         tbody.innerHTML = `
           <tr>
             <td>سعر الخدمة الأساسي</td>
-            <td class="highlight">${basePrice.toFixed(2)} ${config.currency}</td>
+            <td class="highlight">${displayBasePrice.toFixed(2)} ${config.currency}</td>
           </tr>
           ${surcharge > 0 ? `
           <tr>
@@ -9045,12 +9031,21 @@
         }
       }
       
+      let customerExtra = (formData.partsProvider === 'customer') ? 10 : 0;
+      let displayPrice = basePrice + customerExtra;
+
       const tbody = document.getElementById('mechResultBody');
       tbody.innerHTML = `
         <tr>
           <td>سعر الخدمة</td>
-          <td class="highlight">${basePrice.toFixed(2)} ${config.currency}</td>
+          <td class="highlight">${displayPrice.toFixed(2)} ${config.currency}</td>
         </tr>
+        ${customerExtra > 0 ? `
+        <tr style="background: #262626;">
+          <td><strong>الإجمالي</strong></td>
+          <td class="highlight"><strong>${displayPrice.toFixed(2)} ${config.currency}</strong></td>
+        </tr>
+        ` : ''}
         <tr>
           <td>رسوم الإلغاء</td>
           <td>${cancellation}</td>
@@ -9093,6 +9088,41 @@
       }
       const tbody = document.getElementById('mechResultBody');
       const resultSection = document.getElementById('mechResultSection');
+      function restoreDefaultHeader() {
+        const thead = resultSection.querySelector('thead');
+        if (thead) {
+          thead.innerHTML = `
+            <tr>
+              <th>البيان</th>
+              <th>الإجمالى</th>
+            </tr>
+          `;
+        }
+      }
+
+      // EXCEPTION HANDLING: If partsProvider === 'customer', do NOT fetch or show products/fluids. Show service fee merged with customer surcharge!
+      if (formData.partsProvider === 'customer') {
+        restoreDefaultHeader();
+        const displayFee = basePrice + 10;
+        tbody.innerHTML = `
+          <tr>
+            <td>رسوم خدمة (${escapeHtml(serviceName)})</td>
+            <td class="highlight">${displayFee.toFixed(2)} ${config.currency}</td>
+          </tr>
+          <tr style="background: #262626;">
+            <td><strong>الإجمالي</strong></td>
+            <td class="highlight"><strong>${displayFee.toFixed(2)} ${config.currency}</strong></td>
+          </tr>
+          <tr>
+            <td>رسوم الإلغاء</td>
+            <td>${cancellation}</td>
+          </tr>
+        `;
+        updateMechResultNote();
+        resultSection.classList.remove('hidden');
+        return;
+      }
+
       async function refreshInventory() {
         try {
           const inventorySheetId = '1tbCZpRWmgHxJC2UT4_4Nwgz0iZ-7JP3eTbIHvHj3p5A';
@@ -9125,17 +9155,6 @@
             if (brandRaw.toLowerCase().includes('duckhams')) displayBrand = 'داكهامز بريطاني 🇬🇧';
             brands.push({ brand: displayBrand, quantity, price });
           }
-        }
-      }
-      function restoreDefaultHeader() {
-        const thead = resultSection.querySelector('thead');
-        if (thead) {
-          thead.innerHTML = `
-            <tr>
-              <th>البيان</th>
-              <th>الإجمالى</th>
-            </tr>
-          `;
         }
       }
       if (!brands.length) {
@@ -9539,7 +9558,8 @@
       });
     }
     function calculateAlternatorPrice() {
-      if (!formData.area || !formData.supplierPrice) return;
+      if (!formData.area) return;
+      if (formData.partsProvider !== 'customer' && !formData.supplierPrice) return;
       
       const rows = sheetsData['خدمات ميكانيكية2'];
       if (!rows) return;
@@ -9562,30 +9582,46 @@
         }
       }
       
-      // Supplier price + 20 dinars = part price
-      const partPrice = formData.supplierPrice + 20;
-      const total = servicePrice + partPrice;
-      
       const tbody = document.getElementById('mechResultBody');
       
-      tbody.innerHTML = `
-        <tr>
-          <td>سعر الخدمة</td>
-          <td class="highlight">${servicePrice.toFixed(2)} ${config.currency}</td>
-        </tr>
-        <tr>
-          <td>سعر القطعة (المورد + 20 د.ك)</td>
-          <td class="highlight">${partPrice.toFixed(2)} ${config.currency}</td>
-        </tr>
-        <tr style="background: #262626;">
-          <td><strong>الإجمالي</strong></td>
-          <td class="highlight"><strong>${total.toFixed(2)} ${config.currency}</strong></td>
-        </tr>
-        <tr>
-          <td>رسوم الإلغاء</td>
-          <td>${cancellation}</td>
-        </tr>
-      `;
+      if (formData.partsProvider === 'customer') {
+        const displayFee = servicePrice + 10;
+        tbody.innerHTML = `
+          <tr>
+            <td>رسوم الخدمة</td>
+            <td class="highlight">${displayFee.toFixed(2)} ${config.currency}</td>
+          </tr>
+          <tr style="background: #262626;">
+            <td><strong>الإجمالي</strong></td>
+            <td class="highlight"><strong>${displayFee.toFixed(2)} ${config.currency}</strong></td>
+          </tr>
+          <tr>
+            <td>رسوم الإلغاء</td>
+            <td>${cancellation}</td>
+          </tr>
+        `;
+      } else {
+        const partPrice = (formData.supplierPrice || 0) + 20;
+        const total = servicePrice + partPrice;
+        tbody.innerHTML = `
+          <tr>
+            <td>سعر الخدمة</td>
+            <td class="highlight">${servicePrice.toFixed(2)} ${config.currency}</td>
+          </tr>
+          <tr>
+            <td>سعر القطعة (المورد + 20 د.ك)</td>
+            <td class="highlight">${partPrice.toFixed(2)} ${config.currency}</td>
+          </tr>
+          <tr style="background: #262626;">
+            <td><strong>الإجمالي</strong></td>
+            <td class="highlight"><strong>${total.toFixed(2)} ${config.currency}</strong></td>
+          </tr>
+          <tr>
+            <td>رسوم الإلغاء</td>
+            <td>${cancellation}</td>
+          </tr>
+        `;
+      }
       
       updateMechResultNote();
       document.getElementById('mechResultSection').classList.remove('hidden');
@@ -15926,4 +15962,3 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
   </script>
 </body>
 </html>==
-
