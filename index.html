@@ -2828,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.5';
+    const SITE_VERSION = '3.6';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -14384,38 +14384,61 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           vendorMap.set(`${brand}|${viscosity}`.toLowerCase(), vendor);
         }
       });
+      // Build price/store maps from Oils sheet
+      const oilPriceMap = new Map();
+      const oilStoreMap = new Map();
+      oilSnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const viscosity = (row[1] || '').toString().trim();
+        const price = toNumber(row[3]); // ven price (Col D)
+        const storeQty = toNumber(row[5]);
+        if (brand && viscosity) {
+          const k = `${brand}|${viscosity}`.toLowerCase();
+          oilPriceMap.set(k, price);
+          oilStoreMap.set(k, storeQty);
+        }
+      });
       const oilMap = new Map();
       const inventoryMap = new Map();
       oilSnapshotRows.forEach(row => {
         const brand = (row[0] || '').toString().trim();
         const viscosity = (row[1] || '').toString().trim();
         const vendor = (row[12] || '').toString().trim();
-        
+        const price = toNumber(row[3]); // ven price (Col D)
+        const storeQty = toNumber(row[5]);
         const mapKey = `${brand}|${viscosity}|${targetMonthAbbr}`.toLowerCase().trim();
         const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[5]);
         if (!brand || !viscosity) return;
         const key = `${brand}|${viscosity}`;
         if (!oilMap.has(key)) {
-          oilMap.set(key, { brand, viscosity, vendor, openingStock, received: 0, issued: 0 });
+          oilMap.set(key, { brand, viscosity, vendor, openingStock, received: 0, issued: 0, price, storeQty });
         } else {
           const existing = oilMap.get(key);
           existing.openingStock += openingStock;
           if (vendor && !existing.vendor) existing.vendor = vendor;
+          if (!existing.price && price) existing.price = price;
+          if (!existing.storeQty && storeQty) existing.storeQty = storeQty;
         }
       });
       inventorySnapshotRows.forEach(row => {
         const brand = (row[0] || '').toString().trim();
-        const partNumber = (row[1] || '').toString().trim();
+        const partNumberRaw = (row[1] || '').toString().trim();
+        const partType = (row[2] || '').toString().trim();
+        const partNumber = partNumberRaw || partType;
+        const price = toNumber(row[5]); // Col F
+        const vendor = (row[6] || '').toString().trim(); // Col G
         
         const mapKey = `${brand}|${partNumber}|${targetMonthAbbr}`.toLowerCase().trim();
         const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[3]);
         if (!brand || !partNumber) return;
         const key = `${brand}|${partNumber}`;
         if (!inventoryMap.has(key)) {
-          inventoryMap.set(key, { brand, partNumber, openingStock, received: 0, issued: 0 });
+          inventoryMap.set(key, { brand, partNumber, openingStock, price, vendor, received: 0, issued: 0 });
         } else {
           const existing = inventoryMap.get(key);
           existing.openingStock += openingStock;
+          if (vendor && !existing.vendor) existing.vendor = vendor;
+          if (price && !existing.price) existing.price = price;
         }
       });
       const oilTransactions = new Map();
@@ -14449,15 +14472,39 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const oilKeys = new Set([...oilMap.keys(), ...oilTransactions.keys()]);
       const inventoryKeys = new Set([...inventoryMap.keys(), ...inventoryTransactions.keys()]);
       const oilRows = Array.from(oilKeys).map(key => {
-        const snapshot = oilMap.get(key) || { openingStock: 0, brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendor: '' };
+        const snapshot = oilMap.get(key) || { openingStock: 0, brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendor: '', price: 0, storeQty: 0 };
         const tx = oilTransactions.get(key) || { received: 0, issued: 0 };
         const vendor = snapshot.vendor || vendorMap.get(key.toLowerCase()) || '';
-        return { brand: snapshot.brand, viscosity: snapshot.viscosity, vendor, openingStock: snapshot.openingStock, received: tx.received, issued: tx.issued };
+        const price = snapshot.price || oilPriceMap.get(key.toLowerCase()) || 0;
+        const start = snapshot.openingStock;
+        const newQty = tx.received;
+        const total = start + newQty;
+        const sold = tx.issued;
+        const storeQty = snapshot.storeQty || oilStoreMap.get(key.toLowerCase()) || 0;
+        const inCar = Math.max(0, total - sold - storeQty);
+        const availableQty = Math.max(0, total - sold);
+        const payOut = sold * price;
+        const availableValue = availableQty * price;
+        return { vendor, brand: snapshot.brand, viscosity: snapshot.viscosity, start, newQty, total, price, storeQty, inCar, sold, availableQty, payOut, availableValue };
       }).sort((a, b) => a.vendor.localeCompare(b.vendor) || a.brand.localeCompare(b.brand) || a.viscosity.localeCompare(b.viscosity));
       const inventoryRows = Array.from(inventoryKeys).map(key => {
-        const snapshot = inventoryMap.get(key) || { openingStock: 0, brand: key.split('|')[0], partNumber: key.split('|')[1] || '' };
+        const snapshot = inventoryMap.get(key) || { openingStock: 0, brand: key.split('|')[0], partNumber: key.split('|')[1] || '', price: 0, vendor: '' };
         const tx = inventoryTransactions.get(key) || { received: 0, issued: 0 };
-        return { brand: snapshot.brand, partNumber: snapshot.partNumber, openingStock: snapshot.openingStock, received: tx.received, issued: tx.issued };
+        const availableQty = Math.max(0, snapshot.openingStock + tx.received - tx.issued);
+        const payOut = tx.issued * (snapshot.price || 0);
+        const availableValue = availableQty * (snapshot.price || 0);
+        return { 
+          brand: snapshot.brand, 
+          partNumber: snapshot.partNumber, 
+          openingStock: snapshot.openingStock, 
+          price: snapshot.price, 
+          vendor: snapshot.vendor, 
+          received: tx.received, 
+          issued: tx.issued,
+          availableQty,
+          payOut,
+          availableValue
+        };
       }).sort((a, b) => a.brand.localeCompare(b.brand) || a.partNumber.localeCompare(b.partNumber));
       const totalReceived = transactions.reduce((sum, tx) => sum + Math.max(tx.qtyChange, 0), 0);
       const totalIssued = transactions.reduce((sum, tx) => sum + Math.max(-tx.qtyChange, 0), 0);
@@ -14549,34 +14596,58 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       });
       const oilMap = new Map();
       const inventoryMap = new Map();
+      // Build price map from Oils sheet (col[2] = price, col[5] = current store qty)
+      const oilPriceMap = new Map();
+      const oilStoreMap = new Map();
+      oilSnapshotRows.forEach(row => {
+        const brand = (row[0] || '').toString().trim();
+        const viscosity = (row[1] || '').toString().trim();
+        const price = toNumber(row[3]); // ven price (Col D)
+        const storeQty = toNumber(row[5]);
+        if (brand && viscosity) {
+          const k = `${brand}|${viscosity}`.toLowerCase();
+          oilPriceMap.set(k, price);
+          oilStoreMap.set(k, storeQty);
+        }
+      });
       oilSnapshotRows.forEach(row => {
         const brand = (row[0] || '').toString().trim();
         const viscosity = (row[1] || '').toString().trim();
         const vendor = (row[12] || '').toString().trim();
+        const price = toNumber(row[3]); // ven price (Col D)
+        const storeQty = toNumber(row[5]);
         const mapKey = `${brand}|${viscosity}|${targetMonthAbbr}`.toLowerCase().trim();
         const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[5]);
         if (!brand || !viscosity) return;
         const key = `${brand}|${viscosity}`;
         if (!oilMap.has(key)) {
-          oilMap.set(key, { brand, viscosity, vendor, openingStock, received: 0, issued: 0 });
+          oilMap.set(key, { brand, viscosity, vendor, openingStock, received: 0, issued: 0, price, storeQty });
         } else {
           const existing = oilMap.get(key);
           existing.openingStock += openingStock;
           if (vendor && !existing.vendor) existing.vendor = vendor;
+          if (!existing.price && price) existing.price = price;
+          if (!existing.storeQty && storeQty) existing.storeQty = storeQty;
         }
       });
       inventorySnapshotRows.forEach(row => {
         const brand = (row[0] || '').toString().trim();
-        const partNumber = (row[1] || '').toString().trim();
+        const partNumberRaw = (row[1] || '').toString().trim();
+        const partType = (row[2] || '').toString().trim();
+        const partNumber = partNumberRaw || partType;
+        const price = toNumber(row[5]); // Col F
+        const vendor = (row[6] || '').toString().trim(); // Col G
         const mapKey = `${brand}|${partNumber}|${targetMonthAbbr}`.toLowerCase().trim();
         const openingStock = snapshotMap.has(mapKey) ? Number(snapshotMap.get(mapKey)) : toNumber(row[3]);
         if (!brand || !partNumber) return;
         const key = `${brand}|${partNumber}`;
         if (!inventoryMap.has(key)) {
-          inventoryMap.set(key, { brand, partNumber, openingStock, received: 0, issued: 0 });
+          inventoryMap.set(key, { brand, partNumber, openingStock, price, vendor, received: 0, issued: 0 });
         } else {
           const existing = inventoryMap.get(key);
           existing.openingStock += openingStock;
+          if (vendor && !existing.vendor) existing.vendor = vendor;
+          if (price && !existing.price) existing.price = price;
         }
       });
       const oilTransactions = new Map();
@@ -14610,49 +14681,353 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const oilKeys = new Set([...oilMap.keys(), ...oilTransactions.keys()]);
       const inventoryKeys = new Set([...inventoryMap.keys(), ...inventoryTransactions.keys()]);
       const oilRows = Array.from(oilKeys).map(key => {
-        const snapshot = oilMap.get(key) || { openingStock: 0, brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendor: '' };
+        const snapshot = oilMap.get(key) || { openingStock: 0, brand: key.split('|')[0], viscosity: key.split('|')[1] || '', vendor: '', price: 0, storeQty: 0 };
         const tx = oilTransactions.get(key) || { received: 0, issued: 0 };
         const vendor = snapshot.vendor || vendorMap.get(key.toLowerCase()) || '';
-        return { brand: snapshot.brand, viscosity: snapshot.viscosity, vendor, openingStock: snapshot.openingStock, received: tx.received, issued: tx.issued };
-      }).sort((a, b) => a.vendor.localeCompare(b.vendor) || a.brand.localeCompare(b.brand) || a.viscosity.localeCompare(b.viscosity));
+        const price = snapshot.price || oilPriceMap.get(key.toLowerCase()) || 0;
+        const start = snapshot.openingStock;
+        const newQty = tx.received;
+        const total = start + newQty;
+        const sold = tx.issued;
+        const storeQty = snapshot.storeQty || oilStoreMap.get(key.toLowerCase()) || 0;
+        // In Car = qty allocated to vehicles (Total - Sold - Store, floored at 0)
+        const inCar = Math.max(0, total - sold - storeQty);
+        const availableQty = Math.max(0, total - sold);
+        const payOut = sold * price;
+        const availableValue = availableQty * price;
+        return { vendor, brand: snapshot.brand, viscosity: snapshot.viscosity, start, newQty, total, price, storeQty, inCar, sold, availableQty, payOut, availableValue };
+      })
+      .filter(r => !(r.start === 0 && r.newQty === 0 && r.sold === 0 && r.availableQty === 0))
+      .filter(r => r.vendor && r.vendor.trim() !== '-' && r.vendor.trim().toLowerCase() !== 'unknown')
+      .sort((a, b) => a.vendor.localeCompare(b.vendor) || a.brand.localeCompare(b.brand) || a.viscosity.localeCompare(b.viscosity));
+
       const inventoryRows = Array.from(inventoryKeys).map(key => {
-        const snapshot = inventoryMap.get(key) || { openingStock: 0, brand: key.split('|')[0], partNumber: key.split('|')[1] || '' };
+        const snapshot = inventoryMap.get(key) || { openingStock: 0, brand: key.split('|')[0], partNumber: key.split('|')[1] || '', price: 0, vendor: '' };
         const tx = inventoryTransactions.get(key) || { received: 0, issued: 0 };
-        return { brand: snapshot.brand, partNumber: snapshot.partNumber, openingStock: snapshot.openingStock, received: tx.received, issued: tx.issued };
+        const availableQty = Math.max(0, snapshot.openingStock + tx.received - tx.issued);
+        const payOut = tx.issued * (snapshot.price || 0);
+        const availableValue = availableQty * (snapshot.price || 0);
+        return { 
+          brand: snapshot.brand, 
+          partNumber: snapshot.partNumber, 
+          openingStock: snapshot.openingStock, 
+          price: snapshot.price, 
+          vendor: snapshot.vendor, 
+          received: tx.received, 
+          issued: tx.issued,
+          availableQty,
+          payOut,
+          availableValue
+        };
       }).sort((a, b) => a.brand.localeCompare(b.brand) || a.partNumber.localeCompare(b.partNumber));
-      const headersOils = ['Brand', 'Viscosity', 'Vendors', 'Original Stock', 'Received', 'Issued'];
-      const rowsOils = oilRows.map(r => [r.brand, r.viscosity, r.vendor, r.openingStock, r.received, r.issued]);
-      const headersInv = ['Brand', 'Part Number / Serial', 'Original Stock', 'Received', 'Issued'];
-      const rowsInv = inventoryRows.map(r => [r.brand, r.partNumber, r.openingStock, r.received, r.issued]);
+
+      const oilRowsByVendor = new Map();
+      oilRows.forEach(r => {
+        const v = r.vendor || 'Unknown';
+        if (!oilRowsByVendor.has(v)) oilRowsByVendor.set(v, []);
+        oilRowsByVendor.get(v).push(r);
+      });
+
+      const aoaOils = [];
+      const mergesOils = [];
+      const dataHeaders = ['Oil', 'Start', 'New', 'Total', 'Price', 'Store', 'In Car', 'Sold', 'Available Qty', 'Pay Out', 'Available Value'];
+
+      oilRowsByVendor.forEach((rows, vendor) => {
+        const vendorRowIdx = aoaOils.length;
+        aoaOils.push([`Supplier Name: ${vendor}`]);
+        mergesOils.push({ s: { r: vendorRowIdx, c: 0 }, e: { r: vendorRowIdx, c: 10 } });
+        
+        aoaOils.push(dataHeaders);
+
+        let totalPayOut = 0;
+        let totalAvailValue = 0;
+
+        rows.forEach(r => {
+          totalPayOut += r.payOut || 0;
+          totalAvailValue += r.availableValue || 0;
+          aoaOils.push([
+            r.brand + (r.viscosity ? ' ' + r.viscosity : ''),
+            r.start, r.newQty, r.total, r.price, r.storeQty, r.inCar, r.sold, r.availableQty, r.payOut, r.availableValue
+          ]);
+        });
+
+        aoaOils.push(['TOTAL', '', '', '', '', '', '', '', '', totalPayOut, totalAvailValue]);
+        aoaOils.push([]);
+      });
+
+      if (aoaOils.length > 0 && aoaOils[aoaOils.length - 1].length === 0) {
+        aoaOils.pop();
+      }
+
+      const inventoryRowsByVendor = new Map();
+      inventoryRows.forEach(r => {
+        const v = r.vendor || 'Unknown';
+        if (!inventoryRowsByVendor.has(v)) inventoryRowsByVendor.set(v, []);
+        inventoryRowsByVendor.get(v).push(r);
+      });
+
+      const aoaInv = [];
+      const mergesInv = [];
+      const dataHeadersInv = ['Brand', 'Part Number / Serial', 'Original Stock', 'Received', 'Issued', 'Price', 'Available Qty', 'Pay Out', 'Available Value'];
+
+      inventoryRowsByVendor.forEach((rows, vendor) => {
+        const vendorRowIdx = aoaInv.length;
+        aoaInv.push([`Supplier Name: ${vendor}`]);
+        mergesInv.push({ s: { r: vendorRowIdx, c: 0 }, e: { r: vendorRowIdx, c: 8 } });
+        
+        aoaInv.push(dataHeadersInv);
+
+        let totalPayOut = 0;
+        let totalAvailValue = 0;
+
+        rows.forEach(r => {
+          totalPayOut += r.payOut || 0;
+          totalAvailValue += r.availableValue || 0;
+          aoaInv.push([
+            r.brand, r.partNumber, r.openingStock, r.received, r.issued, r.price, r.availableQty, r.payOut, r.availableValue
+          ]);
+        });
+
+        aoaInv.push(['TOTAL', '', '', '', '', '', '', totalPayOut, totalAvailValue]);
+        aoaInv.push([]);
+      });
+
+      if (aoaInv.length > 0 && aoaInv[aoaInv.length - 1].length === 0) {
+        aoaInv.pop();
+      }
+
       const wb = XLSX.utils.book_new();
-      const wsOils = XLSX.utils.aoa_to_sheet([headersOils, ...rowsOils]);
-      const wsInv = XLSX.utils.aoa_to_sheet([headersInv, ...rowsInv]);
+      const wsOils = XLSX.utils.aoa_to_sheet(aoaOils);
+      if (mergesOils.length > 0) {
+        wsOils['!merges'] = mergesOils;
+      }
+      const wsInv = XLSX.utils.aoa_to_sheet(aoaInv);
+      if (mergesInv.length > 0) {
+        wsInv['!merges'] = mergesInv;
+      }
+
+      const numericOilCols = new Set([1, 2, 3, 5, 6, 7, 8]);
+      const currencyOilCols = new Set([4, 9, 10]);
+
+      const supplierHeaderStyle = {
+        font: { name: 'Calibri', sz: 12, bold: true, color: { rgb: '000000' } },
+        fill: { fgColor: { rgb: 'EAEAEA' } },
+        alignment: { vertical: 'center', horizontal: 'left' },
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'medium', color: { rgb: '000000' } },
+          right: { style: 'medium', color: { rgb: '000000' } }
+        }
+      };
+
       const headerStyle = {
         font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '000000' } },
         fill: { fgColor: { rgb: 'F2BC1B' } },
-        alignment: { vertical: 'center', horizontal: 'center' },
+        alignment: { vertical: 'center', horizontal: 'center', wrapText: true },
         border: {
-          top: { style: 'thin', color: { rgb: '000000' } },
+          top: { style: 'medium', color: { rgb: '000000' } },
           bottom: { style: 'medium', color: { rgb: '000000' } },
           left: { style: 'thin', color: { rgb: '000000' } },
           right: { style: 'thin', color: { rgb: '000000' } }
         }
       };
-      const cellStyle = {
+      
+      const cellStyleText = {
         font: { name: 'Calibri', sz: 11, color: { rgb: '333333' } },
         border: {
-          top: { style: 'thin', color: { rgb: 'E0E0E0' } },
-          bottom: { style: 'thin', color: { rgb: 'E0E0E0' } },
-          left: { style: 'thin', color: { rgb: 'E0E0E0' } },
-          right: { style: 'thin', color: { rgb: 'E0E0E0' } }
+          top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
         },
         alignment: { vertical: 'center', horizontal: 'left' }
       };
       const numberCellStyle = {
-        ...cellStyle,
-        alignment: { vertical: 'center', horizontal: 'right' }
+        font: { name: 'Calibri', sz: 11, color: { rgb: '1a1a2e' } },
+        fill: { fgColor: { rgb: 'F7F7F7' } },
+        border: {
+          top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+        },
+        alignment: { vertical: 'center', horizontal: 'center' }
       };
-      function applyStyles(ws) {
+      const currencyCellStyleGreen = {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '1B5E20' } },
+        fill: { fgColor: { rgb: 'E8F5E9' } },
+        border: {
+          top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+        },
+        alignment: { vertical: 'center', horizontal: 'center' },
+        numFmt: '0.000'
+      };
+
+      const currencyCellStyleRed = {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'B71C1C' } },
+        fill: { fgColor: { rgb: 'FFEBEE' } },
+        border: {
+          top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+        },
+        alignment: { vertical: 'center', horizontal: 'center' },
+        numFmt: '0.000'
+      };
+
+      const currencyCellStyleDefault = {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '333333' } },
+        fill: { fgColor: { rgb: 'F5F5F5' } },
+        border: {
+          top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+        },
+        alignment: { vertical: 'center', horizontal: 'center' },
+        numFmt: '0.000'
+      };
+
+      const totalRowStyle = {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '000000' } },
+        fill: { fgColor: { rgb: 'F5F5F5' } },
+        alignment: { vertical: 'center', horizontal: 'left' },
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+      const totalEmptyStyle = {
+        ...totalRowStyle,
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+          right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+        }
+      };
+      const totalCurrencyStyleGreen = {
+        ...currencyCellStyleGreen,
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '1B5E20' } },
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+      const totalCurrencyStyleRed = {
+        ...currencyCellStyleRed,
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'B71C1C' } },
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+      const totalCurrencyStyleDefault = {
+        ...currencyCellStyleDefault,
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '333333' } },
+        border: {
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+
+      function applyOilSheetStyles(ws, numColSet, currColSet, payOutCol = 9, availValueCol = 10) {
+        ws['!views'] = [{ showGridLines: false }];
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        
+        let dataRowCounter = 0;
+        
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const firstCellRef = XLSX.utils.encode_cell({ c: 0, r: R });
+          const firstCellValue = ws[firstCellRef] ? ws[firstCellRef].v : '';
+          
+          if (firstCellValue === undefined || firstCellValue === '') continue; // Empty row
+          
+          let rowType = 'data';
+          if (String(firstCellValue).startsWith('Supplier Name:')) {
+            rowType = 'supplier';
+            dataRowCounter = 0;
+          } else if (String(firstCellValue) === 'Oil') {
+            rowType = 'header';
+          } else if (String(firstCellValue) === 'TOTAL') {
+            rowType = 'total';
+          } else {
+            rowType = 'data';
+            dataRowCounter++;
+          }
+          
+          const isOdd = dataRowCounter % 2 === 1;
+
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+            if (!ws[cell_ref]) ws[cell_ref] = { v: '', t: 's' };
+            
+            if (rowType === 'supplier') {
+              ws[cell_ref].s = supplierHeaderStyle;
+            } else if (rowType === 'header') {
+              ws[cell_ref].s = headerStyle;
+            } else if (rowType === 'total') {
+              if (C === payOutCol) {
+                ws[cell_ref].s = totalCurrencyStyleGreen;
+              } else if (C === availValueCol) {
+                ws[cell_ref].s = totalCurrencyStyleRed;
+              } else if (currColSet && currColSet.has(C)) {
+                ws[cell_ref].s = totalCurrencyStyleDefault;
+              } else if (C === 0) {
+                 ws[cell_ref].s = totalRowStyle;
+              } else {
+                 ws[cell_ref].s = totalEmptyStyle;
+              }
+            } else { // data
+              if (C === payOutCol) {
+                ws[cell_ref].s = { ...currencyCellStyleGreen, fill: { fgColor: { rgb: isOdd ? 'F1F8E9' : 'E8F5E9' } } };
+              } else if (C === availValueCol) {
+                ws[cell_ref].s = { ...currencyCellStyleRed, fill: { fgColor: { rgb: isOdd ? 'FFEBEE' : 'FFCDD2' } } };
+              } else if (currColSet && currColSet.has(C)) {
+                ws[cell_ref].s = { ...currencyCellStyleDefault, fill: { fgColor: { rgb: isOdd ? 'F9F9F9' : 'F5F5F5' } } };
+              } else if (numColSet && numColSet.has(C)) {
+                ws[cell_ref].s = { ...numberCellStyle, fill: { fgColor: { rgb: isOdd ? 'F5F5F5' : 'FFFFFF' } } };
+              } else {
+                ws[cell_ref].s = { ...cellStyleText, fill: { fgColor: { rgb: isOdd ? 'F9F9F9' : 'FFFFFF' } } };
+              }
+            }
+          }
+        }
+        
+        const cols = [];
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          let maxLen = 5;
+          for (let R = range.s.r; R <= range.e.r; ++R) {
+            const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+            if (ws[cell_ref] && ws[cell_ref].v !== undefined && ws[cell_ref].v !== null) {
+              let valStr = String(ws[cell_ref].v);
+              // Handle currency formatting for width
+              if (typeof ws[cell_ref].v === 'number' && (C === 4 || C === 5 || C === payOutCol || C === availValueCol)) {
+                valStr = ws[cell_ref].v.toFixed(3);
+              }
+              if (C === 0 && valStr.startsWith('Supplier Name:')) continue; // Skip supplier name row length calculation
+              maxLen = Math.max(maxLen, valStr.length);
+            }
+          }
+          cols.push({ wch: Math.min(maxLen + 2, 42) });
+        }
+        ws['!cols'] = cols;
+      }
+
+      function applyStandardSheetStyles(ws) {
         ws['!views'] = [{ showGridLines: true }];
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -14663,28 +15038,33 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               ws[cell_ref].s = headerStyle;
             } else {
               const isNum = typeof ws[cell_ref].v === 'number';
-              ws[cell_ref].s = isNum ? numberCellStyle : cellStyle;
+              ws[cell_ref].s = isNum ? numberCellStyle : cellStyleText;
             }
           }
         }
         const cols = [];
         for (let C = range.s.c; C <= range.e.c; ++C) {
-          let maxLen = 10;
+          let maxLen = 5;
           for (let R = range.s.r; R <= range.e.r; ++R) {
             const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-            if (ws[cell_ref] && ws[cell_ref].v) {
+            if (ws[cell_ref] && ws[cell_ref].v !== undefined && ws[cell_ref].v !== null) {
               maxLen = Math.max(maxLen, String(ws[cell_ref].v).length);
             }
           }
-          cols.push({ wch: maxLen + 4 });
+          cols.push({ wch: Math.min(maxLen + 2, 40) });
         }
         ws['!cols'] = cols;
       }
-      applyStyles(wsOils);
-      applyStyles(wsInv);
+
+      applyOilSheetStyles(wsOils, numericOilCols, currencyOilCols, 9, 10);
+      
+      const numericInvCols = new Set([2, 3, 4, 6]);
+      const currencyInvCols = new Set([5, 7, 8]);
+      applyOilSheetStyles(wsInv, numericInvCols, currencyInvCols, 7, 8);
+      
       XLSX.utils.book_append_sheet(wb, wsOils, 'Oils Monthly Analysis');
       XLSX.utils.book_append_sheet(wb, wsInv, 'Inventory Monthly Analysis');
-      XLSX.writeFile(wb, `Monthly_Analysis_${monthLabel.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Oil_Inventory_${monthLabel.replace(/\s+/g, '_')}.xlsx`);
     }
     function getMonthlyReportOptions() {
       return [
@@ -14707,7 +15087,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (reportKey === 'inventory') {
         return `
           <h4 class="section-title" style="font-size:15px;">Inventory Monthly Analysis</h4>
-          ${buildTableWithFiltersHtml(['Brand','Part Number / Serial','Original Stock','Received','Issued'], inventoryRows.map(row => [row.brand, row.partNumber, row.openingStock, row.received, row.issued]))}
+          ${buildTableWithFiltersHtml(['Brand','Part Number / Serial','Price','Vendor Name','Original Stock','Received','Issued', 'Available Qty', 'Pay Out', 'Available Value'], inventoryRows.map(row => [row.brand, row.partNumber, row.price, row.vendor, row.openingStock, row.received, row.issued, row.availableQty, row.payOut, row.availableValue]))}
         `;
       }
       if (reportKey === 'salesByViscosity') {
@@ -14764,7 +15144,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       }
       return `
         <h4 class="section-title" style="font-size:15px;">Oils Monthly Analysis</h4>
-        ${buildTableWithFiltersHtml(['Brand','Viscosity','Vendors','Original Stock','Received','Issued'], oilRows.map(row => [row.brand, row.viscosity, row.vendor, row.openingStock, row.received, row.issued]))}
+        ${buildTableWithFiltersHtml(['Supplier Name','Oil','Start','New','Total','Price','Store','In Car','Sold','Available Qty','Pay Out','Available Value'], oilRows.map(row => [row.vendor, row.brand + (row.viscosity ? ' ' + row.viscosity : ''), row.start, row.newQty, row.total, row.price, row.storeQty, row.inCar, row.sold, row.availableQty, row.payOut, row.availableValue]))}
       `;
     }
     function getUniqueMonthLabels(rows, monthIndex) {
