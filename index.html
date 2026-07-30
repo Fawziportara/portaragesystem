@@ -2614,7 +2614,7 @@
   <div id="loginContainer" class="login-container hidden">
     <div class="login-box">
       <div class="login-header">
-        <img src="https://i.top4top.io/p_35860o72q1.png" alt="بورتراج" style="width: 150px; height: auto; margin: 0 auto 20px; display: block;">
+        <img src="https://f.top4top.io/p_3863btzbb1.png" alt="بورتراج" style="width: 150px; height: auto; margin: 0 auto 20px; display: block;">
       </div>
       
       <form id="loginForm" class="login-form">
@@ -2731,7 +2731,7 @@
   
   <div class="dashboard-wrapper" id="dashboardWrapper"><!-- Sidebar -->
    <aside class="sidebar" id="sidebar">
-    <div class="logo-section"><img src="https://i.top4top.io/p_35860o72q1.png" alt="Logo">
+    <div class="logo-section"><img src="https://f.top4top.io/p_3863btzbb1.png" alt="Logo">
      <h1 id="siteTitle">خدمات بورتراج</h1>
     </div>
     <div class="service-item has-submenu" data-service="staff"><span class="icon">👥</span> <span class="label">الموظفين</span> <span class="arrow">▼</span>
@@ -2809,7 +2809,7 @@
     </header><!-- Content Area -->
     <div id="contentArea" class="content-area">
      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px;">
-      <img src="https://i.top4top.io/p_35860o72q1.png" alt="بورتراج" style="max-width: 150px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
+      <img src="https://f.top4top.io/p_3863btzbb1.png" alt="بورتراج" style="max-width: 150px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
       <h3 style="color: #F2BC1B; font-size: 18px; margin-bottom: 8px;">حياكم الله</h3>
       <p style="color: #999; font-size: 14px;">اختر خدمة الي محتاجها من القائمه الي على اليمين </p>
      </div>
@@ -2828,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.6';
+    const SITE_VERSION = '3.7';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -7401,7 +7401,7 @@
         logo.src = lopLogoDataCache;
         return;
       }
-      const fallback = 'https://i.top4top.io/p_35860o72q1.png';
+      const fallback = 'https://f.top4top.io/p_3863btzbb1.png';
       try {
         const res = await fetch(fallback, { mode: 'cors', cache: 'force-cache' });
         if (res.ok) {
@@ -11354,19 +11354,36 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const dest = 'شويخ';
         // compute price using portarage normal tow routes
         const routes = getTowRoutes('portarage towtruk', 'normal');
-        const route = routes.find(r => r.from === area && r.to && r.to.includes(dest));
+        const pickupRoute = routes.find(r => r.from === area && r.to && r.to.includes(dest));
+        const deliveryRoute = routes.find(r => r.from && r.from.includes(dest) && r.to === area);
+        
         const tbody = document.getElementById('protResultBody');
         const note = document.getElementById('protNote');
-        if (!route) {
-          tbody.innerHTML = '<tr><td colspan="2">لا يوجد سعر مُسجل لهذه المنطقة (تحقق من الشيت)</td></tr>';
+        
+        if (!pickupRoute) {
+          tbody.innerHTML = '<tr><td colspan="2">لا يوجد سعر مُسجل للذهاب من هذه المنطقة إلى الشويخ (تحقق من الشيت)</td></tr>';
           document.getElementById('protResult').classList.remove('hidden');
           if (note) note.classList.add('hidden');
           return;
         }
-        const basePrice = parseFloat(route.price) || 0;
+        if (!deliveryRoute) {
+          tbody.innerHTML = '<tr><td colspan="2">لا يوجد سعر مُسجل للعودة من الشويخ إلى هذه المنطقة (تحقق من الشيت)</td></tr>';
+          document.getElementById('protResult').classList.remove('hidden');
+          if (note) note.classList.add('hidden');
+          return;
+        }
+
+        const pickupBasePrice = parseFloat(pickupRoute.price) || 0;
+        const deliveryBasePrice = parseFloat(deliveryRoute.price) || 0;
+        const totalBasePrice = pickupBasePrice + deliveryBasePrice;
+
         const routesFlat = getTowRoutes('portarage towtruk', 'flatbed');
-        const routeFlat = routesFlat.find(r => r.from === area && r.to && r.to.includes(dest));
-        const flatbedPrice = routeFlat ? (parseFloat(routeFlat.price) || 0) : null;
+        const pickupRouteFlat = routesFlat.find(r => r.from === area && r.to && r.to.includes(dest));
+        const deliveryRouteFlat = routesFlat.find(r => r.from && r.from.includes(dest) && r.to === area);
+        
+        const pickupFlatPrice = pickupRouteFlat ? (parseFloat(pickupRouteFlat.price) || 0) : null;
+        const deliveryFlatPrice = deliveryRouteFlat ? (parseFloat(deliveryRouteFlat.price) || 0) : null;
+        const totalFlatPrice = (pickupFlatPrice !== null && deliveryFlatPrice !== null) ? (pickupFlatPrice + deliveryFlatPrice) : null;
         // Build services cards with detailed prices
         const servicesHtml = `
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
@@ -11400,16 +11417,18 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           </div>
         `;
         // Unified important red note (single message) with link to garage location
-        const flatbedPriceStr = flatbedPrice !== null ? (flatbedPrice * 2).toFixed(2) : 'غير متوفر';
+        const flatbedPickupStr = pickupFlatPrice !== null ? pickupFlatPrice.toFixed(2) + ' ' + config.currency : 'غير متوفر';
+        const flatbedDeliveryStr = deliveryFlatPrice !== null ? deliveryFlatPrice.toFixed(2) + ' ' + config.currency : 'غير متوفر';
+
         const importantHtml = `
           <div class="prot-important">
             ملاحظه رسوم النقل لا تشمل رسوم الخدمه أعلاه,
-            <br><br>١-رسوم النقل (الروحة والرده): 
-            <br style="line-height: 0.5;">
-            <div style="margin-right: 20px; margin-top: 4px;">
-              الونش العادي: ${(basePrice * 2).toFixed(2)} ${config.currency}
-              <br>الفل داون: ${flatbedPriceStr} ${config.currency}
-            </div>
+            <br><br>١-رسوم النقل مفصلة:
+            <ul style="margin-top:4px;margin-bottom:4px;padding-right:20px;">
+              <li><b>الذهاب (إلى الشويخ):</b> ونش عادي: ${pickupBasePrice.toFixed(2)} ${config.currency} | فل داون: ${flatbedPickupStr}</li>
+              <li><b>العودة (إلى ${area}):</b> ونش عادي: ${deliveryBasePrice.toFixed(2)} ${config.currency} | فل داون: ${flatbedDeliveryStr}</li>
+              <li><b>الإجمالي النهائي:</b> ونش عادي: <b>${totalBasePrice.toFixed(2)} ${config.currency}</b> | فل داون: <b>${totalFlatPrice !== null ? totalFlatPrice.toFixed(2) + ' ' + config.currency : 'غير متوفر'}</b></li>
+            </ul>
             <br>٢-يمكن للعميل الذهاب بنفسه للكراج ولكن يُشترط الدفع أولاً قبل إرسال الموقع.
             <br><br><a href="https://maps.app.goo.gl/A9WwLj4PjiZcH68N8" target="_blank" style="color:#ffb3b3;text-decoration:underline;">لوكيشن كراج (كار باث)</a>
           </div>
@@ -11455,17 +11474,32 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         }
         // Compute price using portarage normal tow routes
         const routes = getTowRoutes('portarage towtruk', 'normal');
-        const route = routes.find(r => r.from === area && r.to && r.to.includes('شويخ'));
-        if (!route) {
-          result.innerHTML = '<div style="color:#ef4444;">لا يوجد سعر مُسجل لهذه المنطقة (تحقق من الشيت)</div>';
+        const pickupRoute = routes.find(r => r.from === area && r.to && r.to.includes('شويخ'));
+        const deliveryRoute = routes.find(r => r.from && r.from.includes('شويخ') && r.to === area);
+        
+        if (!pickupRoute) {
+          result.innerHTML = '<div style="color:#ef4444;">لا يوجد سعر مُسجل للذهاب من هذه المنطقة إلى الشويخ (تحقق من الشيت)</div>';
           result.classList.remove('hidden');
           return;
         }
-        const basePrice = parseFloat(route.price) || 0;
-        const towPrice = basePrice * 2;
+        if (!deliveryRoute) {
+          result.innerHTML = '<div style="color:#ef4444;">لا يوجد سعر مُسجل للعودة من الشويخ إلى هذه المنطقة (تحقق من الشيت)</div>';
+          result.classList.remove('hidden');
+          return;
+        }
+
+        const pickupPrice = parseFloat(pickupRoute.price) || 0;
+        const deliveryPrice = parseFloat(deliveryRoute.price) || 0;
+        const towPrice = pickupPrice + deliveryPrice;
+
         const noteHtml = `
           <div class="ring-note">
-            ١-رسوم نقل الرنق (روحه ورده) من (${area}) إلى شويخ الصناعيه (${towPrice.toFixed(2)} د.ك)<br>
+            ١-رسوم نقل الرنق:
+            <ul style="margin-top:4px;margin-bottom:4px;padding-right:20px;">
+              <li>الذهاب (من ${area} إلى الشويخ الصناعية): ${pickupPrice.toFixed(2)} د.ك</li>
+              <li>العودة (من الشويخ الصناعية إلى ${area}): ${deliveryPrice.toFixed(2)} د.ك</li>
+              <li><b>الإجمالي: ${towPrice.toFixed(2)} د.ك</b></li>
+            </ul>
             ٢-رسوم تصليح الرنق تتراوح مابين ٢٠ د.ك إلى ٥٠ د.ك<br>
             ٣-رسوم تبديل الطوق عاده مابين ٥٠ الي ٨٠ د.ك ولكن يختلف حسب نوع السياره وحجم الرنق<br>
             ٤-الزياده لتصليح الرنق او تبديل الطوق الكامل ١٥ د.ك<br>
@@ -11502,11 +11536,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const areaDatalist = document.getElementById('protRegionOptions');
       const areaInput = document.getElementById('protRegionSelect');
       const sheetName = 'portarage towtruk';
-      // Use columns for normal tow: from (index 6), price (4), cancel (3) and alternate (2,1,0)
-      const cols = [6,4,3, 6,1,0];
-      if (!sheetsData[sheetName]) {
+      if (!sheetsData || !sheetsData[sheetName]) {
         areaDatalist.innerHTML = '<option value="">...جارٍ التحميل</option>';
-        // retry later
         setTimeout(loadProtRegionOptions, 300);
         return;
       }
@@ -11514,13 +11545,12 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const areas = [];
       for (let i = 2; i < rows.length; i++) {
         const row = rows[i];
-        cols.forEach((colIndex, idx) => {
-          if (idx % 3 === 0 && row[colIndex]) areas.push(row[colIndex]);
-        });
+        if (!row) continue;
+        const val = row[2]; // Column C
+        if (val && val.toString().trim()) areas.push(val.toString().trim());
       }
       const unique = [...new Set(areas)].filter(Boolean);
       areaDatalist.innerHTML = unique.map(a => `<option value="${a}"></option>`).join('');
-      // clear value
       if (areaInput) areaInput.value = '';
     }
     function renderProtectionCompaniesCards() {
@@ -15207,11 +15237,6 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const bodyRows = rows.slice(1).map(row => {
         const cells = cols.map((colIndex, ci) => {
           let val = (row[colIndex] || '').toString().trim();
-          if (headers[ci] === 'QR') {
-            if (val && !/^\d+$/.test(val)) {
-              val = '';
-            }
-          }
           return `<td>${escapeHtml(val)}</td>`;
         }).join('');
         return `<tr>${cells}</tr>`;
@@ -15243,11 +15268,6 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const bodyRows = rows.map(row => {
         const cells = row.map((cell, ci) => {
           let val = (cell ?? '').toString().trim();
-          if (headers[ci] === 'QR') {
-            if (val && !/^\d+$/.test(val)) {
-              val = '';
-            }
-          }
           return `<td>${escapeHtml(val)}</td>`;
         }).join('');
         return `<tr>${cells}</tr>`;
