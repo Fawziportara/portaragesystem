@@ -2689,7 +2689,6 @@
     <div class="logout-modal">
       <div class="logout-modal-icon">❌</div>
       <h2 class="logout-modal-title">رابط غير صالح</h2>
-      <p id="coordsErrorMessage" class="logout-modal-message">الرجاء إرسال رابط Google Maps بالشكل: https://maps.google.com/?q=29.2419738769531,48.080810546875</p>
       <div class="logout-modal-buttons">
         <button id="coordsErrorDismiss" class="logout-modal-btn logout-modal-btn-cancel">لقد فهمت</button>
       </div>
@@ -2828,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.9';
+    const SITE_VERSION = '4.1';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -10903,6 +10902,17 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         submitBtn.textContent = 'حفظ الموعد';
       }
     }
+    function formatDateForExport(val) {
+      if (val === undefined || val === null || String(val).trim() === '') return '';
+      const parsedDate = parseFlexibleDate(val);
+      if (parsedDate && !isNaN(parsedDate.getTime())) {
+        const d = String(parsedDate.getDate()).padStart(2, '0');
+        const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+        const y = parsedDate.getFullYear();
+        return `${d}/${m}/${y}`;
+      }
+      return String(val).trim();
+    }
     function exportSingleInsuranceSheet(sheetName) {
       if (typeof XLSX === 'undefined') {
         alert('مكتبة تصدير الاكسيل غير محملة بعد، الرجاء الانتظار ثانية والمحاولة مجدداً.');
@@ -10953,33 +10963,56 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         if (!row || !Array.isArray(row)) continue;
         const hasData = row.some(cell => cell && cell.toString().trim() !== '');
         if (!hasData) continue;
+
+        const processedRow = row.map((cell, cIdx) => {
+          if (cIdx === toDateCol) {
+            return formatDateForExport(cell);
+          }
+          return cell !== undefined && cell !== null ? String(cell).trim() : '';
+        });
         
-        const rawKey = (row[primaryKeyCol] || '').toString().trim().toLowerCase();
+        const rawKey = (processedRow[primaryKeyCol] || '').toString().trim().toLowerCase();
         
         if (rawKey && seenMap.has(rawKey)) {
           const primaryRow = seenMap.get(rawKey).row;
-          const diffs = [];
+          const diffFields = [];
           for (let c = 0; c < headers.length; c++) {
+            const h = (headers[c] || '').toLowerCase().trim();
+            if (h.includes('sr') || h.includes('serial') || h.includes('متسلسل') || h === '#' || h === 'no' || h === 'no.' || h === 'id') {
+              continue;
+            }
             const val1 = (primaryRow[c] || '').toString().trim();
-            const val2 = (row[c] || '').toString().trim();
+            const val2 = (processedRow[c] || '').toString().trim();
             if (val1 !== val2) {
-              const colHeader = (headers[c] || '').trim() || `عمود ${c + 1}`;
-              diffs.push(`اختلاف في ${colHeader} ("${val2}" مقابل "${val1}")`);
+              let shortName = (headers[c] || '').trim() || `عمود ${c + 1}`;
+              if (h.includes('customer') || h.includes('العميل')) shortName = 'اسم العميل';
+              else if (h.includes('plate') || h.includes('لوحة')) shortName = 'رقم اللوحة';
+              else if (h.includes('chassis') || h.includes('شاصي') || h.includes('هيكل')) shortName = 'رقم الشاصي';
+              else if (h.includes('policy') || h.includes('بوليصة') || h.includes('وثيقة')) shortName = 'رقم الوثيقة';
+              else if (h.includes('to date') || h.includes('نهاية')) shortName = 'تاريخ النهاية';
+              else if (h.includes('from date') || h.includes('بداية')) shortName = 'تاريخ البداية';
+              else if (h.includes('model') || h.includes('make') || h.includes('نوع') || h.includes('موديل')) shortName = 'نوع السيارة';
+              else if (h.includes('year') || h.includes('سنة')) shortName = 'سنة الصنع';
+              else if (h.includes('mobile') || h.includes('phone') || h.includes('هاتف')) shortName = 'رقم الهاتف';
+              
+              if (!diffFields.includes(shortName)) {
+                diffFields.push(shortName);
+              }
             }
           }
-          const diffNotice = diffs.length === 0 ? 'مطابق بالكامل' : diffs.join(' | ');
-          const dupRowWithDiff = [...row];
+          const diffNotice = diffFields.length === 0 ? 'مطابق بالكامل' : `اختلاف ${diffFields.slice(0, 2).join(' و ')}`;
+          const dupRowWithDiff = [...processedRow];
           while (dupRowWithDiff.length < headers.length) dupRowWithDiff.push('');
           dupRowWithDiff.push(diffNotice);
           duplicateRows.push(dupRowWithDiff);
         } else {
           if (rawKey) {
-            seenMap.set(rawKey, { row, index: i });
+            seenMap.set(rawKey, { row: processedRow, index: i });
           }
           if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
-            expiredRows.push(row);
+            expiredRows.push(processedRow);
           } else {
-            activeRows.push(row);
+            activeRows.push(processedRow);
           }
         }
       }
@@ -13063,8 +13096,15 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       return getArabicBrandName(brand) || brand;
     }
 
-    function getDealer(brand) {
+    function getDealer(brand, size = '') {
       const normalizedBrand = normalizeBrandName(brand);
+      if (normalizedBrand === 'هانكوك' || (brand || '').toUpperCase().includes('HANKOOK')) {
+        const cleanSize = (size || '').toUpperCase().trim();
+        if (cleanSize.includes('DA74') || cleanSize.includes('74')) {
+          return 'المشعل';
+        }
+        return 'الفتو انترنتشلن';
+      }
       const info = getBrandInfo(normalizedBrand);
       return info.dealer || 'افتخار';
     }
@@ -13981,7 +14021,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const countryDisplay = flag ? `${nationality} ${flag}` : (nationality || countryStr);
         const tradeName = (row[4] || '').trim();
         const brandInfo = getBrandInfo(brand);
-        const dealer = brandInfo.dealer || getDealer(brand);
+        const dealer = getDealer(brand, size);
         const salePrice = (row[6] || '').trim() || '-';
         const duplicateBadge = `<span class="battery-count-badge">${escapeHtml(size)}</span>`;
         const driverStockHtml = renderDriverStock(row);
@@ -14129,7 +14169,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const countryDisplay = flag ? `${nationality} ${flag}` : (nationality || countryStr);
         const tradeName = (row[4] || '').trim();
         const brandInfo = getBrandInfo(brand);
-        const dealer = brandInfo.dealer || getDealer(brand);
+        const dealer = getDealer(brand, size);
         const salePrice = (row[6] || '').trim() || '-';
         const duplicateBadge = `<span class="battery-count-badge">${escapeHtml(groupSize)}</span>`;
         const driverStockHtml = renderDriverStock(row);
@@ -14355,15 +14395,26 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       return warrantyStr;
     }
     function buildBatteryMessage(row) {
+      const size = (row[0] || '').trim();
       const brand = (row[1] || '').trim();
+      const upperBrand = brand.toUpperCase();
+      const upperSize = size.toUpperCase();
       const arabicBrand = getArabicBrandName(brand) || brand;
       const rawWarranty = (row[2] || '').trim();
-      const warranty = translateWarrantyToArabic(rawWarranty);
+      const warranty = translateWarrantyToArabic(rawWarranty) || 'سنه';
       const countryStr = (row[3] || '').trim();
       const { nationality, flag } = getCountryDetails(countryStr);
-      const dealer = getDealer(brand);
+      const dealer = getDealer(brand, size);
       const salePrice = (row[6] || '').trim() || '-';
       const flagPart = flag ? ` ${flag}` : '';
+
+      if (upperBrand.includes('HANKOOK') || arabicBrand.includes('هانكوك')) {
+        if (upperSize.includes('DA74') || upperSize.includes('74')) {
+          return `متوفرة بطارية هانكوك كورية 🇰🇷 كفالتها سنه على الوكيل المشعل السعر مع رسوم التركيب ${salePrice} دك`;
+        }
+        return `متوفرة بطارية هانكوك كورية 🇰🇷 كفالتها سنه على الوكيل الفتو انترنشلن السعر مع رسوم التركيب ${salePrice} دك`;
+      }
+
       return `متوفرة بطارية ${arabicBrand} ${nationality}${flagPart} كفالتها ${warranty} على الوكيل ${dealer} السعر مع رسوم التركيب ${salePrice} دك`;
     }
     async function copyBatteryTextToClipboard(text) {
