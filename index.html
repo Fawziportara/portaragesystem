@@ -2828,7 +2828,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '3.8';
+    const SITE_VERSION = '3.9';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -10917,25 +10917,70 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       
       const headers = rows[0];
       let toDateCol = -1;
+      let customerCol = -1;
+      let plateCol = -1;
+      let chassisCol = -1;
+      let policyCol = -1;
+
       for (let i = 0; i < headers.length; i++) {
         const header = (headers[i] || '').toLowerCase().trim();
         if (header.includes('to date') || header.includes('تاريخ النهاية') || header.includes('نهاية') || header.includes('expiry') || header === 'to') {
           toDateCol = i;
         }
+        if (header.includes('customer') || header.includes('العميل') || header.includes('اسم العميل')) {
+          customerCol = i;
+        }
+        if (header.includes('plate') || header.includes('لوحة') || header.includes('رقم اللوحة')) {
+          plateCol = i;
+        }
+        if (header.includes('chassis') || header.includes('هيكل') || header.includes('شاصي')) {
+          chassisCol = i;
+        }
+        if (header.includes('policy') || header.includes('بوليصة') || header.includes('وثيقة')) {
+          policyCol = i;
+        }
       }
       
+      const primaryKeyCol = customerCol !== -1 ? customerCol : (policyCol !== -1 ? policyCol : (plateCol !== -1 ? plateCol : (chassisCol !== -1 ? chassisCol : 0)));
+
       const activeRows = [];
       const expiredRows = [];
-      
+      const duplicateRows = [];
+      const seenMap = new Map();
+
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
+        if (!row || !Array.isArray(row)) continue;
         const hasData = row.some(cell => cell && cell.toString().trim() !== '');
         if (!hasData) continue;
         
-        if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
-          expiredRows.push(row);
+        const rawKey = (row[primaryKeyCol] || '').toString().trim().toLowerCase();
+        
+        if (rawKey && seenMap.has(rawKey)) {
+          const primaryRow = seenMap.get(rawKey).row;
+          const diffs = [];
+          for (let c = 0; c < headers.length; c++) {
+            const val1 = (primaryRow[c] || '').toString().trim();
+            const val2 = (row[c] || '').toString().trim();
+            if (val1 !== val2) {
+              const colHeader = (headers[c] || '').trim() || `عمود ${c + 1}`;
+              diffs.push(`اختلاف في ${colHeader} ("${val2}" مقابل "${val1}")`);
+            }
+          }
+          const diffNotice = diffs.length === 0 ? 'مطابق بالكامل' : diffs.join(' | ');
+          const dupRowWithDiff = [...row];
+          while (dupRowWithDiff.length < headers.length) dupRowWithDiff.push('');
+          dupRowWithDiff.push(diffNotice);
+          duplicateRows.push(dupRowWithDiff);
         } else {
-          activeRows.push(row);
+          if (rawKey) {
+            seenMap.set(rawKey, { row, index: i });
+          }
+          if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
+            expiredRows.push(row);
+          } else {
+            activeRows.push(row);
+          }
         }
       }
       
@@ -10946,6 +10991,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       
       const wsExpired = XLSX.utils.aoa_to_sheet([headers, ...expiredRows]);
       XLSX.utils.book_append_sheet(wb, wsExpired, 'المنتهين');
+
+      const dupHeaders = [...headers, 'طبيعة التكرار / الاختلاف'];
+      const wsDuplicates = XLSX.utils.aoa_to_sheet([dupHeaders, ...duplicateRows]);
+      XLSX.utils.book_append_sheet(wb, wsDuplicates, 'مكرر');
       
       const companyName = sheetName.replace('تأمين', '').trim();
       XLSX.writeFile(wb, `${companyName}_Insurance.xlsx`);
@@ -11588,45 +11637,112 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       else wrapper.classList.add('hidden');
     }
     
+    function parseFlexibleDate(dateValue) {
+      if (dateValue === undefined || dateValue === null || String(dateValue).trim() === '') return null;
+      
+      const str = String(dateValue).trim();
+      
+      if (typeof dateValue === 'number' || (!isNaN(str) && !str.includes('/') && !str.includes('-') && !str.includes('.'))) {
+        const num = parseFloat(str);
+        if (num > 20000 && num < 70000) {
+          const dateObj = new Date((num - (25567 + 2)) * 86400 * 1000);
+          if (!isNaN(dateObj.getTime())) return dateObj;
+        }
+      }
+
+      const monthsMap = {
+        'يناير': 0, 'كانون الثاني': 0,
+        'فبراير': 1, 'شباط': 1,
+        'مارس': 2, 'آذار': 2, 'اذار': 2,
+        'أبريل': 3, 'ابريل': 3, 'نيسان': 3,
+        'مايو': 4, 'أيار': 4, 'ايار': 4,
+        'يونيو': 5, 'حزيران': 5,
+        'يوليو': 6, 'تموز': 6,
+        'أغسطس': 7, 'اغسطس': 7, 'آب': 7, 'اب': 7,
+        'سبتمبر': 8, 'أيلول': 8, 'ايول': 8, 'ايلول': 8,
+        'أكتوبر': 9, 'اكتوبر': 9, 'تشرين الأول': 9, 'تشرين الاول': 9,
+        'نوفمبر': 10, 'تشرين الثاني': 10,
+        'ديسمبر': 11, 'كانون الأول': 11, 'كانون الاول': 11
+      };
+
+      const tokens = str.split(/[\s\/\-\.,_]+/);
+      let foundMonth = -1;
+      let textTokens = [];
+      
+      for (let t of tokens) {
+        const lower = t.toLowerCase();
+        if (monthsMap[lower] !== undefined) {
+          foundMonth = monthsMap[lower];
+        } else {
+          textTokens.push(t);
+        }
+      }
+
+      if (foundMonth !== -1) {
+        let day = -1, year = -1;
+        for (let t of textTokens) {
+          const num = parseInt(t, 10);
+          if (!isNaN(num)) {
+            if (num > 1000) {
+              year = num;
+            } else if (num <= 31 && day === -1) {
+              day = num;
+            } else if (num <= 31) {
+              day = num;
+            }
+          }
+        }
+        if (year === -1) year = new Date().getFullYear();
+        if (day !== -1) {
+          return new Date(year, foundMonth, day, 23, 59, 59);
+        }
+      }
+
+      const parts = str.split(/[\/\-\.\s]+/);
+      if (parts.length >= 3) {
+        let p1 = parseInt(parts[0], 10);
+        let p2 = parseInt(parts[1], 10);
+        let p3 = parseInt(parts[2], 10);
+        if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
+          let year, month, day;
+          if (p1 > 1000) {
+            year = p1;
+            if (p2 > 12) { day = p2; month = p3 - 1; }
+            else { month = p2 - 1; day = p3; }
+          } else {
+            if (p3 < 100) p3 = (p3 < 50 ? 2000 : 1900) + p3;
+            year = p3;
+            if (p1 > 12) {
+              day = p1;
+              month = p2 - 1;
+            } else if (p2 > 12) {
+              day = p2;
+              month = p1 - 1;
+            } else {
+              day = p1;
+              month = p2 - 1;
+            }
+          }
+          const d = new Date(year, month, day, 23, 59, 59);
+          if (!isNaN(d.getTime())) return d;
+        }
+      }
+
+      const parsed = Date.parse(str);
+      if (!isNaN(parsed)) {
+        return new Date(parsed);
+      }
+
+      return null;
+    }
+
     function isInsuranceExpired(dateValue) {
       if (!dateValue) return false;
-      const cleanVal = dateValue.toString().trim();
-      if (!cleanVal) return false;
-      const parts = cleanVal.split(/[\/\-.]/);
-      if (parts.length >= 2) {
-        let day, month, year;
-        if (parts[0].length === 4) {
-          year = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          day = parseInt(parts[2], 10);
-        } else {
-          day = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          year = parts[2] ? parseInt(parts[2], 10) : new Date().getFullYear();
-          if (parts[2] && parts[2].length === 2) {
-            year = 2000 + year;
-          }
-          if (month > 11) {
-            const temp = day;
-            day = month + 1;
-            month = temp - 1;
-          }
-        }
-        const expiryDate = new Date(year, month, day, 23, 59, 59);
-        if (!isNaN(expiryDate.getTime())) {
-          const today = new Date();
-          today.setHours(0,0,0,0);
-          return expiryDate < today;
-        }
-      }
-      const parsed = Date.parse(cleanVal);
-      if (!isNaN(parsed)) {
-        const expiryDate = new Date(parsed);
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        return expiryDate < today;
-      }
-      return false;
+      const expiryDate = parseFlexibleDate(dateValue);
+      if (!expiryDate || isNaN(expiryDate.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return expiryDate < today;
     }
     function updateInsuranceSuggestions(query) {
       const datalist = document.getElementById('insuranceSuggestions');
@@ -11673,6 +11789,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         
         for (let i = 1; i < rows.length && suggestions.size < 20; i++) {
           const row = rows[i];
+          if (!row || !Array.isArray(row)) continue;
           
           // Skip if expired
           if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
@@ -11763,6 +11880,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         const matchingRows = [];
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
+          if (!row || !Array.isArray(row)) continue;
           
           if (toDateCol !== -1 && isInsuranceExpired(row[toDateCol])) {
             continue;
@@ -14061,6 +14179,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
     function renderMainStock(row) {
       const brand = (row[1] || '').toUpperCase();
+      const size = (row[0] || '').toUpperCase().trim();
       const fkQty = Number(row[7]) || 0;
       const mQty = Number(row[8]) || 0;
       const threeQty = Number(row[9]) || 0;
@@ -14071,9 +14190,21 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">فارتا: ${total}</span>`);
         }
       } else if (brand.includes('HANKOOK')) {
-        const total = fkQty + mQty + threeQty;
-        if (total > 0) {
-          badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">هانكوك: ${total}</span>`);
+        if (size.includes('DA74') || size.includes('74')) {
+          if (fkQty > 0) {
+            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">اف كي: ${fkQty}</span>`);
+          }
+          if (mQty > 0) {
+            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">افتخار: ${mQty}</span>`);
+          }
+          if (threeQty > 0) {
+            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">مخزن 3: ${threeQty}</span>`);
+          }
+        } else {
+          const total = fkQty + mQty + threeQty;
+          if (total > 0) {
+            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">فارتا: ${total}</span>`);
+          }
         }
       } else if (brand.includes('EMTRAC')) {
         const total = fkQty + mQty + threeQty;
@@ -14180,7 +14311,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const driverGroups = getDriverColumnGroups();
       let hasStock = false;
       const brand = (row[1] || '').toUpperCase();
-      const isVartaOrHankook = brand.includes('VARTA') || brand.includes('HANKOOK');
+      const size = (row[0] || '').toUpperCase().trim();
+      const isHankookDa74 = brand.includes('HANKOOK') && (size.includes('DA74') || size.includes('74'));
+      const isVartaOrHankook = (brand.includes('VARTA') || brand.includes('HANKOOK')) && !isHankookDa74;
       driverGroups.forEach(group => {
         const driverNameRaw = group.name || '';
         const name = getDriverName(driverNameRaw);
