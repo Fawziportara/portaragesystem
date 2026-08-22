@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.1';
+    const SITE_VERSION = '4.2';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -7877,7 +7877,13 @@
         `;
         
         const noteDiv = document.getElementById('balanceNote');
-        noteDiv.textContent = 'اذا الطلب تركيب تواير من عملاء زيتكس لازم تبلغون الفني يعظي العميل الفاتوره';
+        noteDiv.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div>• اذا الطلب تركيب تواير من عملاء زيتكس لازم تبلغون الفني يعطي العميل الفاتوره</div>
+            <div>• لازم ترسلون الـ QR بالقروب</div>
+            <div>• يتم ابلاغ موظفين قروب زيتكس بسعر الخدمه حسب عدد الاطارات المعتمده في كل مره يتم اعتماد طلب من طرفهم</div>
+          </div>
+        `;
         noteDiv.classList.remove('hidden');
       }
       
@@ -14238,7 +14244,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">افتخار: ${mQty}</span>`);
           }
           if (threeQty > 0) {
-            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">مخزن 3: ${threeQty}</span>`);
+            badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">الميلم: ${threeQty}</span>`);
           }
         } else {
           const total = fkQty + mQty + threeQty;
@@ -14259,7 +14265,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
           badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">افتخار: ${mQty}</span>`);
         }
         if (threeQty > 0) {
-          badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">مخزن 3: ${threeQty}</span>`);
+          badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">الميلم: ${threeQty}</span>`);
         }
       }
       return badges.length ? badges.join('<br>') : '<span class="battery-count-badge" style="background:rgba(212,53,53,0.2); border-color:rgba(239,68,68,0.3); color:#ef4444;">غير متوفرة</span>';
@@ -14370,7 +14376,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
             const parts = [];
             if (fkQty) parts.push(`اف كي:${fkQty}`);
             if (mQty) parts.push(`افتخار:${mQty}`);
-            if (threeQty) parts.push(`3:${threeQty}`);
+            if (threeQty) parts.push(`الميلم:${threeQty}`);
             badges.push(`<span class="battery-driver-badge">${escapeHtml(name)} ${parts.join(' | ')}</span>`);
           }
         }
