@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.2';
+    const SITE_VERSION = '4.3';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -14287,8 +14287,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'Yuasa': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
       'Exide': { country: 'أمريكية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'موتر كرافت': { country: 'أمريكية', warranty: { default: '3 سنوات', special: { '95AGM': 'سنتين', 'DA100': 'سنتين' } }, dealer: 'فورد الغانم' },
-      'موتو رافت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
-      'موتو رفت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'افتخار' },
+      'موتو رافت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'موتو رفت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'فارتا': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'هانكوك': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'بوستر': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
@@ -14298,7 +14298,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'سنشري': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'امتراك بلس': { country: 'هندية', warranty: { default: 'سنتان' }, dealer: 'البابطين' },
       'يواسا': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
-      'إكسايد': { country: 'أمريكية', warranty: { default: 'سنة' }, dealer: 'الغانم' }
+      'QUICKSTART': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'المشعل' }
     };
     function getBrandInfo(brand) {
       const normalizedBrand = normalizeBrandName(brand);
@@ -14342,6 +14342,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (normalized === 'اوكلي') return 'اوكلي';
       if (normalized === 'امترا') return 'امترا';
       if (normalized === 'START-X') return 'ستارت اكس';
+      if (normalized === 'QUICKSTART') return 'كويك ستارت';
       if (normalized === 'Black Panther') return 'بلاك بانثر';
       return brand; // Fallback to original
     }
