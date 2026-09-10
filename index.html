@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.5';
+    const SITE_VERSION = '4.6';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -13177,29 +13177,29 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               </div>
             </div>
             <div id="batterySearchByDriver" class="hidden">
-              <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
-                <!-- بحث بالسائق -->
-                <div style="flex:1; min-width:260px;">
-                  <div class="form-field" style="margin-bottom:10px;">
-                    <label style="color:#F2BC1B; font-weight:700;">👤 اختر السائق</label>
-                    <input id="driverSearchInput" class="form-control" placeholder="اكتب اسم السائق..." autocomplete="off" />
-                  </div>
-                  <div id="driverSearchList" class="data-table-container hidden" style="margin-top:6px; max-height:220px; overflow:auto;"></div>
+              <div class="form-field" style="max-width:100%; display:flex; flex-direction:column; align-items:center;">
+                <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:12px; width:100%; max-width:540px;">
+                  <label style="color:#F2BC1B; font-weight:700; font-size:16px; margin:0; text-align:center;">
+                    🔋 البحث بمقاسات متعددة (اختر المقاسات المطلوبة)
+                  </label>
+                  <button type="button" id="clearAllSizesBtn" class="btn-option" style="padding:6px 14px; font-size:12px; min-width:auto; min-height:auto; display:none;">
+                    إلغاء التحديد ✕
+                  </button>
                 </div>
-                <!-- بحث بعدة مقاسات -->
-                <div style="flex:1; min-width:260px;">
-                  <div class="form-field" style="margin-bottom:6px;">
-                    <label style="color:#F2BC1B; font-weight:700;">🔋 البحث بمقاسات متعددة (اختر المقاسات)</label>
-                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
-                      <input id="multiSizeInput" class="form-control" placeholder="ابحث أو اختر المقاس (مثال: DA47)..." autocomplete="off" style="flex:1; min-width:140px;" />
-                      <button type="button" id="addSizeBtn" style="background:#F2BC1B;color:#000;border:none;border-radius:8px;padding:10px 14px;font-weight:700;font-size:18px;cursor:pointer;flex-shrink:0;" title="إضافة المقاس">+</button>
-                    </div>
-                    <div id="multiSizeList" class="data-table-container hidden" style="margin-top:4px; max-height:200px; overflow:auto; margin-bottom:8px;"></div>
-                    <div id="multiSizeTagsContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:28px; margin-bottom:8px;"></div>
-                    <button type="button" id="searchMultiSizeBtn" class="btn-primary btn-inline" style="margin-top:4px;width:auto;padding:10px 20px;display:none;">
-                      🔍 اقتراح أفضل سائق
-                    </button>
-                  </div>
+                <!-- حقل البحث واختيار المقاس من القائمة المنسدلة كبير وفي المنتصف -->
+                <div style="max-width:540px; width:100%; position:relative;">
+                  <input id="multiSizeInput" class="form-control" placeholder="اضغط لاختيار مقاس أو اكتب للبحث..." autocomplete="off" style="width:100%; font-size:16px; padding:13px 18px; border-radius:12px; text-align:center; height:auto; box-sizing:border-box;" />
+                  <div id="multiSizeList" class="data-table-container hidden" style="margin-top:8px; max-height:280px; overflow-y:auto; border-radius:12px; width:100%; box-sizing:border-box;"></div>
+                </div>
+                <!-- المقاسات المحددة حالياً -->
+                <div id="multiSizeSelectedArea" style="margin-top:16px; margin-bottom:12px; display:none; width:100%; max-width:540px; text-align:center;">
+                  <div style="color:#aaa; font-size:13px; margin-bottom:8px; font-weight:700;">المقاسات المحددة للبحث:</div>
+                  <div id="multiSizeTagsContainer" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
+                </div>
+                <div style="margin-top:16px; display:flex; justify-content:center; align-items:center; gap:10px; width:100%;">
+                  <button type="button" id="searchMultiSizeBtn" class="btn-primary btn-inline" style="width:auto; padding:12px 34px; font-size:16px; font-weight:700; border-radius:10px; display:none;">
+                    🔍 اقتراح أفضل سائق
+                  </button>
                 </div>
               </div>
             </div>
@@ -13814,165 +13814,143 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
 
     function renderBatteryDriverMode() {
-      driverMode_selectedDriver = '';
       driverMode_multiSizes = [];
 
-      const driverInput = document.getElementById('driverSearchInput');
-      const driverList = document.getElementById('driverSearchList');
       const multiSizeInput = document.getElementById('multiSizeInput');
       const multiSizeList = document.getElementById('multiSizeList');
-      const addSizeBtn = document.getElementById('addSizeBtn');
+      const selectedArea = document.getElementById('multiSizeSelectedArea');
       const tagsContainer = document.getElementById('multiSizeTagsContainer');
       const searchBtn = document.getElementById('searchMultiSizeBtn');
+      const clearBtn = document.getElementById('clearAllSizesBtn');
 
-      if (!driverInput || !driverList) return;
+      if (!multiSizeInput || !multiSizeList) return;
 
-      // ---- جانب السائق ----
-      function getAllDriverNames() {
-        if (!driverNamesRecords || !driverNamesRecords.length) return [];
-        return driverNamesRecords
-          .filter(r => r.ar || r.en)
-          .map(r => ({ ar: r.ar, en: r.en, display: r.ar || r.en }));
-      }
+      multiSizeInput.value = '';
+      multiSizeList.innerHTML = '';
+      multiSizeList.classList.add('hidden');
 
-      function renderDriverList(query) {
-        const all = getAllDriverNames();
+      const allSizes = getUniqueBatterySizes();
+
+      function updateSuggestions(query = '') {
         const q = normalizeText(query);
-        const filtered = q ? all.filter(d => normalizeText(d.display).includes(q) || normalizeText(d.en).includes(q)) : all;
+        const available = allSizes.filter(s => !driverMode_multiSizes.includes(s));
+        const filtered = q ? available.filter(s => normalizeText(s).includes(q)) : available;
+
         if (!filtered.length) {
-          driverList.innerHTML = `<div style="padding:10px;color:#aaa;">لا يوجد سائق بهذا الاسم.</div>`;
-          driverList.classList.remove('hidden');
+          multiSizeList.innerHTML = `<div style="padding:12px; color:#aaa; text-align:center; font-size:13px;">لا توجد مقاسات مطابقة.</div>`;
+          multiSizeList.classList.remove('hidden');
           return;
         }
-        driverList.innerHTML = filtered.slice(0, 60).map(d =>
-          `<button type="button" class="btn-option" style="width:100%;text-align:right;margin:3px 0;" data-driver-en="${escapeHtml(d.en)}" data-driver-ar="${escapeHtml(d.ar)}">${escapeHtml(d.display)}</button>`
-        ).join('');
-        driverList.classList.remove('hidden');
-        driverList.querySelectorAll('button[data-driver-en]').forEach(btn => {
+
+        multiSizeList.innerHTML = filtered.slice(0, 80).map(size => `
+          <button type="button" class="btn-option" style="width:100%; text-align:center; margin:4px 0; font-size:15px; padding:10px 16px; font-weight:600;" data-size="${escapeHtml(size)}">
+            ${highlightMatch(size, query)}
+          </button>
+        `).join('');
+
+        multiSizeList.querySelectorAll('button[data-size]').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const size = btn.dataset.size;
+            if (!driverMode_multiSizes.includes(size)) {
+              driverMode_multiSizes.push(size);
+            }
+            multiSizeInput.value = '';
+            multiSizeList.classList.add('hidden');
+            updateSelectionUI();
+          };
+        });
+
+        multiSizeList.classList.remove('hidden');
+      }
+
+      function updateSelectionUI() {
+        if (!tagsContainer || !searchBtn || !selectedArea) return;
+        const count = driverMode_multiSizes.length;
+        if (count === 0) {
+          selectedArea.style.display = 'none';
+          searchBtn.style.display = 'none';
+          if (clearBtn) clearBtn.style.display = 'none';
+          renderEmptyBatteryResultsMessage('اختر مقاسين أو أكثر من القائمة لاقتراح أفضل سائق');
+          return;
+        }
+
+        selectedArea.style.display = 'block';
+        searchBtn.style.display = 'inline-flex';
+        if (clearBtn) clearBtn.style.display = 'inline-flex';
+
+        tagsContainer.innerHTML = driverMode_multiSizes.map((s, i) => `
+          <span style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #f5c64e 0%, #f2bc1b 100%); color:#000; font-weight:800; border-radius:24px; padding:8px 16px; font-size:14px; box-shadow:0 3px 10px rgba(242,188,27,0.35);">
+            ${escapeHtml(s)}
+            <button type="button" data-remove-idx="${i}" style="background:none; border:none; color:#000; cursor:pointer; font-size:18px; font-weight:900; line-height:1; padding:0 0 0 4px;" title="إزالة">×</button>
+          </span>
+        `).join('');
+
+        tagsContainer.querySelectorAll('[data-remove-idx]').forEach(btn => {
           btn.onclick = () => {
-            const en = btn.dataset.driverEn;
-            const ar = btn.dataset.driverAr;
-            driverMode_selectedDriver = en;
-            driverInput.value = ar || en;
-            driverList.classList.add('hidden');
-            renderBatteryResultsForDriver(en, false);
+            driverMode_multiSizes.splice(Number(btn.dataset.removeIdx), 1);
+            updateSelectionUI();
           };
         });
       }
 
-      driverInput.value = '';
-      driverList.innerHTML = '';
-      driverList.classList.add('hidden');
-      driverInput.oninput = () => renderDriverList(driverInput.value.trim());
-      driverInput.onfocus = () => renderDriverList(driverInput.value.trim());
-      driverInput.onkeydown = (e) => {
+      multiSizeInput.oninput = () => {
+        updateSuggestions(multiSizeInput.value.trim());
+      };
+
+      multiSizeInput.onfocus = () => {
+        updateSuggestions(multiSizeInput.value.trim());
+      };
+
+      multiSizeInput.onclick = () => {
+        updateSuggestions(multiSizeInput.value.trim());
+      };
+
+      multiSizeInput.onkeydown = (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          const q = normalizeText(driverInput.value.trim());
-          const all = getAllDriverNames();
-          const match = all.find(d => normalizeText(d.display) === q || normalizeText(d.en) === q);
+          const q = normalizeText(multiSizeInput.value.trim());
+          const match = allSizes.find(s => normalizeText(s) === q && !driverMode_multiSizes.includes(s));
           if (match) {
-            driverMode_selectedDriver = match.en;
-            driverList.classList.add('hidden');
-            renderBatteryResultsForDriver(match.en, false);
+            driverMode_multiSizes.push(match);
+            multiSizeInput.value = '';
+            multiSizeList.classList.add('hidden');
+            updateSelectionUI();
           }
         }
       };
 
-      // ---- جانب المقاسات المتعددة (اختيار المقاس من القائمة) ----
-      function updateTagsUI() {
-        if (!tagsContainer || !searchBtn) return;
-        tagsContainer.innerHTML = driverMode_multiSizes.map((s, i) =>
-          `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(242,188,27,0.15);border:1px solid rgba(242,188,27,0.4);border-radius:20px;padding:4px 12px;color:#F2BC1B;font-weight:700;font-size:13px;">
-            ${escapeHtml(s.toUpperCase())}
-            <button type="button" data-remove-idx="${i}" style="background:none;border:none;color:#F2BC1B;cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 4px;" title="حذف">×</button>
-          </span>`
-        ).join('');
-        tagsContainer.querySelectorAll('[data-remove-idx]').forEach(btn => {
-          btn.onclick = () => {
-            driverMode_multiSizes.splice(Number(btn.dataset.removeIdx), 1);
-            updateTagsUI();
-          };
-        });
-        searchBtn.style.display = driverMode_multiSizes.length > 0 ? 'inline-flex' : 'none';
-      }
-
-      function updateMultiSizeSuggestions(query) {
-        if (!multiSizeList) return;
-        const allSizes = getUniqueBatterySizes();
-        const q = normalizeText(query);
-        const filtered = q ? allSizes.filter(s => normalizeText(s).includes(q)) : allSizes;
-        if (!filtered.length) {
-          multiSizeList.innerHTML = `<div style="padding:10px;color:#aaa;">لا يوجد مقاس مطابق.</div>`;
-          multiSizeList.classList.remove('hidden');
-          return;
-        }
-        multiSizeList.innerHTML = filtered.slice(0, 60).map(s => `
-          <button type="button" class="btn-option" style="width:100%;text-align:right;margin:3px 0;" data-size="${escapeHtml(s)}">
-            ${escapeHtml(s)}
-          </button>
-        `).join('');
-        multiSizeList.classList.remove('hidden');
-        multiSizeList.querySelectorAll('button[data-size]').forEach(btn => {
-          btn.onclick = () => {
-            const chosen = btn.dataset.size;
-            if (!driverMode_multiSizes.includes(chosen)) {
-              driverMode_multiSizes.push(chosen);
-              updateTagsUI();
+      if (!multiSizeInput._hasOutsideClickListener) {
+        multiSizeInput._hasOutsideClickListener = true;
+        document.addEventListener('click', (e) => {
+          const list = document.getElementById('multiSizeList');
+          const input = document.getElementById('multiSizeInput');
+          if (list && !list.classList.contains('hidden')) {
+            if (input && !input.contains(e.target) && !list.contains(e.target)) {
+              list.classList.add('hidden');
             }
-            if (multiSizeInput) multiSizeInput.value = '';
-            multiSizeList.classList.add('hidden');
-            if (multiSizeInput) multiSizeInput.focus();
-          };
+          }
         });
       }
 
-      if (multiSizeInput) {
-        multiSizeInput.value = '';
-        multiSizeInput.oninput = () => updateMultiSizeSuggestions(multiSizeInput.value.trim());
-        multiSizeInput.onfocus = () => updateMultiSizeSuggestions(multiSizeInput.value.trim());
-        multiSizeInput.onkeydown = (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            addCurrentSize();
-            if (multiSizeList) multiSizeList.classList.add('hidden');
-          }
+      if (clearBtn) {
+        clearBtn.onclick = () => {
+          driverMode_multiSizes = [];
+          multiSizeInput.value = '';
+          multiSizeList.classList.add('hidden');
+          updateSelectionUI();
         };
       }
 
-      function addCurrentSize() {
-        if (!multiSizeInput) return;
-        const val = multiSizeInput.value.trim().toUpperCase();
-        if (!val) return;
-        if (!driverMode_multiSizes.includes(val)) {
-          driverMode_multiSizes.push(val);
-          updateTagsUI();
-        }
-        multiSizeInput.value = '';
-        if (multiSizeList) multiSizeList.classList.add('hidden');
-        multiSizeInput.focus();
-      }
-
-      if (addSizeBtn) {
-        addSizeBtn.onclick = addCurrentSize;
-      }
-
       if (searchBtn) {
-        updateTagsUI();
-        searchBtn.onclick = () => renderBatteryResultsForMultiSizes(driverMode_multiSizes);
+        searchBtn.onclick = () => {
+          multiSizeList.classList.add('hidden');
+          renderBatteryResultsForMultiSizes(driverMode_multiSizes);
+        };
       }
 
-      // إخفاء القوائم المنسدلة عند النقر خارجها
-      document.addEventListener('click', (e) => {
-        if (multiSizeList && !multiSizeList.contains(e.target) && e.target !== multiSizeInput && e.target !== addSizeBtn) {
-          multiSizeList.classList.add('hidden');
-        }
-        if (driverList && !driverList.contains(e.target) && e.target !== driverInput) {
-          driverList.classList.add('hidden');
-        }
-      });
-
-      renderEmptyBatteryResultsMessage('اختر سائقاً لعرض بطارياته، أو اختر مقاسات واضغط اقتراح');
+      updateSelectionUI();
+      renderEmptyBatteryResultsMessage('اختر مقاسين أو أكثر من القائمة لاقتراح أفضل سائق');
     }
 
     // عرض جدول إكسيل لبطاريات سائق محدد
