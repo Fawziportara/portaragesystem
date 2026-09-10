@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.4';
+    const SITE_VERSION = '4.5';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -13134,6 +13134,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               <span class="mode-icon">🚗</span>
               <span class="mode-label">البحث بأسماء السيارات</span>
             </button>
+            <button id="batteryModeDriverBtn" type="button" class="btn-option battery-mode-option">
+              <span class="mode-icon">🔋</span>
+              <span class="mode-label">البحث بمقاسات متعددة</span>
+            </button>
             <button type="button" class="btn-option battery-mode-option" style="display:${isAdmin ? 'flex' : 'none'};" onclick="window.open('https://docs.google.com/spreadsheets/d/1WghSWhC-NJ0h--afoaR0ydzTP8ULw7N3tBDgToXoLVk/edit?usp=sharing', '_blank', 'noopener')">
               <span class="mode-icon">📋</span>
               <span class="mode-label">فتح لوحة التحكم (الشيت)</span>
@@ -13172,6 +13176,33 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
                 </div>
               </div>
             </div>
+            <div id="batterySearchByDriver" class="hidden">
+              <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+                <!-- بحث بالسائق -->
+                <div style="flex:1; min-width:260px;">
+                  <div class="form-field" style="margin-bottom:10px;">
+                    <label style="color:#F2BC1B; font-weight:700;">👤 اختر السائق</label>
+                    <input id="driverSearchInput" class="form-control" placeholder="اكتب اسم السائق..." autocomplete="off" />
+                  </div>
+                  <div id="driverSearchList" class="data-table-container hidden" style="margin-top:6px; max-height:220px; overflow:auto;"></div>
+                </div>
+                <!-- بحث بعدة مقاسات -->
+                <div style="flex:1; min-width:260px;">
+                  <div class="form-field" style="margin-bottom:6px;">
+                    <label style="color:#F2BC1B; font-weight:700;">🔋 البحث بمقاسات متعددة (اختر المقاسات)</label>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+                      <input id="multiSizeInput" class="form-control" placeholder="ابحث أو اختر المقاس (مثال: DA47)..." autocomplete="off" style="flex:1; min-width:140px;" />
+                      <button type="button" id="addSizeBtn" style="background:#F2BC1B;color:#000;border:none;border-radius:8px;padding:10px 14px;font-weight:700;font-size:18px;cursor:pointer;flex-shrink:0;" title="إضافة المقاس">+</button>
+                    </div>
+                    <div id="multiSizeList" class="data-table-container hidden" style="margin-top:4px; max-height:200px; overflow:auto; margin-bottom:8px;"></div>
+                    <div id="multiSizeTagsContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:28px; margin-bottom:8px;"></div>
+                    <button type="button" id="searchMultiSizeBtn" class="btn-primary btn-inline" style="margin-top:4px;width:auto;padding:10px 20px;display:none;">
+                      🔍 اقتراح أفضل سائق
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="batteryResultsContainer" class="data-table-container hidden">
@@ -13181,9 +13212,9 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         <div id="batteryFeeNotice" class="warning-box hidden" style="margin-top:10px;">
           ⚠️ ملاحظة مهمة - رسوم إضافية:
           <ul style="margin:8px 0 0 12px; padding:0; list-style: none; color:#fce588; font-size:13px; text-align:right;">
-            <li>زيادة 15 د.ك: إذا البطارية تحت الكشن</li>
+            <li>زيادة 10 د.ك: إذا البطارية تحت الكشن</li>
             <li>زيادة 10 د.ك: صباح السالم، أم الهيمان، شعيبة، ميناء عبدالله، جليعة، بنيدر، الخيران، النويصيب، الروضتين، المطلاع، العبدلي، الصبية، جبد، صباح الأحمد، الوفرة</li>
-            <li>زيادة 5 د.ك: جابر الأحمد، سعد العبدالله، الجهراء، فحيحيل، الأحمدي، غرب عبدالله مبارك</li>
+            <li>زيادة 5 د.ك:  جنوب عبدالله مبارك، جابر الأحمد، سعد العبدالله، الجهراء، فحيحيل، الأحمدي، غرب عبدالله مبارك</li>
           </ul>
         </div>
       `;
@@ -13260,9 +13291,11 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     function bindBatteryModeButtons() {
       const sizeBtn = document.getElementById('batteryModeSizeBtn');
       const carBtn = document.getElementById('batteryModeCarBtn');
+      const driverBtn = document.getElementById('batteryModeDriverBtn');
       if (!sizeBtn || !carBtn) return;
       sizeBtn.onclick = () => renderBatteryModeSection('size');
       carBtn.onclick = () => renderBatteryModeSection('car');
+      if (driverBtn) driverBtn.onclick = () => renderBatteryModeSection('driver');
     }
     function openBatteryDealerLocationModal() {
       let modal = document.getElementById('batteryDealerLocationModal');
@@ -13331,20 +13364,23 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       batterySearchMode = mode;
       const sizeSection = document.getElementById('batterySearchBySize');
       const carSection = document.getElementById('batterySearchByCar');
+      const driverSection = document.getElementById('batterySearchByDriver');
       const sizeBtn = document.getElementById('batteryModeSizeBtn');
       const carBtn = document.getElementById('batteryModeCarBtn');
-      if (sizeSection && carSection) {
-        sizeSection.classList.toggle('hidden', mode !== 'size');
-        carSection.classList.toggle('hidden', mode !== 'car');
-      }
-      if (sizeBtn && carBtn) {
-        sizeBtn.classList.toggle('active', mode === 'size');
-        carBtn.classList.toggle('active', mode === 'car');
-      }
+      const driverBtn = document.getElementById('batteryModeDriverBtn');
+      if (sizeSection) sizeSection.classList.toggle('hidden', mode !== 'size');
+      if (carSection) carSection.classList.toggle('hidden', mode !== 'car');
+      if (driverSection) driverSection.classList.toggle('hidden', mode !== 'driver');
+      if (sizeBtn) sizeBtn.classList.toggle('active', mode === 'size');
+      if (carBtn) carBtn.classList.toggle('active', mode === 'car');
+      if (driverBtn) driverBtn.classList.toggle('active', mode === 'driver');
+      renderEmptyBatteryResultsMessage();
       if (mode === 'size') {
         renderBatterySizeMode();
-      } else {
+      } else if (mode === 'car') {
         renderBatteryCarMode();
+      } else if (mode === 'driver') {
+        renderBatteryDriverMode();
       }
     }
     async function initializeBatterySearchData() {
@@ -13356,8 +13392,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
         await Promise.all([loadBatterySheetData(), loadCarSheetData(), loadDriverNamesSheet()]);
         if (batterySearchMode === 'size') {
           renderBatterySizeMode();
-        } else {
+        } else if (batterySearchMode === 'car') {
           renderBatteryCarMode();
+        } else if (batterySearchMode === 'driver') {
+          renderBatteryDriverMode();
         }
         if (!batteryModuleRefreshTimer) {
           batteryModuleRefreshTimer = setInterval(() => {
@@ -13390,12 +13428,18 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
               if (sizeInput && sizeInput.value.trim()) {
                 renderBatteryResultsForSize(sizeInput.value.trim());
               }
-            } else {
+            } else if (batterySearchMode === 'car') {
               const makeSearch = document.getElementById('carMakeSearch');
               const modelSearch = document.getElementById('carModelSearch');
               const yearSearch = document.getElementById('carYearSearch');
               if (makeSearch && modelSearch && yearSearch && makeSearch.value && modelSearch.value && yearSearch.value) {
                 renderBatteryResultsForCar(makeSearch.value.trim(), modelSearch.value.trim(), yearSearch.value.trim());
+              }
+            } else if (batterySearchMode === 'driver') {
+              if (driverMode_selectedDriver) {
+                renderBatteryResultsForDriver(driverMode_selectedDriver);
+              } else if (driverMode_multiSizes && driverMode_multiSizes.length > 0) {
+                renderBatteryResultsForMultiSizes(driverMode_multiSizes);
               }
             }
           }
@@ -13740,6 +13784,634 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       resetYearStep();
       renderMakeOptions('');
       renderEmptyBatteryResultsMessage('اختر الشركة أولاً');
+    }
+
+    // =============================================
+    // وضع البحث بأسماء السائقين (Driver Mode)
+    // =============================================
+    let driverMode_selectedDriver = '';
+    let driverMode_multiSizes = [];
+
+    function getMainWarehouseStockForSize(size) {
+      if (!batterySheetData) return { total: 0, brands: [] };
+      const matched = batterySheetData.filter(row => normalizeText(row[0]) === normalizeText(size));
+      let total = 0;
+      const brandCounts = {};
+      matched.forEach(row => {
+        const fk = Number(row[7]) || 0;
+        const m = Number(row[8]) || 0;
+        const three = Number(row[9]) || 0;
+        const sum = fk + m + three;
+        if (sum > 0) {
+          total += sum;
+          const b = (row[1] || '').trim();
+          const ab = getArabicBrandName(b) || b;
+          brandCounts[ab] = (brandCounts[ab] || 0) + sum;
+        }
+      });
+      const brands = Object.entries(brandCounts).map(([b, q]) => `${b} (${q})`);
+      return { total, brands };
+    }
+
+    function renderBatteryDriverMode() {
+      driverMode_selectedDriver = '';
+      driverMode_multiSizes = [];
+
+      const driverInput = document.getElementById('driverSearchInput');
+      const driverList = document.getElementById('driverSearchList');
+      const multiSizeInput = document.getElementById('multiSizeInput');
+      const multiSizeList = document.getElementById('multiSizeList');
+      const addSizeBtn = document.getElementById('addSizeBtn');
+      const tagsContainer = document.getElementById('multiSizeTagsContainer');
+      const searchBtn = document.getElementById('searchMultiSizeBtn');
+
+      if (!driverInput || !driverList) return;
+
+      // ---- جانب السائق ----
+      function getAllDriverNames() {
+        if (!driverNamesRecords || !driverNamesRecords.length) return [];
+        return driverNamesRecords
+          .filter(r => r.ar || r.en)
+          .map(r => ({ ar: r.ar, en: r.en, display: r.ar || r.en }));
+      }
+
+      function renderDriverList(query) {
+        const all = getAllDriverNames();
+        const q = normalizeText(query);
+        const filtered = q ? all.filter(d => normalizeText(d.display).includes(q) || normalizeText(d.en).includes(q)) : all;
+        if (!filtered.length) {
+          driverList.innerHTML = `<div style="padding:10px;color:#aaa;">لا يوجد سائق بهذا الاسم.</div>`;
+          driverList.classList.remove('hidden');
+          return;
+        }
+        driverList.innerHTML = filtered.slice(0, 60).map(d =>
+          `<button type="button" class="btn-option" style="width:100%;text-align:right;margin:3px 0;" data-driver-en="${escapeHtml(d.en)}" data-driver-ar="${escapeHtml(d.ar)}">${escapeHtml(d.display)}</button>`
+        ).join('');
+        driverList.classList.remove('hidden');
+        driverList.querySelectorAll('button[data-driver-en]').forEach(btn => {
+          btn.onclick = () => {
+            const en = btn.dataset.driverEn;
+            const ar = btn.dataset.driverAr;
+            driverMode_selectedDriver = en;
+            driverInput.value = ar || en;
+            driverList.classList.add('hidden');
+            renderBatteryResultsForDriver(en, false);
+          };
+        });
+      }
+
+      driverInput.value = '';
+      driverList.innerHTML = '';
+      driverList.classList.add('hidden');
+      driverInput.oninput = () => renderDriverList(driverInput.value.trim());
+      driverInput.onfocus = () => renderDriverList(driverInput.value.trim());
+      driverInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const q = normalizeText(driverInput.value.trim());
+          const all = getAllDriverNames();
+          const match = all.find(d => normalizeText(d.display) === q || normalizeText(d.en) === q);
+          if (match) {
+            driverMode_selectedDriver = match.en;
+            driverList.classList.add('hidden');
+            renderBatteryResultsForDriver(match.en, false);
+          }
+        }
+      };
+
+      // ---- جانب المقاسات المتعددة (اختيار المقاس من القائمة) ----
+      function updateTagsUI() {
+        if (!tagsContainer || !searchBtn) return;
+        tagsContainer.innerHTML = driverMode_multiSizes.map((s, i) =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(242,188,27,0.15);border:1px solid rgba(242,188,27,0.4);border-radius:20px;padding:4px 12px;color:#F2BC1B;font-weight:700;font-size:13px;">
+            ${escapeHtml(s.toUpperCase())}
+            <button type="button" data-remove-idx="${i}" style="background:none;border:none;color:#F2BC1B;cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 4px;" title="حذف">×</button>
+          </span>`
+        ).join('');
+        tagsContainer.querySelectorAll('[data-remove-idx]').forEach(btn => {
+          btn.onclick = () => {
+            driverMode_multiSizes.splice(Number(btn.dataset.removeIdx), 1);
+            updateTagsUI();
+          };
+        });
+        searchBtn.style.display = driverMode_multiSizes.length > 0 ? 'inline-flex' : 'none';
+      }
+
+      function updateMultiSizeSuggestions(query) {
+        if (!multiSizeList) return;
+        const allSizes = getUniqueBatterySizes();
+        const q = normalizeText(query);
+        const filtered = q ? allSizes.filter(s => normalizeText(s).includes(q)) : allSizes;
+        if (!filtered.length) {
+          multiSizeList.innerHTML = `<div style="padding:10px;color:#aaa;">لا يوجد مقاس مطابق.</div>`;
+          multiSizeList.classList.remove('hidden');
+          return;
+        }
+        multiSizeList.innerHTML = filtered.slice(0, 60).map(s => `
+          <button type="button" class="btn-option" style="width:100%;text-align:right;margin:3px 0;" data-size="${escapeHtml(s)}">
+            ${escapeHtml(s)}
+          </button>
+        `).join('');
+        multiSizeList.classList.remove('hidden');
+        multiSizeList.querySelectorAll('button[data-size]').forEach(btn => {
+          btn.onclick = () => {
+            const chosen = btn.dataset.size;
+            if (!driverMode_multiSizes.includes(chosen)) {
+              driverMode_multiSizes.push(chosen);
+              updateTagsUI();
+            }
+            if (multiSizeInput) multiSizeInput.value = '';
+            multiSizeList.classList.add('hidden');
+            if (multiSizeInput) multiSizeInput.focus();
+          };
+        });
+      }
+
+      if (multiSizeInput) {
+        multiSizeInput.value = '';
+        multiSizeInput.oninput = () => updateMultiSizeSuggestions(multiSizeInput.value.trim());
+        multiSizeInput.onfocus = () => updateMultiSizeSuggestions(multiSizeInput.value.trim());
+        multiSizeInput.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addCurrentSize();
+            if (multiSizeList) multiSizeList.classList.add('hidden');
+          }
+        };
+      }
+
+      function addCurrentSize() {
+        if (!multiSizeInput) return;
+        const val = multiSizeInput.value.trim().toUpperCase();
+        if (!val) return;
+        if (!driverMode_multiSizes.includes(val)) {
+          driverMode_multiSizes.push(val);
+          updateTagsUI();
+        }
+        multiSizeInput.value = '';
+        if (multiSizeList) multiSizeList.classList.add('hidden');
+        multiSizeInput.focus();
+      }
+
+      if (addSizeBtn) {
+        addSizeBtn.onclick = addCurrentSize;
+      }
+
+      if (searchBtn) {
+        updateTagsUI();
+        searchBtn.onclick = () => renderBatteryResultsForMultiSizes(driverMode_multiSizes);
+      }
+
+      // إخفاء القوائم المنسدلة عند النقر خارجها
+      document.addEventListener('click', (e) => {
+        if (multiSizeList && !multiSizeList.contains(e.target) && e.target !== multiSizeInput && e.target !== addSizeBtn) {
+          multiSizeList.classList.add('hidden');
+        }
+        if (driverList && !driverList.contains(e.target) && e.target !== driverInput) {
+          driverList.classList.add('hidden');
+        }
+      });
+
+      renderEmptyBatteryResultsMessage('اختر سائقاً لعرض بطارياته، أو اختر مقاسات واضغط اقتراح');
+    }
+
+    // عرض جدول إكسيل لبطاريات سائق محدد
+    function renderBatteryResultsForDriver(driverEnName, isFromMultiSearch = false, filterSizes = []) {
+      if (!driverEnName || !batterySheetData || !batterySheetHeaders) {
+        renderEmptyBatteryResultsMessage('لا توجد بيانات');
+        return;
+      }
+      const container = document.getElementById('batteryResultsContainer');
+      const scroll = document.getElementById('batteryResultsScroll');
+      if (!container || !scroll) return;
+
+      const driverGroups = getDriverColumnGroups();
+      const driverGroup = driverGroups.find(g => normalizeText(g.name) === normalizeText(driverEnName));
+      if (!driverGroup) {
+        scroll.innerHTML = `<div class="battery-results-message" style="color:#ef4444;">لم يُعثر على بيانات هذا السائق في الشيت.</div>`;
+        container.classList.remove('hidden');
+        return;
+      }
+
+      const driverDisplayName = getDriverName(driverEnName) || driverEnName;
+
+      // جميع البطاريات المتوفرة لدى هذا السائق فقط (الكمية > 0)
+      const allDriverRows = batterySheetData.filter(row => {
+        const fk = Number(row[driverGroup.fkIndex]) || 0;
+        const m = Number(row[driverGroup.mIndex]) || 0;
+        const three = Number(row[driverGroup.threeIndex]) || 0;
+        return (fk + m + three) > 0;
+      });
+
+      // إذا كان البحث بمقاسات متعددة، نظهر فقط المقاسات المبحوث عنها والماركات المتاحة منها
+      const isFilteringSizes = isFromMultiSearch && filterSizes && filterSizes.length > 0;
+      const targetSizesNorm = isFilteringSizes ? filterSizes.map(s => normalizeText(s)) : [];
+
+      const rowsWithStock = isFilteringSizes
+        ? allDriverRows.filter(row => targetSizesNorm.includes(normalizeText(row[0])))
+        : allDriverRows;
+
+      if (!rowsWithStock.length) {
+        scroll.innerHTML = `
+          <div class="battery-results-card" style="padding:24px; text-align:center;">
+            ${isFromMultiSearch ? `
+              <div style="text-align:right;margin-bottom:12px;">
+                <button type="button" id="backToSuggestionsBtn" class="btn-option" style="padding:6px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px;">
+                  ← رجوع للاقتراحات
+                </button>
+              </div>` : ''}
+            <div style="font-size:36px;margin-bottom:12px;">📦</div>
+            <div style="color:#F2BC1B;font-weight:700;font-size:18px;margin-bottom:8px;">${escapeHtml(driverDisplayName)}</div>
+            <div style="color:#aaa;font-size:14px;">
+              ${isFilteringSizes
+                ? `لا تتوفر مع هذا السائق المقاسات المطلوبة (${filterSizes.join(' ، ')}).`
+                : 'لا توجد بطاريات متواجدة مع هذا السائق حالياً.'}
+            </div>
+            ${isFilteringSizes && allDriverRows.length > 0 ? `
+              <div style="margin-top:12px;">
+                <button type="button" id="showAllDriverBatteriesBtn" class="btn-option" style="width:auto;margin:0 auto;padding:6px 14px;font-size:13px;">
+                  عرض باقي البطاريات المتوفرة معه (${allDriverRows.length})
+                </button>
+              </div>
+            ` : ''}
+          </div>`;
+        container.classList.remove('hidden');
+        showBatteryFeeNotice(false);
+
+        const backBtn = document.getElementById('backToSuggestionsBtn');
+        if (backBtn) backBtn.onclick = () => renderBatteryResultsForMultiSizes(driverMode_multiSizes);
+
+        const showAllBtn = document.getElementById('showAllDriverBatteriesBtn');
+        if (showAllBtn) showAllBtn.onclick = () => renderBatteryResultsForDriver(driverEnName, isFromMultiSearch, []);
+        return;
+      }
+
+      // بناء صفوف جدول الإكسيل
+      const tableRows = rowsWithStock.map(row => {
+        const size = (row[0] || '').trim();
+        const brand = (row[1] || '').trim();
+        const arabicBrand = getArabicBrandName(brand) || brand;
+        const warranty = translateWarrantyToArabic((row[2] || '').trim());
+        const countryStr = (row[3] || '').trim();
+        const { nationality, flag } = getCountryDetails(countryStr);
+        const countryDisplay = flag ? `${nationality} ${flag}` : (nationality || countryStr);
+        const tradeName = (row[4] || '').trim();
+        const dealer = getDealer(brand, size);
+        const salePrice = (row[6] || '').trim() || '-';
+        const brandDisplay = tradeName ? `${arabicBrand} (${tradeName})` : arabicBrand;
+        const copyMessage = buildBatteryMessage(row);
+
+        const fk = Number(row[driverGroup.fkIndex]) || 0;
+        const m = Number(row[driverGroup.mIndex]) || 0;
+        const three = Number(row[driverGroup.threeIndex]) || 0;
+
+        // كمية السائق فقط (اف كي / افتخار / الميلم أو فارتا)
+        let qtyBadges = '';
+        const brand_upper = brand.toUpperCase();
+        const isVartaOrHankookNotDa74 = (brand_upper.includes('VARTA') || (brand_upper.includes('HANKOOK') && !size.toUpperCase().includes('DA74') && !size.toUpperCase().includes('74')));
+        if (isVartaOrHankookNotDa74) {
+          const total = fk + m + three;
+          qtyBadges = `<span class="status-badge" style="background:#F2BC1B;color:#000;font-weight:700;">فارتا: ${total}</span>`;
+        } else {
+          if (fk) qtyBadges += `<span class="status-badge" style="background:rgba(242,188,27,0.18);color:#F2BC1B;border:1px solid rgba(242,188,27,0.4);margin:2px;">اف كي: ${fk}</span>`;
+          if (m) qtyBadges += `<span class="status-badge" style="background:rgba(242,188,27,0.18);color:#F2BC1B;border:1px solid rgba(242,188,27,0.4);margin:2px;">افتخار: ${m}</span>`;
+          if (three) qtyBadges += `<span class="status-badge" style="background:rgba(242,188,27,0.18);color:#F2BC1B;border:1px solid rgba(242,188,27,0.4);margin:2px;">الميلم: ${three}</span>`;
+        }
+
+        return `<tr style="border-bottom:1px solid #222;transition:background 0.15s;" onmouseover="this.style.background='#1c1c1c'" onmouseout="this.style.background='transparent'">
+          <td style="padding:11px 12px;color:#F2BC1B;font-weight:700;font-size:14px;text-align:center;border-left:1px solid #282828;">${escapeHtml(size)}</td>
+          <td style="padding:11px 12px;color:#fff;font-size:13px;text-align:center;border-left:1px solid #282828;">${escapeHtml(brandDisplay)}</td>
+          <td style="padding:11px 12px;color:#ddd;font-size:13px;text-align:center;border-left:1px solid #282828;">${escapeHtml(countryDisplay)}</td>
+          <td style="padding:11px 12px;color:#ddd;font-size:13px;text-align:center;border-left:1px solid #282828;">${escapeHtml(warranty)}</td>
+          <td style="padding:11px 12px;color:#ddd;font-size:13px;text-align:center;border-left:1px solid #282828;">${escapeHtml(dealer)}</td>
+          <td style="padding:11px 12px;color:#4ade80;font-weight:700;font-size:14px;text-align:center;border-left:1px solid #282828;">${escapeHtml(salePrice)} د.ك</td>
+          <td style="padding:11px 12px;text-align:center;border-left:1px solid #282828;">${qtyBadges}</td>
+          <td style="padding:11px 12px;text-align:center;">
+            <button type="button" class="copy-btn-small" data-copy-message="${escapeAttribute(copyMessage)}">نسخ</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      scroll.innerHTML = `
+        <div class="battery-results-card">
+          ${isFromMultiSearch ? `
+            <div style="margin-bottom:12px;">
+              <button type="button" id="backToSuggestionsBtn" class="btn-option" style="padding:6px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px;">
+                ← رجوع للاقتراحات
+              </button>
+            </div>` : ''}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #262626;padding-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="background:linear-gradient(135deg,#F2BC1B,#d4a016);color:#000;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0;">👤</div>
+              <div>
+                <div style="color:#F2BC1B;font-size:20px;font-weight:800;">${escapeHtml(driverDisplayName)}</div>
+                <div style="color:#aaa;font-size:13px;">
+                  ${isFilteringSizes
+                    ? `المقاسات المبحوث عنها والماركات المتاحة معه: <strong style="color:#F2BC1B;">(${filterSizes.join(' ، ')})</strong>`
+                    : `البطاريات المتواجدة معه في سيارته (${allDriverRows.length} بطارية متوفرة)`}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              ${isFilteringSizes ? `
+                <button type="button" id="toggleDriverBatteriesViewBtn" class="btn-option" style="padding:6px 12px;font-size:12px;width:auto;">
+                  عرض جميع بطاريات السائق (${allDriverRows.length})
+                </button>
+              ` : (isFromMultiSearch && filterSizes.length > 0 ? `
+                <button type="button" id="toggleDriverBatteriesViewBtn" class="btn-option" style="padding:6px 12px;font-size:12px;width:auto;">
+                  عرض المقاسات المبحوث عنها فقط (${filterSizes.join('، ')})
+                </button>
+              ` : '')}
+              <div style="background:#181818;border:1px solid #333;border-radius:8px;padding:6px 14px;color:#F2BC1B;font-size:13px;font-weight:700;">
+                النتائج: ${rowsWithStock.length}
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto;border-radius:10px;border:1px solid #333;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            <table style="width:100%;border-collapse:collapse;min-width:650px;">
+              <thead>
+                <tr style="background:#191919;">
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">المقاس</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">الماركة</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">البلد</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">الكفالة</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">الوكيل</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">السعر</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;border-left:1px solid #333;">الكمية المتوفرة معه</th>
+                  <th style="padding:12px 14px;color:#F2BC1B;font-size:13px;font-weight:700;text-align:center;border-bottom:2px solid #F2BC1B;">نسخ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      container.classList.remove('hidden');
+      showBatteryFeeNotice(true);
+
+      const backBtn = document.getElementById('backToSuggestionsBtn');
+      if (backBtn) backBtn.onclick = () => renderBatteryResultsForMultiSizes(driverMode_multiSizes);
+
+      const toggleViewBtn = document.getElementById('toggleDriverBatteriesViewBtn');
+      if (toggleViewBtn) {
+        toggleViewBtn.onclick = () => {
+          renderBatteryResultsForDriver(driverEnName, isFromMultiSearch, isFilteringSizes ? [] : driverMode_multiSizes);
+        };
+      }
+
+      scroll.querySelectorAll('.copy-btn-small').forEach(btn => {
+        btn.onclick = async () => {
+          const msg = btn.dataset.copyMessage;
+          if (!msg) return;
+          await copyBatteryTextToClipboard(msg);
+          showToast('تم نسخ الرسالة ✅');
+        };
+      });
+    }
+
+    // عرض اقتراح أفضل سائق بناءً على مقاسات متعددة
+    function renderBatteryResultsForMultiSizes(sizes) {
+      if (!sizes || !sizes.length) return;
+      const container = document.getElementById('batteryResultsContainer');
+      const scroll = document.getElementById('batteryResultsScroll');
+      if (!container || !scroll) return;
+
+      const driverGroups = getDriverColumnGroups();
+
+      // لكل سائق، حساب المقاسات المتوفرة لديه مع الماركات
+      const driverResults = driverGroups.map(group => {
+        const driverDisplayName = getDriverName(group.name) || group.name;
+        const sizesFound = [];
+        const sizesMissing = [];
+
+        sizes.forEach(size => {
+          const matched = (batterySheetData || []).filter(row => {
+            const rowSize = normalizeText(row[0]);
+            const target = normalizeText(size);
+            const fk = Number(row[group.fkIndex]) || 0;
+            const m = Number(row[group.mIndex]) || 0;
+            const three = Number(row[group.threeIndex]) || 0;
+            return rowSize === target && (fk + m + three) > 0;
+          });
+          if (matched.length > 0) {
+            const brands = Array.from(new Set(matched.map(r => getArabicBrandName(r[1]) || r[1]))).join('، ');
+            sizesFound.push({ size, rows: matched, brands });
+          } else {
+            sizesMissing.push(size);
+          }
+        });
+
+        return {
+          name: group.name,
+          displayName: driverDisplayName,
+          group,
+          sizesFound,
+          sizesMissing,
+          totalFound: sizesFound.length
+        };
+      }).filter(d => d.totalFound > 0);
+
+      // فرز السائقين: من لديه عدد أكبر من المقاسات المطلوبة أولاً
+      driverResults.sort((a, b) => b.totalFound - a.totalFound || a.displayName.localeCompare(b.displayName, 'ar'));
+
+      const fullMatch = driverResults.filter(d => d.sizesMissing.length === 0);
+      const partialMatch = driverResults.filter(d => d.sizesMissing.length > 0);
+
+      // دالة لتوليد بطاقة السائق (مربع السائق)
+      function renderDriverCard(d, isClickable) {
+        const isFull = d.sizesMissing.length === 0;
+        const foundBadges = d.sizesFound.map(sf => `
+          <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:6px 10px;margin-bottom:4px;">
+            <div style="color:#4ade80;font-weight:700;font-size:13px;">✓ ${escapeHtml(sf.size)}</div>
+            <div style="color:#aaa;font-size:11px;">الماركات المتاحة معه: <strong style="color:#fff;">${escapeHtml(sf.brands)}</strong></div>
+          </div>
+        `).join('');
+
+        const missingBadges = d.sizesMissing.map(s => {
+          const mainInfo = getMainWarehouseStockForSize(s);
+          const hasWarehouse = mainInfo.total > 0;
+          return `
+            <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:6px 10px;margin-bottom:4px;">
+              <div style="color:#ef4444;font-weight:700;font-size:13px;">✗ ${escapeHtml(s)} (غير متوفر مع الفني)</div>
+              <div style="color:#bbb;font-size:11px;margin-top:2px;">
+                ${hasWarehouse
+                  ? `<span style="color:#F2BC1B;font-weight:700;">المخزون الرئيسي:</span> متوفر (${mainInfo.total} قطعة - ${escapeHtml(mainInfo.brands.join('، '))}) <span style="color:#4ade80;font-weight:700;display:inline-block;margin-top:2px;">💡 يمكن الحصول عليها من المخزون الرئيسي</span>`
+                  : `<span style="color:#888;">المخزون الرئيسي: غير متوفر حالياً</span>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="driver-suggest-card ${isClickable ? 'driver-suggest-clickable' : ''}"
+               data-driver-name="${escapeHtml(d.name)}"
+               style="background:#111;border:1px solid ${isFull ? 'rgba(74,222,128,0.5)' : '#333'};border-radius:14px;padding:16px;cursor:${isClickable ? 'pointer' : 'default'};transition:all 0.2s;box-shadow:0 6px 16px rgba(0,0,0,0.3);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding-bottom:10px;">
+              <div style="background:${isFull ? '#4ade80' : '#F2BC1B'};color:#000;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0;">👤</div>
+              <div style="flex:1;">
+                <div style="color:${isFull ? '#4ade80' : '#F2BC1B'};font-weight:800;font-size:16px;">${escapeHtml(d.displayName)}</div>
+                <div style="color:#888;font-size:12px;">متوفر معه ${d.totalFound} من أصل ${sizes.length} مقاس مطلوب</div>
+              </div>
+              ${isClickable ? `<span style="color:#F2BC1B;font-size:12px;font-weight:700;">عرض الجدول والتفاصيل ←</span>` : ''}
+            </div>
+            <div>
+              <div style="color:#4ade80;font-size:12px;font-weight:700;margin-bottom:4px;">المقاسات المتوفرة معه:</div>
+              ${foundBadges}
+            </div>
+            ${d.sizesMissing.length ? `
+              <div style="margin-top:8px;">
+                <div style="color:#ef4444;font-size:12px;font-weight:700;margin-bottom:4px;">المقاسات غير المتوفرة معه:</div>
+                ${missingBadges}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      let html = '';
+
+      // الحالة 1: لا يوجد أي سائق يملك أي مقاس
+      if (!driverResults.length) {
+        let anyWarehouseStock = false;
+        const warehouseSummary = sizes.map(s => {
+          const w = getMainWarehouseStockForSize(s);
+          if (w.total > 0) anyWarehouseStock = true;
+          return `<div style="margin:4px 0;"><strong style="color:#F2BC1B;">${escapeHtml(s)}</strong>: ${w.total > 0 ? `متوفر بالمخزون الرئيسي (${w.total} قطعة - ${escapeHtml(w.brands.join('، '))}) <span style="color:#4ade80;font-weight:700;">(💡 يمكن الحصول عليها من المخزون الرئيسي)</span>` : '<span style="color:#ef4444;">غير متوفر بالمخزون الرئيسي</span>'}</div>`;
+        }).join('');
+
+        scroll.innerHTML = `
+          <div class="battery-results-card" style="border:1px dashed rgba(239,68,68,0.5);background:rgba(239,68,68,0.05);text-align:center;padding:26px 18px;">
+            <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+            <div style="color:#ef4444;font-weight:800;font-size:17px;margin-bottom:8px;">لا يوجد أي سائق يملك المقاسات المطلوبة حالياً</div>
+            <div style="color:#aaa;font-size:14px;margin-bottom:12px;">المقاسات المطلوبة: <strong style="color:#F2BC1B;">${sizes.map(s => escapeHtml(s)).join(' ، ')}</strong></div>
+            <div style="background:#161616;border:1px solid #333;border-radius:10px;padding:14px;display:inline-block;text-align:right;font-size:13px;color:#ddd;margin-top:6px;max-width:95%;">
+              <div style="color:#F2BC1B;font-weight:700;margin-bottom:6px;">📦 حالة المخزون الرئيسي:</div>
+              ${warehouseSummary}
+              ${anyWarehouseStock ? `<div style="color:#4ade80;font-size:13px;font-weight:700;margin-top:8px;">💡 يمكن الحصول عليها من المخزون الرئيسي</div>` : `<div style="color:#ef4444;font-size:12px;margin-top:6px;">المقاسات غير متوفرة في المخزون الرئيسي أيضاً.</div>`}
+            </div>
+          </div>`;
+        container.classList.remove('hidden');
+        showBatteryFeeNotice(false);
+        return;
+      }
+
+      // الحالة 2: فني واحد فقط يملك جميع المقاسات
+      if (fullMatch.length === 1) {
+        html += `
+          <div class="battery-results-card" style="border:1px solid #4ade80;background:rgba(74,222,128,0.06);padding:16px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="background:#4ade80;color:#000;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;">✓</div>
+                <div>
+                  <div style="color:#4ade80;font-weight:800;font-size:16px;">أفضل فني متوفر معه جميع المقاسات: ${escapeHtml(fullMatch[0].displayName)}</div>
+                  <div style="color:#ddd;font-size:13px;">المقاسات المطلوبة: ${sizes.map(s => `<strong style="color:#F2BC1B;">${escapeHtml(s)}</strong>`).join(' + ')} متوفرة جميعها معه</div>
+                </div>
+              </div>
+              <button type="button" class="btn-option driver-suggest-clickable" data-driver-name="${escapeHtml(fullMatch[0].name)}" style="width:auto;padding:8px 16px;font-size:13px;">
+                عرض جدول المقاسات والماركات المتاحة معه 📋
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      // الحالة 3: أكثر من سائق يملك جميع المقاسات
+      else if (fullMatch.length > 1) {
+        html += `
+          <div class="battery-results-card" style="margin-bottom:12px;">
+            <div style="color:#4ade80;font-weight:800;font-size:16px;margin-bottom:12px;">
+              ✅ السائقون الذين لديهم جميع المقاسات المطلوبة (${fullMatch.length} فنيين) — اضغط على الفني لعرض جدول المقاسات والماركات:
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+              ${fullMatch.map(d => renderDriverCard(d, true)).join('')}
+            </div>
+          </div>
+        `;
+      }
+      // الحالة 4: لا يوجد أي فني يملك جميع المقاسات معاً
+      else if (fullMatch.length === 0 && partialMatch.length > 0) {
+        const topDriver = partialMatch[0];
+        const foundStr = topDriver.sizesFound.map(s => s.size).join(' و ');
+
+        const missingWithWarehouse = [];
+        const missingWithoutWarehouse = [];
+
+        topDriver.sizesMissing.forEach(s => {
+          const w = getMainWarehouseStockForSize(s);
+          if (w.total > 0) {
+            missingWithWarehouse.push({ size: s, total: w.total, brands: w.brands.join('، ') });
+          } else {
+            missingWithoutWarehouse.push(s);
+          }
+        });
+
+        let proposalMsg = `مقاس <strong style="color:#4ade80;">${escapeHtml(foundStr)}</strong> متواجد مع الفني <strong style="color:#F2BC1B;">${escapeHtml(topDriver.displayName)}</strong>.`;
+
+        if (missingWithWarehouse.length > 0) {
+          const details = missingWithWarehouse.map(m => `مقاس <strong style="color:#F2BC1B;">${escapeHtml(m.size)}</strong> متوفر في المخزون الرئيسي (${m.total} قطعة: ${escapeHtml(m.brands)})`).join(' و ');
+          proposalMsg += ` بينما ${details}، <span style="color:#4ade80;font-weight:700;">💡 يمكن الحصول عليها من المخزون الرئيسي</span>.`;
+        }
+
+        if (missingWithoutWarehouse.length > 0) {
+          proposalMsg += ` بينما مقاس <strong style="color:#ef4444;">${escapeHtml(missingWithoutWarehouse.join(' و '))}</strong> غير متوفر لدى السائقين ولا في المخزون الرئيسي حالياً.`;
+        }
+
+        html += `
+          <div class="battery-results-card" style="border:1px solid #F2BC1B;background:rgba(242,188,27,0.06);padding:18px;margin-bottom:12px;">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="font-size:28px;line-height:1;">💡</div>
+              <div>
+                <div style="color:#F2BC1B;font-weight:800;font-size:16px;margin-bottom:6px;">اقتراح النظام:</div>
+                <div style="color:#eee;font-size:14px;line-height:1.6;">
+                  ${proposalMsg}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // عرض السائقين الذين يملكون بعض المقاسات فقط (إذا لم نكن قد عرضناهم بعد)
+      if (partialMatch.length > 0 && (fullMatch.length === 0 || fullMatch.length > 0)) {
+        html += `
+          <div class="battery-results-card">
+            <div style="color:#F2BC1B;font-weight:700;font-size:15px;margin-bottom:12px;">
+              ${fullMatch.length > 0 ? '⚠️ فنيون يملكون بعض المقاسات المطلوبة:' : '👤 الفنيون المتوفر لديهم بعض المقاسات (اضغط على الفني لعرض تفاصيل بطارياته):'}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+              ${partialMatch.map(d => renderDriverCard(d, true)).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      scroll.innerHTML = html;
+      container.classList.remove('hidden');
+      showBatteryFeeNotice(false);
+
+      // ربط أحداث النقر للبطاقات والأزرار
+      scroll.querySelectorAll('.driver-suggest-clickable').forEach(card => {
+        card.onmouseenter = () => {
+          card.style.borderColor = '#F2BC1B';
+          card.style.transform = 'translateY(-2px)';
+        };
+        card.onmouseleave = () => {
+          const d = driverResults.find(x => x.name === card.dataset.driverName);
+          card.style.borderColor = d && d.sizesMissing.length === 0 ? 'rgba(74,222,128,0.5)' : '#333';
+          card.style.transform = '';
+        };
+        card.onclick = () => {
+          const name = card.dataset.driverName;
+          const di = document.getElementById('driverSearchInput');
+          if (di) {
+            const record = driverNamesRecords.find(r => normalizeText(r.en) === normalizeText(name));
+            di.value = record ? (record.ar || record.en) : name;
+          }
+          // عرض فقط المقاسات المطلوبة والماركات المتاحة منها مع هذا السائق
+          renderBatteryResultsForDriver(name, true, sizes);
+        };
+      });
     }
     function updateBatterySizeSuggestions(query) {
       const sizeList = document.getElementById('batterySizeList');
