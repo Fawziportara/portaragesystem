@@ -14298,6 +14298,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'سنشري': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'الغانم' },
       'امتراك بلس': { country: 'هندية', warranty: { default: 'سنتان' }, dealer: 'البابطين' },
       'يواسا': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
+      'acdelco': { country: 'سعوديه', warranty: { default: 'سنتان' }, dealer: 'بهبهاني' },
       'IGNITER': { country: 'سعوديه', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'QUICKSTART': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'المشعل' }
     };
@@ -14345,6 +14346,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (normalized === 'START-X') return 'ستارت اكس';
       if (normalized === 'QUICKSTART') return 'كويك ستارت';
       if (normalized === 'IGNITER') return 'إنجيتر';
+      if (normalized === 'acdelco') return 'اسي ديلكو';
       if (normalized === 'Black Panther') return 'بلاك بانثر';
       return brand; // Fallback to original
     }
