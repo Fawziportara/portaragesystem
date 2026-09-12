@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.6';
+    const SITE_VERSION = '4.7';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -14949,6 +14949,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       'امتراك بلس': { country: 'هندية', warranty: { default: 'سنتان' }, dealer: 'البابطين' },
       'يواسا': { country: 'يابانية', warranty: { default: 'سنتان' }, dealer: 'الفهد إنترناشيونال' },
       'acdelco': { country: 'سعوديه', warranty: { default: 'سنتان' }, dealer: 'بهبهاني' },
+      'GLOBAL': { country: 'كوريه', warranty: { default: 'سنه' }, dealer: 'المشعل' },
       'IGNITER': { country: 'سعوديه', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'QUICKSTART': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'المشعل' }
     };
@@ -14996,6 +14997,7 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       if (normalized === 'START-X') return 'ستارت اكس';
       if (normalized === 'QUICKSTART') return 'كويك ستارت';
       if (normalized === 'IGNITER') return 'إنجيتر';
+      if (normalized === 'GLOBAL') return 'جلوبال';
       if (normalized === 'acdelco') return 'اسي ديلكو';
       if (normalized === 'Black Panther') return 'بلاك بانثر';
       return brand; // Fallback to original
