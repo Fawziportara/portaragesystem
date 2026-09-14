@@ -2827,7 +2827,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.7';
+    const SITE_VERSION = '4.8';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -3235,7 +3235,8 @@
           'تأمين وربه',
           'تأمين صفينه VIP',
           'تأمين إيلاف',
-          'others'
+          'تأمين الخليجية',
+         'others'
         ];
         
         sheetsData = { currentSheetId: sheetId };
@@ -11103,8 +11104,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
     }
     async function loadInsuranceSheetsData() {
       const sheetId = config.sheet_id;
-      const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأمين إيلاف'];
-      if (!sheetsData) {
+const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأمين إيلاف', 'تأمين الخليجية'];
+     if (!sheetsData) {
         sheetsData = { currentSheetId: sheetId };
       }
       const requests = sheetNames.map(async (sheetName) => {
@@ -11788,7 +11789,8 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const insuranceSheets = [
         { name: 'تأمين وربه' },
         { name: 'تأمين صفينه VIP' },
-        { name: 'تأمين إيلاف' }
+      { name: 'تأمين الخليجية' },
+       { name: 'تأمين إيلاف' }
       ];
       
       let suggestions = new Set();
@@ -11873,8 +11875,10 @@ ${wash.services.map(s => `• ${s}`).join('\n')}
       const insuranceSheets = [
         { name: 'تأمين وربه', displayName: 'تأمين وربه' },
         { name: 'تأمين صفينه VIP', displayName: 'تأمين صفينه VIP' },
-        { name: 'تأمين إيلاف', displayName: 'تأمين إيلاف' }
-      ];
+        { name: 'تأمين إيلاف', displayName: 'تأمين إيلاف' },
+        { name: 'تأمين الخليجية', displayName: 'تأمين الخليجية' }   
+
+           ];
       
       let foundResults = [];
       
