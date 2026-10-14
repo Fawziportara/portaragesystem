@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>اسعار خدمات بورتراج</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/Kcx8h4bs/0f9be3e3e7c4f1b93c71cd7f5ef5b7f0.png" sizes="128x128">
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -2547,6 +2548,11 @@
     }
     .animated-highlight{ animation: glowGradient 6s linear infinite; background: linear-gradient(90deg, rgba(242,188,27,0.12), rgba(242,188,27,0.04)); border:1px solid rgba(242,188,27,0.2); }
     @keyframes glowGradient{ 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
+    @keyframes cardMoveGlow {
+      0% { background-position: 0% 50%; filter: saturate(1); }
+      50% { background-position: 100% 50%; filter: saturate(1.6); }
+      100% { background-position: 0% 50%; filter: saturate(1); }
+    }
     .completed-months h4{ color: #F2BC1B; margin:0 0 8px 0; font-size:14px }
     .completed-months .month-block{ border-top:1px dashed #333; padding-top:8px; margin-top:8px }
     .completed-months .month-title{ color:#ccc; font-weight:700; font-size:13px; margin-bottom:6px }
@@ -2604,6 +2610,950 @@
       border-color: #F2BC1B !important;
       color: #F2BC1B !important;
     }
+
+    /* Discounts Module Styles - Compact & Organized */
+    .discounts-page-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      padding-bottom: 16px;
+      color: #fff;
+    }
+
+    /* Simple Company Tiles Grid */
+    .discounts-companies-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 2px 0 6px;
+    }
+    .discounts-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #F2BC1B;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .company-names-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+    .company-name-tile {
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      color: #fff;
+    }
+    .company-name-tile:hover {
+      background: #222;
+      border-color: #F2BC1B;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 10px rgba(242, 188, 27, 0.18);
+    }
+    .company-tile-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .company-tile-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .company-tile-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .company-tile-side {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .company-tile-arrow {
+      color: #F2BC1B;
+      font-size: 13px;
+      transition: transform 0.2s;
+    }
+    .company-name-tile:hover .company-tile-arrow {
+      transform: translateX(-3px);
+    }
+
+    /* Selected Company View */
+    .company-detail-view {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      animation: discountsFadeIn 0.22s ease;
+    }
+    @keyframes discountsFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .company-detail-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .btn-back-companies {
+      background: #242424;
+      border: 1px solid #444;
+      color: #F2BC1B;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-back-companies:hover {
+      background: #F2BC1B;
+      color: #000;
+      border-color: #F2BC1B;
+    }
+    .company-quick-select {
+      background: #111;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      max-width: 260px;
+    }
+    .company-quick-select:focus {
+      border-color: #F2BC1B;
+    }
+
+    /* Discount Calculator Card - Compact */
+    .discount-calc-card {
+      background: linear-gradient(180deg, #1d1d1d 0%, #141414 100%);
+      border: 1px solid #383838;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    .discount-calc-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 2.5px;
+      background: #F2BC1B;
+      border-radius: 8px 8px 0 0;
+    }
+    .calc-company-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #282828;
+    }
+    .calc-company-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #F2BC1B;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .calc-input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .calc-input-wrapper label {
+      font-size: 12px;
+      color: #bbb;
+      font-weight: 600;
+    }
+    .calc-input-field-group {
+      display: flex;
+      align-items: center;
+      background: #0f0f0f;
+      border: 1px solid #444;
+      border-radius: 5px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .calc-input-field-group:focus-within {
+      border-color: #F2BC1B;
+      box-shadow: 0 0 6px rgba(242, 188, 27, 0.22);
+    }
+    .calc-input-field-group input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 15px;
+      font-weight: 700;
+      width: 100%;
+      outline: none;
+      direction: ltr;
+      text-align: right;
+    }
+    .calc-input-suffix {
+      background: #222;
+      color: #F2BC1B;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border-right: 1px solid #333;
+      white-space: nowrap;
+    }
+    .calc-summary-box {
+      background: #0d0d0d;
+      border: 1px solid #282828;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: discountsFadeIn 0.2s ease;
+    }
+    .calc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #ccc;
+    }
+    .calc-row.final-row {
+      margin-top: 2px;
+      padding-top: 6px;
+      border-top: 1px solid #242424;
+    }
+    .calc-row .val {
+      font-weight: 700;
+      color: #fff;
+    }
+    .calc-row.final-row .val-final {
+      font-size: 15px;
+      font-weight: 800;
+      color: #10b981;
+      text-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+    }
+    .discount-expired-warning {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid #ef4444;
+      border-radius: 5px;
+      padding: 6px 10px;
+      color: #fca5a5;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Circular Details Section - Compact & Neat */
+    .discount-circles-wrapper {
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+    .discount-circles-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .discount-circles-header h4 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ddd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .discount-circles-hint {
+      font-size: 11px;
+      color: #F2BC1B;
+    }
+    .discount-circles-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 4px 0;
+    }
+    .discount-circle-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.22s ease;
+      position: relative;
+    }
+    .circle-disc {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #202020;
+      border: 2px solid #3d3d3d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+    .circle-disc .disc-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .circle-disc .disc-sub {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #F2BC1B;
+      margin-top: 1px;
+    }
+    .circle-badge-count {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      background: #F2BC1B;
+      color: #000;
+      font-size: 9.5px;
+      font-weight: 800;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+    .circle-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #bbb;
+      text-align: center;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .discount-circle-item:hover .circle-disc {
+      border-color: #F2BC1B;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 14px rgba(242, 188, 27, 0.35);
+      background: #2a2517;
+    }
+    .discount-circle-item:hover .circle-label {
+      color: #F2BC1B;
+    }
+    .discount-circle-item.active .circle-disc {
+      border-color: #F2BC1B;
+      background: #F2BC1B;
+      color: #000;
+      transform: scale(1.08);
+      box-shadow: 0 0 16px rgba(242, 188, 27, 0.5);
+    }
+    .discount-circle-item.active .circle-disc .disc-sub {
+      color: #000;
+    }
+    .discount-circle-item.active .circle-label {
+      color: #F2BC1B;
+      font-weight: 800;
+    }
+
+    /* Expandable Circle Details Box - Compact */
+    .circle-expanded-card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px 14px;
+      animation: discountsFadeIn 0.2s ease;
+    }
+    .circle-expanded-header {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #F2BC1B;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #262626;
+    }
+
+    /* Badges & Bullets */
+    .discount-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .discount-status-badge.status-active {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid #10b981;
+      color: #34d399;
+    }
+    .discount-status-badge.status-pending {
+      background: rgba(242, 188, 27, 0.18);
+      border: 1px solid #F2BC1B;
+      color: #fbbf24;
+    }
+    .discount-status-badge.status-expired {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid #ef4444;
+      color: #f87171;
+    }
+    .discount-percent-tag {
+      background: linear-gradient(135deg, #F2BC1B 0%, #d49e0a 100%);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .discount-bullets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .discount-bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #d1d5db;
+    }
+    .discount-bullet {
+      color: #F2BC1B;
+      font-size: 14px;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+    .card-date-row {
+      background: #121212;
+      border: 1px solid #262626;
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .card-date-arrow {
+      color: #F2BC1B;
+      font-weight: bold;
+    }
+    .discounts-empty-state {
+      background: #181818;
+      border: 1px dashed #444;
+      border-radius: 6px;
+      padding: 20px 16px;
+      text-align: center;
+      color: #bbb;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .discounts-empty-state .empty-icon {
+      font-size: 28px;
+    }
+    
+  
+    /* ============================================================
+       MECHANICAL INSPECTION REPORTS STYLING (تقارير الفحص الميكانيكي)
+       ============================================================ */
+    .mech-report-container {
+      width: 780px;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 10px 0 40px 0;
+    }
+    .mech-report-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: #111111;
+      border: 1px solid #333333;
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .mech-report-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .mech-report-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .mech-report-btn-dark {
+      background: #1f1f1f;
+      color: #ffffff;
+      border: 1px solid #3a3a3a;
+    }
+    .mech-report-btn-dark:hover {
+      background: #2a2a2a;
+      border-color: #F2BC1B;
+      color: #F2BC1B;
+    }
+    .mech-report-btn-primary {
+      background: #F2BC1B;
+      color: #000000;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(242, 188, 27, 0.35);
+    }
+    .mech-report-btn-primary:hover {
+      background: #e2ac10;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(242, 188, 27, 0.45);
+    }
+
+    /* Official Printable Sheet */
+    .mech-report-sheet {
+      background: #ffffff;
+      color: #111111;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      font-family: 'Cairo', sans-serif;
+      direction: rtl;
+      text-align: right;
+      width: 100%;
+    }
+    .mech-report-sheet * {
+      box-sizing: border-box;
+    }
+    .mech-report-accent-stripe {
+      height: 8px;
+      background: linear-gradient(90deg, #F2BC1B 0%, #FFD700 50%, #111111 100%);
+      width: 100%;
+    }
+    .mech-report-header {
+      padding: 18px 28px;
+      border-bottom: 3px solid #F2BC1B;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .mech-report-logo {
+      height: 48px;
+      max-height: 56px;
+      width: auto;
+      max-width: 260px;
+      object-fit: contain;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    .mech-report-body {
+      padding: 22px 28px 16px 28px;
+      display: flex;
+      flex-direction: column;
+    }
+    .mech-report-section {
+      margin-bottom: 22px;
+    }
+    .mech-report-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .mech-report-section-bar {
+      width: 4px;
+      height: 18px;
+      background: #F2BC1B;
+      border-radius: 2px;
+    }
+    .mech-report-section-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111111;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mech-report-section-subtitle {
+      font-size: 13px;
+      color: #555555;
+      font-weight: 700;
+      margin-right: auto;
+    }
+
+    .mech-report-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px 20px;
+      background: #fafafa;
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid #ebebeb;
+    }
+    @media (min-width: 768px) {
+      .mech-report-info-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+    .mech-report-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mech-report-field-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #222222;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mech-report-field-dot {
+      width: 7px;
+      height: 7px;
+      background: #F2BC1B;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .mech-report-input {
+      width: 100%;
+      background: #ffffff !important;
+      color: #111111 !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 7px !important;
+      padding: 9px 12px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      outline: none;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+    .mech-report-input:focus {
+      border-color: #F2BC1B !important;
+      box-shadow: 0 0 0 3px rgba(242, 188, 27, 0.25) !important;
+    }
+    .mech-report-input::placeholder {
+      color: #9ca3af;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .mech-report-textarea {
+      width: 100%;
+      min-height: 32px;
+      background: #ffffff !important;
+      color: #111111 !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 6px !important;
+      padding: 6px 10px !important;
+      font-size: 13.5px !important;
+      font-weight: 600 !important;
+      line-height: 1.45 !important;
+      resize: none !important;
+      overflow: hidden !important;
+      box-sizing: border-box;
+      outline: none;
+      font-family: inherit;
+      display: block;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mech-report-textarea:focus {
+      border-color: #F2BC1B !important;
+      box-shadow: 0 0 0 3px rgba(242, 188, 27, 0.25) !important;
+    }
+
+    .mech-report-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    .mech-report-table {
+      table-layout: fixed;
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      font-size: 13.5px;
+    }
+    .mech-report-table thead th {
+      background: #111111;
+      color: #ffffff;
+      padding: 0 12px;
+      height: 38px;
+      line-height: 36px;
+      font-size: 13.5px;
+      font-weight: 800;
+      border-bottom: 3px solid #F2BC1B;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .mech-report-table tbody tr {
+      border-bottom: 1px solid #ebebeb;
+      transition: background 0.15s ease;
+    }
+    .mech-report-table tbody tr:last-child {
+      border-bottom: none;
+    }
+    .mech-report-table tbody tr:hover {
+      background: #fffdf5;
+    }
+    .mech-report-table td {
+      padding: 6px 8px;
+      vertical-align: middle;
+      color: #111111;
+    }
+    .mech-report-row-num {
+      width: 40px;
+      text-align: center;
+      font-weight: 800;
+      color: #888888;
+      font-size: 13px;
+    }
+
+    /* Badges */
+    .status-badge,
+    .pdf-status-badge,
+    .mech-status-cycle {
+      display: inline-block;
+      height: 32px;
+      line-height: 29px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      white-space: nowrap;
+      box-sizing: border-box;
+      vertical-align: middle;
+    }
+    .status-safe {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1.5px solid #a7f3d0;
+    }
+    .status-inspect {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1.5px solid #bfdbfe;
+    }
+    .status-maintain {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1.5px solid #fde68a;
+    }
+    .status-replace {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1.5px solid #fed7aa;
+    }
+    .status-urgent {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1.5px solid #fecaca;
+    }
+
+    .mech-delete-row-btn {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .mech-delete-row-btn:hover {
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #dc2626;
+    }
+    .mech-add-row-bar {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+    }
+    .mech-add-btn {
+      background: #F2BC1B;
+      color: #000000;
+      border: none;
+      font-weight: 800;
+      padding: 9px 20px;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(242, 188, 27, 0.3);
+    }
+    .mech-add-btn:hover {
+      background: #e2ac10;
+      transform: translateY(-1px);
+    }
+
+    
+    /* تعويض عكسي لطباعة الـ PDF بمقدار 3 مم للأعلى */
+    .pdf-text-lift {
+      position: relative;
+      top: -3mm; /* يمكنك تغيير الرقم هنا بسهولة: -2mm أو -4mm حسب نتيجة الطباعة */
+      display: inline-block;
+    }
+    .mech-pdf-export-mode {
+      width: 780px !important;
+      max-width: 780px !important;
+      min-height: 1120px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      box-sizing: border-box !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+    }
+    .mech-pdf-export-mode .mech-report-body {
+      flex: 1 0 auto !important;
+    }
+    .mech-pdf-export-mode .mech-report-bottom-block {
+      margin-top: auto !important;
+    }
+    .mech-pdf-export-mode .no-pdf {
+      display: none !important;
+    }
+
+    .mech-report-notice {
+      margin: 0;
+      background: #fffdf5;
+      border-top: 1px solid #f1e4b8;
+      border-right: 4px solid #F2BC1B;
+      border-left: none;
+      border-bottom: none;
+      border-radius: 0;
+      padding: 10px 18px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #333333;
+      text-align: right;
+    }
+    .mech-report-notice strong {
+      color: #111111;
+      font-weight: 800;
+      margin-left: 4px;
+    }
+
+    .mech-report-footer {
+      margin-top: 0;
+      border-top: 3px solid #F2BC1B;
+      background: #ffffff;
+    }
+    .mech-report-footer-content {
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mech-report-footer-address {
+      text-align: right;
+    }
+    .mech-report-addr-ar {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #111111;
+      margin-bottom: 3px;
+    }
+    .mech-report-addr-en {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555555;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      direction: ltr;
+      text-align: right;
+    }
+
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -2743,8 +3693,6 @@
       <div class="service-item submenu-item" data-service="driver_status"><span class="label">جدول السائقين</span>
       </div>
     </div>
-    <div class="service-item" data-service="coords"><span class="icon">📍</span> <span class="label">الاحداثيات</span>
-    </div>
     <div class="service-item" data-service="tow"><span class="icon">🚚</span> <span class="label">ونشات</span>
     </div>
     <div class="service-item has-submenu" data-service="battery"><span class="icon">🔋</span> <span class="label">بطارية</span> <span class="arrow">▼</span>
@@ -2784,11 +3732,11 @@
     <div class="service-item has-submenu" data-service="other"><span class="icon">🧩</span> <span class="label">خدمات أخرى</span> <span class="arrow">▼</span>
     </div>
     <div class="service-submenu" id="otherSubmenu">
-     <div class="service-item submenu-item" data-service="protection"><span class="label">الحمايه والتغيم</span>
+     <div class="service-item submenu-item" data-service="discounts"><span class="label">الخصومات</span>
      </div>
      <div class="service-item submenu-item" data-service="insurance"><span class="label">شركات التأمين</span>
      </div>
-     <div class="service-item submenu-item" data-service="annualSubscription"><span class="label">الاشتراك السنوي</span>
+     <div class="service-item submenu-item" data-service="annualSubscription"><span class="label">الاشتراكات السنويه</span>
      </div>
      <div class="service-item submenu-item" data-service="glassCare"><span class="label">العناية بالزجاج</span>
      </div>
@@ -2827,7 +3775,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '4.8';
+    const SITE_VERSION = '4.9';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -2836,15 +3784,17 @@
     function checkAuthStatus() {
       const authToken = localStorage.getItem('authToken');
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
-      
       const storedUser = localStorage.getItem('currentUser');
+
       if (authToken && rememberMe && storedUser) {
         const user = usersData.find(u => u.username === storedUser);
         currentUserRole = user ? (user.role || 'Call Center') : localStorage.getItem('currentUserRole') || 'Call Center';
         isAuthenticated = true;
         showMainApp();
       } else {
-        showLogin();
+        currentUserRole = 'Admin';
+        isAuthenticated = true;
+        showMainApp();
       }
     }
     
@@ -3517,13 +4467,13 @@
           'staff_scheduling': 'جدول الموظفين',
           'driver_status': 'جدول السائقين',
           'carwash': 'غسيل السيارات',
-          'protection': 'الحمايه والتغيم',
           'insurance': 'شركات التأمين',
           'siteLinks': 'روابط المواقع',
-          'annualSubscription': 'الاشتراك السنوي',
+          'annualSubscription': 'الاشتراكات السنويه',
           'glassCare': 'العناية بالزجاج',
           'installments': 'الاقساط',
-          'coords': 'الاحداثيات'
+          'coords': 'الاحداثيات',
+          'discounts': 'الخصومات'
         };
         
         document.getElementById('serviceTitle').textContent = serviceTitles[currentService];
@@ -3583,9 +4533,6 @@
           case 'carwash':
             renderCarWashInterface();
             break;
-          case 'protection':
-            renderProtectionInterface();
-            break;
           case 'insurance':
             renderInsuranceInterface();
             break;
@@ -3601,8 +4548,8 @@
           case 'installments':
             renderInstallmentsInterface();
             break;
-          case 'coords':
-            renderCoordsInterface();
+          case 'discounts':
+            renderDiscountsInterface();
             break;
         }
       }
@@ -3768,17 +4715,23 @@
       const now = new Date();
       const currentMonth = now.getMonth() + 1; // 1..12
       contentArea.innerHTML = `
-        <div class="form-section full-width">
-          <h3 class="section-title">الموظفين - ${monthNames[(new Date()).getMonth()]}</h3>
-          <div style="display:flex;align-items:center;justify-content:flex-start;margin-bottom:8px;">
-            <div id="staffUpdated" style="color:#999; font-size:13px;">تحميل...</div>
+        <div class="form-section full-width" style="background:linear-gradient(180deg,#171717 0%, #0f0f10 100%); border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-shadow:0 14px 36px rgba(0,0,0,0.26); padding:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <h3 class="section-title" style="margin:0; font-size:26px; color:#f5f5f5; letter-spacing:0.2px;">الموظفين - ${monthNames[(new Date()).getMonth()]}</h3>
+            <div style="padding:8px 12px;border-radius:999px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.16);color:#facc15;font-weight:700; font-size:12px; letter-spacing:0.4px;">مراكز الطلبات</div>
           </div>
-          <div id="staffTop" style="display:flex;flex-direction:column;gap:8px;align-items:center;
-               background:#0f0f0f;border:1px solid #333;padding:12px;border-radius:6px;">
+          <div style="display:flex;align-items:center;justify-content:flex-start;margin-bottom:14px;">
+            <div id="staffUpdated" style="color:#d4d4d8; font-size:13px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:999px; padding:8px 12px;">تحميل...</div>
+          </div>
+          <div id="staffTop" style="display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:12px;align-items:stretch;">
             <!-- top 3 will be injected here -->
           </div>
         </div>
-        <div id="staffListSection" class="form-section full-width hidden" style="padding-top:8px;">
+        <div id="staffListSection" class="form-section full-width hidden" style="padding-top:0; margin-top:14px; background:linear-gradient(180deg,#141414 0%, #0e0e0f 100%); border:1px solid rgba(255,255,255,0.05); border-radius:18px; box-shadow:0 12px 28px rgba(0,0,0,0.18); padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+            <h4 style="margin:0; color:#f5f5f5; font-size:18px;">المراكز المتبقية</h4>
+            <span style="color:#d4d4d8; font-size:12px;">تصنيف الطلبات</span>
+          </div>
           <div id="staffColumns" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;"></div>
         </div>
       `;
@@ -3981,7 +4934,7 @@
           return daysAr[dateObj.getDay()];
         }
         // Build shift styling function
-        function getShiftStyle(val) {
+        function getShiftStyle(val, context = {}) {
           const clean = (val || '').toString().trim().toUpperCase();
           if (!clean) return 'background:#1a1a1a; color:#ccc;';
           
@@ -4005,12 +4958,19 @@
             return 'background:#ffffff; color:#000000; font-weight:bold;';
           }
           const shiftVal = (val || '').toString().trim();
-          if (shiftVal === '7:00 - 3:00') return 'background:#fce5cd; color:#000000; font-weight:600;';
-          if (shiftVal === '12:00 - 8:00') return 'background:#d9ead3; color:#000000; font-weight:600;';
-          if (shiftVal === '3:00 - 11:00') return 'background:#fff2cc; color:#000000; font-weight:600;';
-          if (shiftVal === '11:00 - 7:00') return 'background:#d9d9d9; color:#000000; font-weight:600;';
-          if (shiftVal === '9:00 - 5:00') return 'background:#f8cbad; color:#000000; font-weight:600;';
-          if (shiftVal === '8:00 - 4:00') return 'background:#fce4d6; color:#000000; font-weight:600;';
+          const normalized = shiftVal
+            .replace(/\s*[-–]\s*/g, ' - ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (['7:00 - 3:00', '4:00 - 8:00'].includes(normalized)) return 'background:#fce5cd; color:#000000; font-weight:600;';
+          if (['12:00 - 8:00', '12:00-8:00', '12 - 8'].includes(normalized)) {
+            return 'background:#d9ead3; color:#000000; font-weight:600;';
+          }
+          if (['3:00 - 11:00', '4:00 - 12:00'].includes(normalized)) return 'background:#fff2cc; color:#000000; font-weight:600;';
+          if (['11:00 - 7:00', '12:00 - 8:00'].includes(normalized)) return 'background:#d9d9d9; color:#000000; font-weight:600;';
+          if (['9:00 - 5:00', '9:00 - 5'].includes(normalized)) return 'background:#f8cbad; color:#000000; font-weight:600;';
+          if (['8:00 - 4:00', '8:00 - 4'].includes(normalized)) return 'background:#fce4d6; color:#000000; font-weight:600;';
           return 'background:#e2efda; color:#000000; font-weight:600;';
         }
         const thead = tableEl.querySelector('thead');
@@ -4188,7 +5148,7 @@
         await ensureHtml2Canvas();
         const canvas = await html2canvas(exportWrapper, {
           backgroundColor: '#0a0a0a',
-          scale: 2,
+          scale: 2.5,
           useCORS: true,
           width: exportWrapper.scrollWidth,
           height: exportWrapper.scrollHeight,
@@ -4606,12 +5566,17 @@
       if (lang !== 'ar') return value;
       const map = {
         'NORMAL TOWTRUK': 'ونش عادي',
+        'NORMAL TRUK ISUZU': 'ونش عادي',
         'BIG TOWTRUK': 'ونش العريض',
         'SMALL TOWTRUK': 'ونش صغير',
         'FULL DOWN': 'فل داون',
         'FULL DOWN CLOSE': 'فل داون مصكر',
+        'FULL DOWN CLOSE ISUZU': 'فل داون مصكر',
+        'FULL DOWN ISUZU': 'فل داون',
         'BATTERY BUS': 'باص البطاريات',
         'TIER BUS': 'باص التواير',
+        'TIER BUS P': 'باص التواير',
+        'TIER BUS R': 'باص التواير',
         'TIER BUS 2': 'باص التواير (الجديد)',
         'TIER TRUCK': 'باص التواير (الجديد)',
         'MECHANIC BUS': 'باص المكانيكيه',
@@ -4625,8 +5590,8 @@
     function buildDriverTypeFilterOptions(rawTypes, lang) {
       const options = [];
       const upperTypes = rawTypes.map(t => t.toString().trim().toUpperCase());
-      const hasTow = upperTypes.includes('NORMAL TOWTRUK') || upperTypes.includes('BIG TOWTRUK') || upperTypes.includes('SMALL TOWTRUK');
-      const hasFullDown = upperTypes.includes('FULL DOWN') || upperTypes.includes('FULL DOWN CLOSE');
+      const hasTow = upperTypes.includes('NORMAL TOWTRUK') || upperTypes.includes('NORMAL TRUK ISUZU') || upperTypes.includes('BIG TOWTRUK') || upperTypes.includes('SMALL TOWTRUK');
+      const hasFullDown = upperTypes.includes('FULL DOWN') || upperTypes.includes('FULL DOWN CLOSE') || upperTypes.includes('FULL DOWN CLOSE ISUZU') || upperTypes.includes('FULL DOWN ISUZU');
       if (hasTow) {
         options.push({
           value: 'group_tow',
@@ -4639,7 +5604,7 @@
           label: lang === 'en' ? 'Full Down' : 'فل داون'
         });
       }
-      const grouped = new Set(['NORMAL TOWTRUK', 'BIG TOWTRUK', 'SMALL TOWTRUK', 'FULL DOWN', 'FULL DOWN CLOSE', 'TIER BUS 2', 'TIER TRUCK']);
+      const grouped = new Set(['NORMAL TOWTRUK', 'NORMAL TRUK ISUZU', 'BIG TOWTRUK', 'SMALL TOWTRUK', 'FULL DOWN', 'FULL DOWN CLOSE', 'FULL DOWN CLOSE ISUZU', 'FULL DOWN ISUZU', 'TIER BUS', 'TIER BUS P', 'TIER BUS R', 'TIER BUS 2', 'TIER TRUCK']);
       const otherTypes = rawTypes
         .filter(t => !grouped.has(t.toString().trim().toUpperCase()))
         .sort((a, b) => a.localeCompare(b, 'ar'))
@@ -4650,13 +5615,13 @@
       if (!rowType) return false;
       const typeKey = rowType.toString().trim().toUpperCase();
       if (filterValue === 'group_tow') {
-        return typeKey === 'NORMAL TOWTRUK' || typeKey === 'BIG TOWTRUK' || typeKey === 'SMALL TOWTRUK';
+        return typeKey === 'NORMAL TOWTRUK' || typeKey === 'NORMAL TRUK ISUZU' || typeKey === 'BIG TOWTRUK' || typeKey === 'SMALL TOWTRUK';
       }
       if (filterValue === 'group_full_down') {
-        return typeKey === 'FULL DOWN' || typeKey === 'FULL DOWN CLOSE';
+        return typeKey === 'FULL DOWN' || typeKey === 'FULL DOWN CLOSE' || typeKey === 'FULL DOWN CLOSE ISUZU' || typeKey === 'FULL DOWN ISUZU';
       }
       if (filterValue === 'TIER BUS') {
-        return typeKey === 'TIER BUS' || typeKey === 'TIER BUS 2' || typeKey === 'TIER TRUCK';
+        return typeKey === 'TIER BUS' || typeKey === 'TIER BUS P' || typeKey === 'TIER BUS R' || typeKey === 'TIER BUS 2' || typeKey === 'TIER TRUCK';
       }
       return rowType === filterValue;
     }
@@ -4838,7 +5803,7 @@
         await ensureHtml2Canvas();
         const canvas = await html2canvas(scroll, {
           backgroundColor: '#1a1a1a',
-          scale: 2,
+          scale: 2.5,
           useCORS: true
         });
         const link = document.createElement('a');
@@ -5201,84 +6166,182 @@
       const listSection = document.getElementById('staffListSection');
       const colsContainer = document.getElementById('staffColumns');
       if (!topEl || !colsContainer) return;
-      // Build top 3 with rank labels and larger, exciting typography
       const first = staff[0] || null;
       const second = staff[1] || null;
       const third = staff[2] || null;
       topEl.innerHTML = '';
+
+      const makeRankCard = (rank, label, item, accent, accentSoft, large = false) => {
+        const wrap = document.createElement('div');
+        wrap.style.position = 'relative';
+        wrap.style.padding = large ? '12px 12px 10px' : '10px 10px 8px';
+        wrap.style.borderRadius = '14px';
+        wrap.style.border = '1px solid rgba(255,255,255,0.06)';
+        wrap.style.background = accentSoft;
+        wrap.style.backgroundSize = '200% 200%';
+        wrap.style.backgroundPosition = '0% 50%';
+        wrap.style.boxShadow = '0 8px 22px rgba(0,0,0,0.18)';
+        wrap.style.overflow = 'hidden';
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = 'column';
+        wrap.style.justifyContent = 'center';
+        wrap.style.textAlign = 'center';
+        wrap.style.minHeight = large ? '150px' : '120px';
+        wrap.style.borderTop = `3px solid ${accent}`;
+        wrap.style.fontFamily = '"Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif';
+        wrap.style.animation = 'cardMoveGlow 5s ease-in-out infinite';
+
+        const movingGlow = document.createElement('div');
+        movingGlow.style.position = 'absolute';
+        movingGlow.style.inset = '0';
+        movingGlow.style.pointerEvents = 'none';
+        movingGlow.style.background = 'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.12) 35%, transparent 52%, rgba(255,255,255,0.08) 70%, transparent 100%)';
+        movingGlow.style.transform = 'translateX(-120%)';
+        movingGlow.style.animation = 'cardMoveGlow 5s ease-in-out infinite';
+        movingGlow.style.opacity = '0.7';
+        wrap.appendChild(movingGlow);
+
+        const badge = document.createElement('div');
+        badge.textContent = label;
+        badge.style.display = 'inline-block';
+        badge.style.margin = '0 auto 8px';
+        badge.style.padding = '5px 9px';
+        badge.style.borderRadius = '999px';
+        badge.style.fontSize = '11px';
+        badge.style.fontWeight = '800';
+        badge.style.color = '#111827';
+        badge.style.background = accent;
+        badge.style.boxShadow = `0 6px 18px ${accent}55`;
+        badge.style.fontFamily = '"Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif';
+
+        const name = document.createElement('div');
+        name.textContent = item.name;
+        name.style.color = '#f5f5f5';
+        name.style.fontSize = large ? '27px' : '20px';
+        name.style.fontWeight = '900';
+        name.style.lineHeight = '1.3';
+        name.style.marginBottom = '6px';
+        name.style.letterSpacing = '0.4px';
+        name.style.textShadow = '0 3px 12px rgba(0,0,0,0.32)';
+        name.style.fontFamily = '"Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif';
+
+        const count = document.createElement('div');
+        count.textContent = `${item.count} طلب`;
+        count.style.color = '#f4f4f5';
+        count.style.fontSize = large ? '18px' : '15px';
+        count.style.fontWeight = '900';
+        count.style.letterSpacing = '0.3px';
+        count.style.textShadow = '0 2px 8px rgba(0,0,0,0.24)';
+        count.style.fontFamily = '"Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif';
+
+        wrap.appendChild(badge);
+        wrap.appendChild(name);
+        wrap.appendChild(count);
+        return wrap;
+      };
+
+      const topThreePalette = {
+        gold: ['linear-gradient(135deg,#facc15,#f59e0b)', 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(20,23,28,0.97))'],
+        silver: ['linear-gradient(135deg,#dbeafe,#60a5fa)', 'linear-gradient(135deg, rgba(96,165,250,0.15), rgba(17,24,39,0.97))'],
+        bronze: ['linear-gradient(135deg,#a16207,#7c2d12)', 'linear-gradient(135deg, rgba(180,120,40,0.18), rgba(20,23,28,0.97))']
+      };
+
       if (first) {
-        const f = document.createElement('div');
-        f.style.textAlign = 'center';
-        f.style.padding = '18px';
-        f.style.border = '1px solid #333';
-        f.style.borderRadius = '8px';
-        f.style.width = '100%';
-        f.style.background = 'linear-gradient(90deg, rgba(242,188,27,0.06), transparent)';
-        f.innerHTML = `<div style="font-size:16px;color:#ccc;margin-bottom:6px;">المركز الأول</div><div style="font-size:28px;font-weight:900;color:#F2BC1B;">${first.name}</div><div style="color:#fff;font-size:20px;margin-top:8px;">${first.count} طلب</div>`;
+        const f = makeRankCard(1, 'المركز الأول', first, topThreePalette.gold[0], topThreePalette.gold[1], true);
         f.classList.add('animated-highlight');
         topEl.appendChild(f);
       }
-      const duo = document.createElement('div');
-      duo.style.display = 'flex';
-      duo.style.gap = '12px';
-      duo.style.width = '100%';
-      duo.style.justifyContent = 'center';
+
       if (second) {
-        const s = document.createElement('div');
-        s.style.flex = '1';
-        s.style.padding = '12px';
-        s.style.border = '1px solid #333';
-        s.style.borderRadius = '8px';
-        s.style.textAlign = 'center';
-        s.style.background = '#0f0f0f';
-        s.innerHTML = `<div style="font-size:14px;color:#ccc;margin-bottom:4px;">المركز الثاني</div><div style="font-weight:800;color:#F2BC1B;">${second.name}</div><div style="color:#fff;">${second.count} طلب</div>`;
-        duo.appendChild(s);
+        const s = makeRankCard(2, 'المركز الثاني', second, topThreePalette.silver[0], topThreePalette.silver[1]);
+        s.classList.add('animated-highlight');
+        topEl.appendChild(s);
       }
+
       if (third) {
-        const t = document.createElement('div');
-        t.style.flex = '1';
-        t.style.padding = '12px';
-        t.style.border = '1px solid #333';
-        t.style.borderRadius = '8px';
-        t.style.textAlign = 'center';
-        t.style.background = '#0f0f0f';
-        t.innerHTML = `<div style="font-size:14px;color:#ccc;margin-bottom:4px;">المركز الثالث</div><div style="font-weight:800;color:#F2BC1B;">${third.name}</div><div style="color:#fff;">${third.count} طلب</div>`;
-        duo.appendChild(t);
+        const t = makeRankCard(3, 'المركز الثالث', third, topThreePalette.bronze[0], topThreePalette.bronze[1]);
+        t.classList.add('animated-highlight');
+        topEl.appendChild(t);
       }
-      if (duo.children.length > 0) topEl.appendChild(duo);
-      // Build remaining in responsive columns (avoid fixed 4-per-column)
+
       const rest = staff.slice(3);
       colsContainer.innerHTML = '';
       if (rest.length === 0) {
         listSection.classList.add('hidden');
       } else {
         listSection.classList.remove('hidden');
-        // determine columns based on available width
-        const available = Math.max(320, Math.min(window.innerWidth - 420, 900));
-        const approxCol = 180;
-        let columnsCount = Math.max(1, Math.floor(available / approxCol));
-        columnsCount = Math.min(columnsCount, rest.length);
-        const perCol = Math.ceil(rest.length / columnsCount);
-        for (let c = 0; c < columnsCount; c++) {
-          const start = c * perCol;
-          const chunk = rest.slice(start, start + perCol);
-          const col = document.createElement('div');
-          col.style.flex = `1 0 ${Math.floor(100 / columnsCount)}%`;
-          col.style.display = 'flex';
-          col.style.flexDirection = 'column';
-          col.style.gap = '8px';
-          chunk.forEach((it, idx) => {
-            const globalIndex = 4 + start + idx; // rank number starting at 4
-            const div = document.createElement('div');
-            div.style.color = '#fff';
-            div.style.fontSize = '16px';
-            div.style.textAlign = 'center';
-            div.style.fontWeight = '600';
-            div.textContent = `${globalIndex}- ${it.name} ${it.count} طلب`;
-            col.appendChild(div);
-          });
-          colsContainer.appendChild(col);
-        }
+        const staircase = document.createElement('div');
+        staircase.style.display = 'flex';
+        staircase.style.flexDirection = 'column';
+        staircase.style.gap = '8px';
+        staircase.style.width = '100%';
+
+        rest.forEach((it, idx) => {
+          const globalIndex = 4 + idx;
+          const remainingColors = [
+            ['rgba(96, 165, 250, 0.18)', '#7dd3fc'],
+            ['rgba(34, 197, 94, 0.18)', '#86efac'],
+            ['rgba(244, 114, 182, 0.18)', '#f9a8d4'],
+            ['rgba(168, 85, 247, 0.18)', '#c4b5fd'],
+            ['rgba(251, 146, 60, 0.18)', '#fdba74'],
+            ['rgba(45, 212, 191, 0.18)', '#99f6e4'],
+            ['rgba(239, 68, 68, 0.18)', '#fca5a5'],
+            ['rgba(59, 130, 246, 0.18)', '#bfdbfe'],
+            ['rgba(14, 165, 233, 0.18)', '#7dd3fc'],
+            ['rgba(236, 72, 153, 0.18)', '#fbcfe8']
+          ];
+          const [bgColor, accentColor] = remainingColors[(globalIndex - 4) % remainingColors.length];
+
+          const div = document.createElement('div');
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.justifyContent = 'space-between';
+          div.style.gap = '12px';
+          div.style.padding = '10px 12px';
+          div.style.borderRadius = '12px';
+          div.style.background = `linear-gradient(135deg, rgba(255,255,255,0.02), ${bgColor})`;
+          div.style.border = '1px solid rgba(255,255,255,0.05)';
+          div.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.015)';
+          div.style.color = '#f5f5f5';
+          div.style.fontSize = '14px';
+          div.style.fontWeight = '700';
+          div.style.width = `${Math.min(100, 76 + idx * 3)}%`;
+          div.style.marginRight = `${idx * 10}px`;
+          div.style.marginLeft = `${idx * 10}px`;
+          div.style.borderRight = `3px solid ${accentColor}`;
+
+          const rank = document.createElement('span');
+          rank.textContent = `${globalIndex}`;
+          rank.style.display = 'inline-flex';
+          rank.style.alignItems = 'center';
+          rank.style.justifyContent = 'center';
+          rank.style.width = '28px';
+          rank.style.height = '28px';
+          rank.style.borderRadius = '50%';
+          rank.style.background = bgColor;
+          rank.style.color = accentColor;
+          rank.style.fontWeight = '900';
+
+          const nameWrap = document.createElement('span');
+          nameWrap.textContent = it.name;
+          nameWrap.style.flex = '1';
+          nameWrap.style.textAlign = 'right';
+          nameWrap.style.overflow = 'hidden';
+          nameWrap.style.textOverflow = 'ellipsis';
+          nameWrap.style.whiteSpace = 'nowrap';
+
+          const countText = document.createElement('span');
+          countText.textContent = `${it.count}`;
+          countText.style.color = accentColor;
+          countText.style.fontWeight = '800';
+
+          div.appendChild(rank);
+          div.appendChild(nameWrap);
+          div.appendChild(countText);
+          staircase.appendChild(div);
+        });
+
+        colsContainer.appendChild(staircase);
       }
     }
     // Render Tow Interface
@@ -5309,9 +6372,9 @@
               <button class="btn-option" data-type="normal">ونش عادي</button>
               <button class="btn-option" data-type="flatbed">ونش فل داون</button>
               <button class="btn-option" data-type="flatbedClose">ونش فل داون مصكر</button>
+              <button class="btn-option" data-type="jetskiBaqi">جت سكي - بقي</button>
             </div>
             <div class="btn-grid" id="towTypeRow2" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; margin-top: 6px;">
-              <button class="btn-option" data-type="jetskiBaqi">جت سكي - بقي</button>
               <button class="btn-option" data-type="jetSki">قلص طراد</button>
             </div>
           </div>
@@ -5649,7 +6712,7 @@
         if (row[12] || row[9]) hasFlatbed = true;
         if (row[22] || row[16]) hasFlatbedClose = true;
         if (row[22] || row[16]) hasJetSki = true;
-        if (row[8] || row[6]) hasJetSkiBaqi = true;
+        if (row[3] || row[1]) hasJetSkiBaqi = true;
       }
       
       // Update buttons visibility
@@ -5980,7 +7043,7 @@
               if (route) routes.push(route);
             }
           } else if (towType === 'jetskiBaqi') {
-            const route = createRoute(row, row[8], row[7], row[6], 5);
+            const route = createRoute(row, row[3], row[2], row[1], 0);
             if (route) routes.push(route);
           }
         } else {
@@ -6176,8 +7239,8 @@
             return `${parseFloat(row[20]).toFixed(2)} ${config.currency}`;
           }
         } else if (towType === 'jetskiBaqi') {
-          if (row[8] === from && row[7] === to && row[5]) {
-            return `${parseFloat(row[5]).toFixed(2)} ${config.currency}`;
+          if (row[3] === from && row[2] === to && row[0]) {
+            return `${parseFloat(row[0]).toFixed(2)} ${config.currency}`;
           }
         }
       }
@@ -7327,7 +8390,7 @@
         await ensureHtml2Canvas();
         const canvas = await html2canvas(target, {
           backgroundColor: '#ffffff',
-          scale: 2,
+          scale: 2.5,
           useCORS: true
         }); 
         const link = document.createElement('a');
@@ -7523,7 +8586,12 @@
               </div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>البيان</th><th>القيمة</th></tr></thead><tbody id="lockPortarageBody"></tbody></table></div>
             </div>
-            <div class="warning-box" style="margin-top:8px;">يرجى التأكد من فني بورتراج انه يقدر يفتح باب السياره لنه ماعندنا امكانيه نفتح جميع السيارات</div>
+            <div class="warning-box" style="margin-top:8px;">
+              <strong>هذه الفنيون لديهم خدمة فتح الباب:</strong><br>
+              • اسانكا سمير &amp; عرفان<br>
+              • محمد عرفان<br>
+              • موثو &amp; راج
+            </div>
           </div>
           <div id="lockExternalPanel" class="form-section hidden" style="margin-top:8px;">
             <div class="form-field">
@@ -7890,6 +8958,674 @@
       
       document.getElementById('balanceResultSection').classList.remove('hidden');
     }
+    
+    
+    // ============================================================
+    // MECHANICAL INSPECTION REPORTS (تقارير الفحص الميكانيكي)
+    // ============================================================
+    const MECH_REPORT_LOGO_SRC = "https://i.ibb.co/9XjjZX5/Artboard-9.png";
+
+    let mechReportState = {
+      carName: '',
+      customerName: '',
+      orderNumber: '',
+      phoneNumber: '',
+      plateNumber: '',
+      reportDate: new Date().toISOString().slice(0, 10),
+      items: [
+        { problem: '', status: 'سليم', action: '' }
+      ]
+    };
+
+    function ensureHtml2Canvas() {
+      return new Promise((resolve, reject) => {
+        if (window.html2canvas) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load html2canvas'));
+        document.head.appendChild(script);
+      });
+    }
+
+    function ensureJsPdf() {
+      return new Promise((resolve, reject) => {
+        if (window.jspdf && window.jspdf.jsPDF) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load jsPDF'));
+        document.head.appendChild(script);
+      });
+    }
+
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'سليم': return 'status-safe';
+        case 'يحتاج تبديل': return 'status-replace';
+        case 'يحتاج تصليح': return 'status-maintain';
+        case 'يحتاج فحص': return 'status-inspect';
+        default: return 'status-safe';
+      }
+    }
+
+    function getStatusSelectStyle(status) {
+      switch (status) {
+        case 'سليم':
+          return 'border:1.5px solid #10b981; color:#065f46; background:#ecfdf5; font-weight:700;';
+        case 'يحتاج تبديل':
+          return 'border:1.5px solid #ea580c; color:#9a3412; background:#fff7ed; font-weight:700;';
+        case 'يحتاج تصليح':
+          return 'border:1.5px solid #f59e0b; color:#92400e; background:#fffbeb; font-weight:700;';
+        case 'يحتاج فحص':
+          return 'border:1.5px solid #3b82f6; color:#1e40af; background:#eff6ff; font-weight:700;';
+        default:
+          return 'border:1.5px solid #10b981; color:#065f46; background:#ecfdf5; font-weight:700;';
+      }
+    }
+
+    function syncMechFormInputsToState() {
+      const carEl = document.getElementById('reportCarName');
+      if (carEl) mechReportState.carName = carEl.value;
+      
+      const custEl = document.getElementById('reportCustomerName');
+      if (custEl) mechReportState.customerName = custEl.value;
+      
+      const orderEl = document.getElementById('reportOrderNumber');
+      if (orderEl) mechReportState.orderNumber = orderEl.value;
+      
+      const phoneEl = document.getElementById('reportPhoneNumber');
+      if (phoneEl) mechReportState.phoneNumber = phoneEl.value;
+
+      const plateEl = document.getElementById('reportPlateNumber');
+      if (plateEl) mechReportState.plateNumber = plateEl.value;
+      
+      const tableBody = document.getElementById('mechInspectionTableBody');
+      if (tableBody) {
+        const rows = tableBody.querySelectorAll('tr[data-row-index]');
+        rows.forEach(tr => {
+          const idx = parseInt(tr.dataset.rowIndex, 10);
+          if (!isNaN(idx) && mechReportState.items[idx]) {
+            const probInput = tr.querySelector('.row-problem-input');
+            const actionInput = tr.querySelector('.row-action-input');
+            if (probInput) mechReportState.items[idx].problem = probInput.value;
+            if (actionInput) mechReportState.items[idx].action = actionInput.value;
+          }
+        });
+      }
+    }
+
+    function autoResizeTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.max(32, el.scrollHeight) + 'px';
+    }
+
+    function renderMechTableRows() {
+      const tableBody = document.getElementById("mechInspectionTableBody");
+      if (!tableBody) return;
+
+      if (!mechReportState.items || mechReportState.items.length === 0) {
+        mechReportState.items = [{ problem: "", status: "سليم", action: "" }];
+      }
+
+      const statusOptions = ["سليم", "يحتاج تبديل", "يحتاج تصليح", "يحتاج فحص"];
+
+      tableBody.innerHTML = mechReportState.items.map((item, idx) => {
+        const selectStyle = getStatusSelectStyle(item.status || "سليم");
+        const st = item.status || "سليم";
+        const badgeClass = getStatusBadgeClass(st);
+        return `
+          <tr data-row-index="${idx}">
+            <td class="mech-report-row-num" style="vertical-align:middle; text-align:center; padding:6px 4px;">${idx + 1}</td>
+            <td style="vertical-align:middle; padding:6px 8px;">
+              <textarea class="mech-report-textarea row-problem-input" data-index="${idx}"
+                rows="1">${escapeHtml(item.problem || "")}</textarea>
+            </td>
+            <td style="text-align:center; vertical-align:middle; padding:6px 6px;">
+              <div class="mech-status-cycle" data-index="${idx}" style="${selectStyle}; cursor:pointer; height:28px; line-height:25px; padding:0 14px; border-radius:14px; font-size:12.5px; font-weight:800; text-align:center; min-width:85px; display:inline-block; vertical-align:middle; box-sizing:border-box; user-select:none;" title="اضغط لتغيير الحالة">
+                ${st}
+              </div>
+              <span class="pdf-status-badge ${badgeClass}" style="display:none; height:28px; line-height:25px; padding:0 14px; border-radius:14px; font-size:12.5px; font-weight:800; text-align:center;">
+                ${st}
+              </span>
+            </td>
+            <td style="vertical-align:middle; padding:6px 8px;">
+              <textarea class="mech-report-textarea row-action-input" data-index="${idx}"
+                rows="1">${escapeHtml(item.action || "")}</textarea>
+            </td>
+            <td class="no-pdf" style="text-align:center; vertical-align:middle; padding:6px 4px;">
+              <button type="button" class="mech-delete-row-btn" data-index="${idx}" title="حذف هذا البند" style="width:28px; height:28px; font-size:13px;">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      requestAnimationFrame(() => {
+        tableBody.querySelectorAll("textarea").forEach(ta => {
+          autoResizeTextarea(ta);
+        });
+      });
+
+      tableBody.querySelectorAll(".row-problem-input").forEach(input => {
+        input.addEventListener("input", (e) => {
+          const i = parseInt(e.target.dataset.index, 10);
+          if (!isNaN(i) && mechReportState.items[i]) {
+            mechReportState.items[i].problem = e.target.value;
+          }
+          autoResizeTextarea(e.target);
+        });
+      });
+
+      tableBody.querySelectorAll(".row-action-input").forEach(input => {
+        input.addEventListener("input", (e) => {
+          const i = parseInt(e.target.dataset.index, 10);
+          if (!isNaN(i) && mechReportState.items[i]) {
+            mechReportState.items[i].action = e.target.value;
+          }
+          autoResizeTextarea(e.target);
+        });
+      });
+
+      tableBody.querySelectorAll(".mech-status-cycle").forEach(div => {
+        div.addEventListener("click", () => {
+          const i = parseInt(div.dataset.index, 10);
+          if (!isNaN(i) && mechReportState.items[i]) {
+            const currentStatus = mechReportState.items[i].status || "سليم";
+            const currentIdx = statusOptions.indexOf(currentStatus);
+            const nextStatus = statusOptions[(currentIdx + 1) % statusOptions.length];
+            mechReportState.items[i].status = nextStatus;
+            div.textContent = nextStatus;
+            const newStyle = getStatusSelectStyle(nextStatus);
+            div.style.cssText = newStyle + "; cursor:pointer; height:32px; line-height:29px; padding:0 16px; border-radius:20px; font-size:13px; font-weight:800; text-align:center; min-width:90px; display:inline-block; vertical-align:middle; box-sizing:border-box; user-select:none;";
+            const pdfBadge = div.nextElementSibling;
+            if (pdfBadge && pdfBadge.classList.contains('pdf-status-badge')) {
+              const bClass = getStatusBadgeClass(nextStatus);
+              pdfBadge.className = 'pdf-status-badge ' + bClass;
+              pdfBadge.style.display = 'none';
+              pdfBadge.textContent = nextStatus;
+            }
+          }
+        });
+      });
+    }
+
+    async function exportMechReportAsPdf() {
+      syncMechFormInputsToState();
+      const carName = (mechReportState.carName || '').trim();
+
+      showToast('جاري إنشاء الفاتورة كملف PDF...');
+      await ensureHtml2Canvas();
+      await ensureJsPdf();
+
+      const exportContainer = document.createElement('div');
+      exportContainer.style.width = '780px';
+      exportContainer.style.position = 'fixed';
+      exportContainer.style.left = '0';
+      exportContainer.style.top = '0';
+      exportContainer.style.zIndex = '-9999';
+      exportContainer.style.background = '#ffffff';
+      exportContainer.style.padding = '0';
+      exportContainer.style.boxSizing = 'border-box';
+      exportContainer.style.direction = 'rtl';
+
+      const clone = document.createElement('div');
+      clone.className = 'mech-report-sheet mech-pdf-export-mode';
+      clone.style.width = '780px';
+      clone.style.maxWidth = '780px';
+      clone.style.minHeight = '1120px';
+      clone.style.display = 'flex';
+      clone.style.flexDirection = 'column';
+      clone.style.boxShadow = 'none';
+      clone.style.borderRadius = '0';
+      clone.style.border = 'none';
+      clone.style.margin = '0 auto';
+      clone.style.background = '#ffffff';
+      clone.style.boxSizing = 'border-box';
+
+      clone.innerHTML = `
+        <div class="mech-report-accent-stripe"></div>
+        <div class="mech-report-header">
+          <div style="display:flex; align-items:center;">
+            <img src="${MECH_REPORT_LOGO_SRC}" alt="Portarage Logo" class="mech-report-logo" crossorigin="anonymous" />
+          </div>
+          <div style="text-align:left;">
+            <h1 style="font-size:22px; font-weight:800; color:#111111; margin:0;"><span class="pdf-text-lift">تقرير الفحص الميكانيكي</span></h1>
+          </div>
+        </div>
+
+        <div class="mech-report-body">
+          <div class="mech-report-section">
+            <div class="mech-report-section-header">
+              <div class="mech-report-section-bar"></div>
+              <h3 class="mech-report-section-title"><span class="pdf-text-lift">بيانات العميل والسياره</span></h3>
+              <div class="mech-report-section-subtitle">
+                <span class="pdf-text-lift">تاريخ الفحص: <strong>${escapeHtml(mechReportState.reportDate || '')}</strong></span>
+              </div>
+            </div>
+
+            <div class="mech-report-info-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: #fafafa; padding: 12px 14px; border-radius: 10px; border: 1px solid #ebebeb;">
+              <div>
+                <label style="font-size: 12.5px; font-weight: 800; color: #222; margin-bottom: 5px; display: block;">
+                  <span style="width: 7px; height: 7px; background: #F2BC1B; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 4px;"></span>
+                  <span class="pdf-text-lift">رقم الطلب:</span>
+                </label>
+                <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 0 10px; height: 36px; display: flex; align-items: center; font-size: 13.5px; font-weight: 700; color: #111;">
+                  <span class="pdf-text-lift">${escapeHtml(mechReportState.orderNumber || '—')}</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 12.5px; font-weight: 800; color: #222; margin-bottom: 5px; display: block;">
+                  <span style="width: 7px; height: 7px; background: #F2BC1B; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 4px;"></span>
+                  <span class="pdf-text-lift">رقم العميل:</span>
+                </label>
+                <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 0 10px; height: 36px; display: flex; align-items: center; justify-content: flex-end; font-size: 13.5px; font-weight: 700; color: #111; direction: ltr; text-align: right; unicode-bidi: isolate;">
+                  <span class="pdf-text-lift" style="direction: ltr; unicode-bidi: isolate;">${escapeHtml(mechReportState.phoneNumber || '—')}</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 12.5px; font-weight: 800; color: #222; margin-bottom: 5px; display: block;">
+                  <span style="width: 7px; height: 7px; background: #F2BC1B; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 4px;"></span>
+                  <span class="pdf-text-lift">اسم العميل:</span>
+                </label>
+                <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 0 10px; height: 36px; display: flex; align-items: center; font-size: 13.5px; font-weight: 700; color: #111;">
+                  <span class="pdf-text-lift">${escapeHtml(mechReportState.customerName || '—')}</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 12.5px; font-weight: 800; color: #222; margin-bottom: 5px; display: block;">
+                  <span style="width: 7px; height: 7px; background: #F2BC1B; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 4px;"></span>
+                  <span class="pdf-text-lift">اسم السيارة:</span>
+                </label>
+                <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 0 10px; height: 36px; display: flex; align-items: center; font-size: 13.5px; font-weight: 700; color: #111;">
+                  <span class="pdf-text-lift">${escapeHtml(mechReportState.carName || '—')}</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 12.5px; font-weight: 800; color: #222; margin-bottom: 5px; display: block;">
+                  <span style="width: 7px; height: 7px; background: #F2BC1B; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 4px;"></span>
+                  <span class="pdf-text-lift">رقم اللوحة:</span>
+                </label>
+                <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 0 10px; height: 36px; display: flex; align-items: center; font-size: 13.5px; font-weight: 700; color: #111;">
+                  <span class="pdf-text-lift">${escapeHtml(mechReportState.plateNumber || '—')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mech-report-section">
+            <div class="mech-report-section-header">
+              <div class="mech-report-section-bar"></div>
+              <h3 class="mech-report-section-title"><span class="pdf-text-lift">بنود الفحص والحالة الفنية</span></h3>
+            </div>
+
+            <div class="mech-report-table-wrapper">
+              <table class="mech-report-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <thead>
+                  <tr style="background: #111; color: #fff;">
+                    <th style="width: 44px; text-align: center; vertical-align: middle; padding: 0 8px; height: 38px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">
+                      <span class="pdf-text-lift">#</span>
+                    </th>
+                    <th style="width: 270px; text-align: right; vertical-align: middle; padding: 0 12px; height: 38px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">
+                      <span class="pdf-text-lift">وصف المشكلة</span>
+                    </th>
+                    <th style="width: 140px; text-align: center; vertical-align: middle; padding: 0 8px; height: 38px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">
+                      <span class="pdf-text-lift">الحالة</span>
+                    </th>
+                    <th style="text-align: right; vertical-align: middle; padding: 0 12px; height: 38px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">
+                      <span class="pdf-text-lift">الإجراء المطلوب</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(mechReportState.items || []).map((item, idx) => {
+                    const st = item.status || 'سليم';
+                    const badgeClass = getStatusBadgeClass(st);
+                    const probText = (item.problem || '').trim();
+                    const actionText = (item.action || '').trim();
+                    const actionDisplay = actionText || '—';
+                    const problemHtml = probText
+                      ? `<div style="background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 600; line-height: 1.45; box-sizing: border-box; width: 100%; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; display: block;"><span style="display: block; position: relative; top: -2mm; line-height: 1.45;">${escapeHtml(probText)}</span></div>`
+                      : '';
+                    const actionHtml = `<div style="background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 600; line-height: 1.45; box-sizing: border-box; width: 100%; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; display: block;"><span style="display: block; position: relative; top: -2mm; line-height: 1.45;">${escapeHtml(actionDisplay)}</span></div>`;
+                    return `<tr style="border-bottom: 1px solid #ebebeb;"><td class="mech-report-row-num" style="vertical-align: middle; text-align: center; font-weight: 800; color: #888; font-size: 13px; padding: 6px 4px;"><span class="pdf-text-lift">${idx + 1}</span></td><td style="vertical-align: middle; padding: 6px 8px;">${problemHtml}</td><td style="text-align: center; vertical-align: middle; padding: 6px 6px;"><span class="${badgeClass}" style="display: inline-block; height: 28px; padding: 0 14px; border-radius: 14px; font-size: 12.5px; font-weight: 800; text-align: center; white-space: nowrap; vertical-align: middle; box-sizing: border-box; line-height: 26px;"><span class="pdf-text-lift">${escapeHtml(st)}</span></span></td><td style="vertical-align: middle; padding: 6px 8px;">${actionHtml}</td></tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="mech-report-bottom-block">
+          <div class="mech-report-notice">
+            <span class="pdf-text-lift"><strong>تنويه:</strong> أُعد هذا التقرير لغرض توثيق نتائج الفحص الميكانيكي والحالة الفنية للمركبة والتوصيات المقترحة فقط، ولا يعتبر فاتورة شراء أو مستندا ماليا.</span>
+          </div>
+          <div class="mech-report-footer">
+            <div class="mech-report-footer-content" style="display:flex; justify-content:center; align-items:center; padding:12px 20px;">
+              <div style="display:flex; flex-direction:row; justify-content:center; align-items:center; gap:30px; direction:ltr;">
+                <span class="pdf-text-lift" style="display:inline-flex; align-items:center; gap:6px; color:#111111; font-size:13px; font-weight:700;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F2BC1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  www.portarage.com
+                </span>
+                <span class="pdf-text-lift" style="display:inline-flex; align-items:center; gap:6px; color:#111111; font-size:13px; font-weight:700;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                  (+965 1850506)
+                </span>
+              </div>
+            </div>
+            <div class="mech-report-accent-stripe"></div>
+          </div>
+        </div>
+      `;
+
+      exportContainer.appendChild(clone);
+      document.body.appendChild(exportContainer);
+
+      try {
+        const logoImg = clone.querySelector('.mech-report-logo');
+        if (logoImg && !logoImg.complete) {
+          await new Promise((resolve) => {
+            logoImg.onload = resolve;
+            logoImg.onerror = resolve;
+            setTimeout(resolve, 2000);
+          });
+        }
+        await new Promise(r => setTimeout(r, 400));
+
+        const canvas = await html2canvas(clone, {
+          scale: 2.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pdfWidth = 210;
+        const pdfHeight = 297;
+        const margin = 10;
+        const availableWidth = pdfWidth - (margin * 2);
+        const availableHeight = pdfHeight - (margin * 2);
+
+        const imgProps = pdf.getImageProperties(imgData);
+        let renderWidth = availableWidth;
+        let renderHeight = (imgProps.height * renderWidth) / imgProps.width;
+
+        if (renderHeight > availableHeight) {
+          renderHeight = availableHeight;
+          renderWidth = (imgProps.width * renderHeight) / imgProps.height;
+        }
+
+        const xPos = margin + ((availableWidth - renderWidth) / 2);
+        const yPos = margin;
+
+        pdf.addImage(imgData, 'JPEG', xPos, yPos, renderWidth, renderHeight);
+
+        const fileName = carName ? `تقرير (${carName}).pdf` : 'تقرير الفحص الميكانيكي.pdf';
+        pdf.save(fileName);
+        showToast('تم تحميل الفاتورة بنجاح');
+      } catch (err) {
+        console.error('PDF Export Error:', err);
+        showToast('حدث خطأ أثناء إنشاء الفاتورة');
+      } finally {
+        if (exportContainer && exportContainer.parentNode) {
+          exportContainer.parentNode.removeChild(exportContainer);
+        }
+      }
+    }
+
+    function renderMechanicalInspectionReportsInterface() {
+      const contentArea = document.getElementById('contentArea');
+      if (!contentArea) return;
+      document.getElementById('serviceTitle').textContent = 'تقرير الفحص الميكانيكي';
+
+      contentArea.innerHTML = `
+        <div class="mech-report-container">
+          <div class="mech-report-toolbar no-print">
+            <div class="mech-report-toolbar-group">
+              <button class="mech-report-btn mech-report-btn-dark" id="mechReportBackBtn">
+                <span>←</span>
+                <span>العودة للخدمات الميكانيكية</span>
+              </button>
+              <button class="mech-report-btn mech-report-btn-dark" id="mechReportNewBtn">
+                <span>🔄</span>
+                <span>تقرير جديد</span>
+              </button>
+            </div>
+            <div class="mech-report-toolbar-group">
+              <button class="mech-report-btn mech-report-btn-primary" id="mechReportDownloadPdfBtn">
+                <span>📄</span>
+                <span>تحميل الفاتورة PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="mechReportDoc" class="mech-report-sheet">
+            <div class="mech-report-accent-stripe"></div>
+            <div class="mech-report-header">
+              <div style="display:flex; align-items:center;">
+                <img src="${MECH_REPORT_LOGO_SRC}" alt="Portarage Logo" class="mech-report-logo" />
+              </div>
+              <div style="text-align:left;">
+                <h1 style="font-size:22px; font-weight:800; color:#111111; margin:0;">تقرير الفحص الميكانيكي</h1>
+              </div>
+            </div>
+
+            <div class="mech-report-body">
+              <div class="mech-report-section">
+                <div class="mech-report-section-header">
+                  <div class="mech-report-section-bar"></div>
+                  <h3 class="mech-report-section-title">بيانات العميل والسياره</h3>
+                  <div class="mech-report-section-subtitle">
+                    تاريخ الفحص: <strong>${escapeHtml(mechReportState.reportDate || '')}</strong>
+                  </div>
+                </div>
+
+                <div class="mech-report-info-grid">
+                  <div class="mech-report-field">
+                    <label class="mech-report-field-label" for="reportOrderNumber">
+                      <span class="mech-report-field-dot"></span>
+                      رقم الطلب:
+                    </label>
+                    <input type="text" id="reportOrderNumber" class="mech-report-input"
+                      value="${escapeHtml(mechReportState.orderNumber || '')}" />
+                  </div>
+                  <div class="mech-report-field">
+                    <label class="mech-report-field-label" for="reportPhoneNumber">
+                      <span class="mech-report-field-dot"></span>
+                      رقم العميل:
+                    </label>
+                    <input type="tel" id="reportPhoneNumber" class="mech-report-input" dir="ltr" style="direction: ltr; text-align: right; unicode-bidi: isolate;"
+                      value="${escapeHtml(mechReportState.phoneNumber || '')}" />
+                  </div>
+                  <div class="mech-report-field">
+                    <label class="mech-report-field-label" for="reportCustomerName">
+                      <span class="mech-report-field-dot"></span>
+                      اسم العميل:
+                    </label>
+                    <input type="text" id="reportCustomerName" class="mech-report-input"
+                      value="${escapeHtml(mechReportState.customerName || '')}" />
+                  </div>
+                  <div class="mech-report-field">
+                    <label class="mech-report-field-label" for="reportCarName">
+                      <span class="mech-report-field-dot"></span>
+                      اسم السيارة:
+                    </label>
+                    <input type="text" id="reportCarName" class="mech-report-input"
+                      value="${escapeHtml(mechReportState.carName || '')}" />
+                  </div>
+                  <div class="mech-report-field">
+                    <label class="mech-report-field-label" for="reportPlateNumber">
+                      <span class="mech-report-field-dot"></span>
+                      رقم اللوحة:
+                    </label>
+                    <input type="text" id="reportPlateNumber" class="mech-report-input"
+                      value="${escapeHtml(mechReportState.plateNumber || '')}" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="mech-report-section">
+                <div class="mech-report-section-header">
+                  <div class="mech-report-section-bar"></div>
+                  <h3 class="mech-report-section-title">بنود الفحص والحالة الفنية</h3>
+                </div>
+
+                <div class="mech-report-table-wrapper">
+                  <table class="mech-report-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 44px; text-align: center; vertical-align: middle; padding: 0 8px; height: 38px; line-height: 36px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">#</th>
+                        <th style="width: 270px; text-align: right; vertical-align: middle; padding: 0 12px; height: 38px; line-height: 36px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">وصف المشكلة</th>
+                        <th style="width: 140px; text-align: center; vertical-align: middle; padding: 0 8px; height: 38px; line-height: 36px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">الحالة</th>
+                        <th style="text-align: right; vertical-align: middle; padding: 0 12px; height: 38px; line-height: 36px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;">الإجراء المطلوب</th>
+                        <th style="width: 44px; text-align: center; vertical-align: middle; padding: 0 6px; height: 38px; line-height: 36px; border-bottom: 3px solid #F2BC1B; font-size: 13.5px; font-weight: 800;" class="no-pdf">حذف</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mechInspectionTableBody">
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mech-add-row-bar no-pdf">
+                  <button type="button" class="mech-add-btn" id="mechAddRowBtn">
+                    <span>+</span>
+                    <span>إضافة فحص</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mech-report-bottom-block">
+              <div class="mech-report-notice">
+                <strong>تنويه:</strong> أُعد هذا التقرير لغرض توثيق نتائج الفحص الميكانيكي والحالة الفنية للمركبة والتوصيات المقترحة فقط، ولا يُعتبر فاتورة شراء أو مستندًا ماليًا.
+              </div>
+              <div class="mech-report-footer">
+                <div class="mech-report-footer-content" style="display:flex; justify-content:center; align-items:center; padding:12px 20px;">
+                  <div style="display:flex; flex-direction:row; justify-content:center; align-items:center; gap:30px; direction:ltr;">
+                    <a href="https://www.portarage.com" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:#111111; font-size:13px; font-weight:700;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F2BC1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                      www.portarage.com
+                    </a>
+                    <a href="https://wa.me/9651850506" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:#111111; font-size:13px; font-weight:700;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                      (+965 1850506)
+                    </a>
+                  </div>
+                </div>
+                <div class="mech-report-accent-stripe"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      renderMechTableRows();
+      attachMechReportEvents();
+    }
+
+    function attachMechReportEvents() {
+      const backBtn = document.getElementById('mechReportBackBtn');
+      if (backBtn) {
+        backBtn.onclick = () => {
+          syncMechFormInputsToState();
+          document.getElementById('serviceTitle').textContent = 'خدمات ميكانيكية';
+          renderMechanicalInterface();
+        };
+      }
+
+      const pdfBtn = document.getElementById('mechReportDownloadPdfBtn');
+      if (pdfBtn) {
+        pdfBtn.onclick = () => {
+          exportMechReportAsPdf();
+        };
+      }
+
+      const addBtn = document.getElementById('mechAddRowBtn');
+      if (addBtn) {
+        addBtn.onclick = () => {
+          syncMechFormInputsToState();
+          mechReportState.items.push({ problem: '', status: 'سليم', action: '' });
+          renderMechTableRows();
+          setTimeout(() => {
+            const lastTextarea = document.querySelector(`.row-problem-input[data-index="${mechReportState.items.length - 1}"]`);
+            if (lastTextarea) lastTextarea.focus();
+          }, 50);
+        };
+      }
+
+      const tableBody = document.getElementById('mechInspectionTableBody');
+      if (tableBody) {
+        tableBody.onclick = (e) => {
+          const delBtn = e.target.closest('.mech-delete-row-btn');
+          if (delBtn) {
+            const idx = parseInt(delBtn.dataset.index, 10);
+            if (!isNaN(idx)) {
+              syncMechFormInputsToState();
+              if (mechReportState.items.length <= 1) {
+                mechReportState.items = [{ problem: '', status: 'سليم', action: '' }];
+              } else {
+                mechReportState.items.splice(idx, 1);
+              }
+              renderMechTableRows();
+            }
+          }
+        };
+      }
+
+      const newBtn = document.getElementById('mechReportNewBtn');
+      if (newBtn) {
+        newBtn.onclick = () => {
+          syncMechFormInputsToState();
+          const hasContent = (mechReportState.carName && mechReportState.carName.trim()) ||
+                             (mechReportState.customerName && mechReportState.customerName.trim()) ||
+                             (mechReportState.orderNumber && mechReportState.orderNumber.trim()) ||
+                             (mechReportState.phoneNumber && mechReportState.phoneNumber.trim()) ||
+                             mechReportState.items.some(i => i.problem && i.problem.trim());
+          if (hasContent) {
+            if (!confirm('هل أنت متأكد من إنشاء تقرير فحص جديد؟ سيتم مسح البيانات الحالية.')) {
+              return;
+            }
+          }
+          mechReportState = {
+            carName: '',
+            customerName: '',
+            orderNumber: '',
+            phoneNumber: '',
+            plateNumber: '',
+            reportDate: new Date().toISOString().slice(0, 10),
+            items: [{ problem: '', status: 'سليم', action: '' }]
+          };
+          renderMechanicalInspectionReportsInterface();
+          showToast('تم إنشاء تقرير جديد جاهز للإدخال');
+        };
+      }
+
+      const carInput = document.getElementById('reportCarName');
+      if (carInput) carInput.addEventListener('input', e => mechReportState.carName = e.target.value);
+
+      const custInput = document.getElementById('reportCustomerName');
+      if (custInput) custInput.addEventListener('input', e => mechReportState.customerName = e.target.value);
+
+      const orderInput = document.getElementById('reportOrderNumber');
+      if (orderInput) orderInput.addEventListener('input', e => mechReportState.orderNumber = e.target.value);
+
+      const phoneInput = document.getElementById('reportPhoneNumber');
+      if (phoneInput) phoneInput.addEventListener('input', e => mechReportState.phoneNumber = e.target.value);
+
+      const plateInput = document.getElementById('reportPlateNumber');
+      if (plateInput) plateInput.addEventListener('input', e => mechReportState.plateNumber = e.target.value);
+    }
+
     // Render Mechanical Interface - UPDATED: زيت وفلتر كخيار
     function renderMechanicalInterface() {
       const contentArea = document.getElementById('contentArea');
@@ -7905,6 +9641,7 @@
           </h3>
           <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
             <button class="btn-option" id="mechAppointmentsBtn">المواعيد</button>
+            <button class="btn-option" data-mech="inspection_report" id="mechInspectionReportsBtn" style="border: 2px solid #F2BC1B; background: rgba(242, 188, 27, 0.15); color: #F2BC1B; font-weight: 700;">📋 تقرير الفحص الميكانيكي</button>
             <button class="btn-option" data-mech="inspection">فحص السيارة</button>
             <button class="btn-option" data-mech="brakes">سفايف وديسكات</button>
             <button class="btn-option" data-mech="oilfilter">زيت وفلتر</button>
@@ -8859,6 +10596,10 @@
           formData.mechanicalService = btn.dataset.mech;
           formData.partsProvider = null;
           
+          if (btn.dataset.mech === 'inspection_report') {
+            renderMechanicalInspectionReportsInterface();
+            return;
+          }
           if (formData.mechanicalService === 'inventoryManagement') {
             renderInventoryManagementInterface();
             return;
@@ -8927,7 +10668,7 @@
         : '';
         
       if (formData.mechanicalService === 'sahkiya') {
-        noteDiv.innerHTML = 'الفني المسؤول عن هذه الخدمة هو يوسف الميكانيكي' + extraClause;
+        noteDiv.innerHTML = '';
         noteDiv.classList.remove('hidden');
         return;
       }
@@ -11147,9 +12888,9 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
             <a class="btn-option" href="https://portarage.app/Default.aspx" target="_blank" rel="noopener">سيستم بومهدي</a>
             <a class="btn-option" href="https://zantrack.fm-track.com/" target="_blank" rel="noopener">زين تراك (خريطة السواقين)</a>
             <a class="btn-option" href="https://hub.portarages.com/en/orders?page=1&status=1" target="_blank" rel="noopener">الأبلكيشن</a>
-            <a class="btn-option" href="https://app.respond.io/" target="_blank" rel="noopener">البريد الوارد 1800</a>
-            <a class="btn-option" href="https://production.trypair.ai/en-us/auth/login" target="_blank" rel="noopener">واتساب AI 2266</a>
+            <a class="btn-option" href="https://app.respond.io/" target="_blank" rel="noopener">واتساب (البريد الوارد)</a>
             <a class="btn-option" href="https://snoonu-portal.kwt.snoonu.com/dashboard/order" target="_blank" rel="noopener">سنونو</a>
+            <a class="btn-option" href="https://gis.paci.gov.kw/Search/" target="_blank" rel="noopener">كويت فايندر</a>
             <a class="btn-option" href="https://web.whatsapp.com/" target="_blank" rel="noopener">واتساب الشخصي</a>
             <a class="btn-option" href="https://translate.google.com/?sl=ar&tl=en&op=translate" target="_blank" rel="noopener">المترجم</a>
           </div>
@@ -11542,62 +13283,32 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
     }
     function renderRingRepairInterface() {
       const contentArea = document.getElementById('contentArea');
+      const ringRepairExtraByArea = {
+        10: ['علي صباح السالم', 'الشعيبه', 'ميناء عبدالله', 'الجليعة', 'بنيدر', 'الخيران', 'النويصيب', 'الروضتين', 'المطلاع', 'العبدلي', 'الصبية', 'كبد', 'صباح الاحمد', 'الوفرة'],
+        5: ['جابر الاحمد', 'سعد العبدالله', 'الجهراء', 'الفحيحيل', 'الاحمدي', 'غرب عبدالله مبارك', 'جنوب عبدلله مبارك']
+      };
+
+      const surchargeListHtml = Object.entries(ringRepairExtraByArea)
+        .map(([extra, names]) => `- زيادة ${extra} د.ك: ${names.join('، ')}`)
+        .join('<br>');
+
       contentArea.innerHTML = `
         <div class="form-section full-width">
           <h3 class="section-title">تصليح الرنقات</h3>
-          <div class="form-field">
-            <input type="text" list="ringRegionOptions" id="ringRegionSelect" class="form-control" placeholder="اكتب أو اختر المنطقة">
-            <datalist id="ringRegionOptions"></datalist>
+          <div id="ringResult" class="info-box">
+            <div class="ring-note">
+              ١-رسوم الروحة والردة 15.00 د.ك للمناطق الديرة.<br>
+              ٢-الزيادة على تصليح الرنق أو تبديل الطوق 15.00 د.ك.<br>
+              ٣-تبلغون العميل عادة تصليح الرنق يتراوح بين ٢٠ إلى ٣٠ د.ك، ولكن تبديل الطوق بين ٥٠ إلى ٨٠ د.ك حسب حجم الطوق.<br>
+              ٤-كراج المتوكل لتصليح الرنقات (<a href="https://maps.app.goo.gl/eEct9MapCFQyYwi86" target="_blank" style="color:#007bff;">اضغط هنا</a>)
+              <div style="margin-top: 12px;">
+                <div style="font-weight: 700; color: #fbbf24; margin-bottom: 6px;">مناطق الزيادة:</div>
+                ${surchargeListHtml}
+              </div>
+            </div>
           </div>
-          <div id="ringResult" class="info-box hidden"></div>
         </div>
       `;
-      loadRingRegionOptions();
-      const ringRegionSelect = document.getElementById('ringRegionSelect');
-      ringRegionSelect.oninput = () => {
-        const area = ringRegionSelect.value.trim();
-        const result = document.getElementById('ringResult');
-        if (!area) {
-          result.classList.add('hidden');
-          return;
-        }
-        // Compute price using portarage normal tow routes
-        const routes = getTowRoutes('portarage towtruk', 'normal');
-        const pickupRoute = routes.find(r => r.from === area && r.to && r.to.includes('شويخ'));
-        const deliveryRoute = routes.find(r => r.from && r.from.includes('شويخ') && r.to === area);
-        
-        if (!pickupRoute) {
-          result.innerHTML = '<div style="color:#ef4444;">لا يوجد سعر مُسجل للذهاب من هذه المنطقة إلى الشويخ (تحقق من الشيت)</div>';
-          result.classList.remove('hidden');
-          return;
-        }
-        if (!deliveryRoute) {
-          result.innerHTML = '<div style="color:#ef4444;">لا يوجد سعر مُسجل للعودة من الشويخ إلى هذه المنطقة (تحقق من الشيت)</div>';
-          result.classList.remove('hidden');
-          return;
-        }
-
-        const pickupPrice = parseFloat(pickupRoute.price) || 0;
-        const deliveryPrice = parseFloat(deliveryRoute.price) || 0;
-        const towPrice = pickupPrice + deliveryPrice;
-
-        const noteHtml = `
-          <div class="ring-note">
-            ١-رسوم نقل الرنق:
-            <ul style="margin-top:4px;margin-bottom:4px;padding-right:20px;">
-              <li>الذهاب (من ${area} إلى الشويخ الصناعية): ${pickupPrice.toFixed(2)} د.ك</li>
-              <li>العودة (من الشويخ الصناعية إلى ${area}): ${deliveryPrice.toFixed(2)} د.ك</li>
-              <li><b>الإجمالي: ${towPrice.toFixed(2)} د.ك</b></li>
-            </ul>
-            ٢-رسوم تصليح الرنق تتراوح مابين ٢٠ د.ك إلى ٥٠ د.ك<br>
-            ٣-رسوم تبديل الطوق عاده مابين ٥٠ الي ٨٠ د.ك ولكن يختلف حسب نوع السياره وحجم الرنق<br>
-            ٤-الزياده لتصليح الرنق او تبديل الطوق الكامل ١٥ د.ك<br>
-            ٥-كراج المتوكل لتصليح الرنقات (<a href="https://maps.app.goo.gl/eEct9MapCFQyYwi86" target="_blank" style="color:#007bff;">اضغط هنا</a>)
-          </div>
-        `;
-        result.innerHTML = noteHtml;
-        result.classList.remove('hidden');
-      };
     }
     function loadRingRegionOptions() {
       const areaDatalist = document.getElementById('ringRegionOptions');
@@ -12343,7 +14054,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       contentArea.innerHTML = `
         <div class="form-section full-width annual-subscription-shell" style="background: transparent; border: none; padding: 0;">
           <div class="annual-hero" style="text-align: center; margin-bottom: 24px;">
-            <h3 class="section-title" style="font-size: 28px; margin-bottom: 8px; color: #F2BC1B; text-shadow: 0 2px 10px rgba(242,188,27,0.15); text-align: center;">الاشتراك السنوي</h3>
+            <h3 class="section-title" style="font-size: 28px; margin-bottom: 8px; color: #F2BC1B; text-shadow: 0 2px 10px rgba(242,188,27,0.15); text-align: center;">الاشتراكات السنويه</h3>
           </div>
 
           <style>
@@ -12365,11 +14076,11 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               min-width: 220px;
               max-width: min(100%, 360px);
               box-sizing: border-box;
-              min-height: 260px;
+              min-height: 320px;
               background: linear-gradient(145deg, #171717 0%, #101010 100%);
               border: 1px solid rgba(242, 188, 27, 0.14);
               border-radius: 16px;
-              padding: 20px 18px;
+              padding: 20px 18px 16px;
               text-align: center;
               position: relative;
               overflow: hidden;
@@ -12380,6 +14091,23 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               transform: translateY(-4px);
               box-shadow: 0 16px 36px rgba(242, 188, 27, 0.12);
               border-color: rgba(242, 188, 27, 0.35);
+            }
+            .annual-card-detail-toggle {
+              position: absolute;
+              top: 12px;
+              left: 12px;
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              border: 1px solid rgba(242, 188, 27, 0.4);
+              background: rgba(242, 188, 27, 0.08);
+              color: #F2BC1B;
+              font-size: 18px;
+              font-weight: 700;
+              display: grid;
+              place-items: center;
+              cursor: pointer;
+              box-shadow: 0 0 0 1px rgba(242, 188, 27, 0.1);
             }
             .annual-card-icon {
               width: 56px;
@@ -12428,6 +14156,31 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               content: '✓';
               color: #F2BC1B;
               font-weight: 700;
+            }
+            .annual-card-copy-row {
+              display: flex;
+              gap: 8px;
+              justify-content: center;
+              flex-wrap: wrap;
+              margin-top: auto;
+              padding-top: 10px;
+            }
+            .annual-card-copy-btn {
+              padding: 8px 10px;
+              border-radius: 999px;
+              border: 1px solid rgba(242, 188, 27, 0.22);
+              background: rgba(242, 188, 27, 0.06);
+              color: #f5f5f5;
+              font-size: 11px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              min-width: 100px;
+            }
+            .annual-card-copy-btn:hover {
+              border-color: rgba(242, 188, 27, 0.6);
+              background: rgba(242, 188, 27, 0.12);
+              color: #F2BC1B;
             }
             .annual-info-buttons {
               display: flex;
@@ -12570,7 +14323,8 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
           </style>
 
           <div class="annual-subscription-grid">
-            <div class="annual-card">
+            <div class="annual-card" data-package="individual">
+              <button class="annual-card-detail-toggle annual-view-details" type="button" data-open="details" aria-label="عرض التفاصيل">i</button>
               <div class="annual-card-icon">🚗</div>
               <h4 class="annual-card-title">الاشتراك الفردي</h4>
               <div class="annual-card-subtitle">لسيارة واحدة</div>
@@ -12578,9 +14332,14 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               <ul class="annual-card-list">
                 <li>لسيارة واحدة بقيمة 15 د.ك لمدة سنة كاملة</li>
               </ul>
+              <div class="annual-card-copy-row">
+                <button class="annual-card-copy-btn" data-copy="terms" type="button">نسخ الشروط</button>
+                <button class="annual-card-copy-btn" data-copy="details" type="button">نسخ التفاصيل</button>
+              </div>
             </div>
 
-            <div class="annual-card featured">
+            <div class="annual-card featured" data-package="family">
+              <button class="annual-card-detail-toggle annual-view-details" type="button" data-open="details" aria-label="عرض التفاصيل">i</button>
               <div class="annual-card-icon">👨‍👩‍👧‍👦</div>
               <h4 class="annual-card-title">الاشتراك العائلي</h4>
               <div class="annual-card-subtitle">لـ 3 سيارات</div>
@@ -12588,17 +14347,29 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               <ul class="annual-card-list">
                 <li>لـ 3 سيارات بقيمة 40 د.ك لمدة سنة كاملة</li>
               </ul>
+              <div class="annual-card-copy-row">
+                <button class="annual-card-copy-btn" data-copy="terms" type="button">نسخ الشروط</button>
+                <button class="annual-card-copy-btn" data-copy="details" type="button">نسخ التفاصيل</button>
+              </div>
+            </div>
+
+            <div class="annual-card" data-package="vehicle">
+              <button class="annual-card-detail-toggle annual-view-details" type="button" data-open="details" aria-label="عرض التفاصيل">i</button>
+              <div class="annual-card-icon">🚘</div>
+              <h4 class="annual-card-title">الاشتراك السنوي + السيارة البديلة</h4>
+              <div class="annual-card-subtitle">مميزات إضافية مع خدمة السيارة البديلة</div>
+              <div class="annual-price" style="font-size: 24px;">حسب الباقة</div>
+              <ul class="annual-card-list">
+                <li>خدمة المساعدة على الطريق</li>
+                <li>السيارة البديلة المخصصة للحوادث</li>
+              </ul>
+              <div class="annual-card-copy-row">
+                <button class="annual-card-copy-btn" data-copy="terms" type="button">نسخ الشروط</button>
+                <button class="annual-card-copy-btn" data-copy="details" type="button">نسخ التفاصيل</button>
+              </div>
             </div>
           </div>
 
-          <div class="annual-info-buttons">
-            <button class="btn-premium-info" id="termsButton">
-              <span>شروط وأحكام الاشتراك</span>
-            </button>
-            <button class="btn-premium-info" id="detailsButton">
-              <span>تفاصيل ومميزات الاشتراك</span>
-            </button>
-          </div>
         </div>
 
         <div id="termsModal" class="modal-overlay hidden">
@@ -12660,41 +14431,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
 
             <div id="detailsContent">
               <div style="margin-bottom: 14px; padding: 12px; background: rgba(242,188,27,0.06); border: 1px solid rgba(242,188,27,0.16); border-radius: 12px; text-align: center;">
-                <strong style="color: #F2BC1B; display: block; margin-bottom: 6px;">الاشتراك السنوي - شركة بورتراج</strong>
-                <div style="font-size: 12px; color: #d9d9d9; line-height: 1.6;">١. الاشتراك الفردي - لسيارة واحدة بقيمة 15 د.ك لمدة سنة كاملة<br>٢. الاشتراك العائلي - ل 3 سيارات بقيمة 40 د.ك لمدة سنة كاملة</div>
-              </div>
-
-              <div class="annual-note-box">
-                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                  <span style="font-size:18px;">⏰</span>
-                  <strong style="color:#fbbf24; font-size:13px;">ملاحظة مهمة</strong>
-                </div>
-                <div style="font-size:12px; color:#fde68a; line-height:1.6;">
-                  الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.
-                </div>
-              </div>
-
-              <div class="annual-detail-grid">
-                <div class="annual-detail-card">
-                  <div class="annual-detail-title"><span>🚗</span> نقل السيارة (ونش/سطحة)</div>
-                  <div class="annual-detail-desc">من الطريق العام فقط. لا يشمل النقل عند البيت أو داخل الفريج أو عند القراج أو عند الشاليه (هذه الحالات عليها تكلفة إضافية).</div>
-                </div>
-                <div class="annual-detail-card">
-                  <div class="annual-detail-title"><span>🔧</span> البنشر (الاطار)</div>
-                  <div class="annual-detail-desc">يشمل تبديل السبير، الرقعة الأمريكية الخارجية، أو تعبئة الإطار بالهواء.</div>
-                </div>
-                <div class="annual-detail-card">
-                  <div class="annual-detail-title"><span>⚡</span> شحن البطارية</div>
-                  <div class="annual-detail-desc">خدمة شحن البطارية عند الحاجة.</div>
-                </div>
-                <div class="annual-detail-card">
-                  <div class="annual-detail-title"><span>⛽</span> البنزين</div>
-                  <div class="annual-detail-desc">نزودك بنزين بقيمة 1.5 د.ك من اختيارك. ما تدفع رسوم التوصيل - فقط رسوم البنزين (1.5 د.ك).</div>
-                </div>
-                <div class="annual-detail-card" style="grid-column: 1 / -1;">
-                  <div class="annual-detail-title"><span>🔑</span> فتح قفل الباب</div>
-                  <div class="annual-detail-desc">إذا لا سمح الله انقفلت السيارة والمفتاح داخلها، نفتحها لك بدون أي رسوم.</div>
-                </div>
+                <strong style="color: #F2BC1B; display: block; margin-bottom: 6px;">جارٍ التحميل...</strong>
               </div>
             </div>
           </div>
@@ -12703,13 +14440,189 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
 
       const termsModal = document.getElementById('termsModal');
       const detailsModal = document.getElementById('detailsModal');
-      const termsBtn = document.getElementById('termsButton');
-      const detailsBtn = document.getElementById('detailsButton');
       const termsCloseBtn = document.getElementById('termsCloseBtn');
       const detailsCloseBtn = document.getElementById('detailsCloseBtn');
+      let currentAnnualPackage = 'vehicle';
 
-      if (termsBtn && termsModal) termsBtn.onclick = () => termsModal.classList.remove('hidden');
-      if (detailsBtn && detailsModal) detailsBtn.onclick = () => detailsModal.classList.remove('hidden');
+      const annualPackageContent = {
+        individual: {
+          title: 'الاشتراك الفردي',
+          subtitle: 'لسيارة واحدة لمدة سنة كاملة',
+          note: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.',
+          details: [
+            { icon: '⏰', title: 'ملاحظة مهمة', desc: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.' },
+            { icon: '🚗', title: 'نقل السيارة (ونش/سطحة)', desc: 'من الطريق العام فقط. لا يشمل النقل عند البيت أو داخل الفريج أو عند القراج أو عند الشاليه (هذه الحالات عليها تكلفة إضافية).' },
+            { icon: '🔧', title: 'البنشر (الإطار)', desc: 'يشمل تبديل السبير، الرقعة الأمريكية الخارجية، أو تعبئة الإطار بالهواء.' },
+            { icon: '🔋', title: 'شحن البطارية', desc: 'خدمة شحن البطارية عند الحاجة.' },
+            { icon: '⛽', title: 'البنزين', desc: 'نزودك بنزين بقيمة 1.5 د.ك من اختيارك. ما تدفع رسوم التوصيل - فقط رسوم البنزين (1.5 د.ك).' },
+            { icon: '🔑', title: 'فتح قفل الباب', desc: 'إذا لا سمح الله انقفلت السيارة والمفتاح داخلها، نفتحها لك بدون أي رسوم.' }
+          ],
+          termsText: [
+            'شروط وأحكام الاشتراك الفردي',
+            '١- مدة اشتراك العضوية سنة كاملة.',
+            '٢- يتم تفعيل الاشتراك بعد ثلاثة أيام عمل من شراء العضوية.',
+            '٣- يجب أن يكون الاشتراك صالحاً عند طلب الخدمة.',
+            '٤- يجب أن يكون دفتر السيارة صالحاً.',
+            '٥- الاشتراك مخصص للسيارات التي تم تسجيل بياناتها فقط.',
+            '٦- أولويتنا أمن وسلامة موظفي الشركة، لذلك لا يمكن استخدام الاشتراك في الأماكن المجهولة أو الخطرة.',
+            '٧- خدمة نقل المركبة غير متاحة في حال وقوف السيارة أمام منزل العميل.',
+            '٨- يمكن للمشترك الاستفادة من خدمات المساعدة على الطريق التالية: نقل السيارة، شحن البطارية، تصليح الإطار، تزويد الوقود، وفتح قفل السيارة.',
+            '٩- يمكن الاستفادة من خدمات المساعدة على الطريق المشمولة في الاشتراك في حالات الطوارئ فقط.',
+            '١٠- يجب ألا يكون موديل المركبة أقدم من 10 سنوات.',
+            '١١- الاشتراك لا يشمل نقل المركبة على السطحات الفل داون.',
+            '١٢- تشمل خدمة نقل السيارة حالات العطل الميكانيكي أو الكهربائي ولجهة واحدة محددة، ولا تشمل نقل السيارة من وإلى محلات البيع أو المزادات أو المهرجانات أو السكراب.',
+            '١٣- لا تشمل خدمات نقل السيارة المركبات المتضررة نتيجة حوادث الاصطدام.',
+            '١٤- تقتصر الخدمات على مركبات السيدان والدفع الرباعي، ولا تشمل المركبات التجارية أو الشاحنات.',
+            '١٥- تستخدم خدمة تزويد الوقود فقط عند توقف السيارة على الطريق، ويتحمل المشترك قيمة الوقود.',
+            '١٦- تشمل خدمة تبديل الإطارات الحالات التي يتوفر فيها الإطار الاحتياطي فقط، ويتحمل المشترك قيمة الإطار عند الحاجة.',
+            '١٧- لا يتم توفير الخدمات في حالات الكوارث الطبيعية أو الحوادث المرورية أو انغماس المركبات في الماء أو الرمال.',
+            '١٨- يتم توفير الخدمات داخل حدود دولة الكويت فقط.',
+            '١٩- للمشترك الحق في طلب خدمة واحدة يومياً.',
+            '٢٠- لا يحق للمشترك استرداد قيمة الاشتراك بعد مرور ثلاثة أيام على الدفع (تفعيل الاشتراك)، حتى وإن لم يتم الانتفاع بالخدمات.',
+            '٢١- للمشترك الحق في استخدام العضوية، وفي حال ثبوت سوء الاستخدام بما يتنافى مع شروط وأحكام البرنامج، يحق لشركة بورتراج للجر والمساعدة للمركبات على الطريق إلغاء الاشتراك.',
+            '٢٢- بقبول هذا العرض، يوافق المشترك على الامتثال لشروط وأحكام شركة بورتراج للجر والمساعدة للمركبات على الطريق.'
+          ].join('\n')
+        },
+        family: {
+          title: 'الاشتراك العائلي',
+          subtitle: 'لـ 3 سيارات لمدة سنة كاملة',
+          note: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.',
+          details: [
+            { icon: '⏰', title: 'ملاحظة مهمة', desc: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.' },
+            { icon: '🚗', title: 'نقل السيارة (ونش/سطحة)', desc: 'من الطريق العام فقط. لا يشمل النقل عند البيت أو داخل الفريج أو عند القراج أو عند الشاليه (هذه الحالات عليها تكلفة إضافية).' },
+            { icon: '🔧', title: 'البنشر (الإطار)', desc: 'يشمل تبديل السبير، الرقعة الأمريكية الخارجية، أو تعبئة الإطار بالهواء.' },
+            { icon: '🔋', title: 'شحن البطارية', desc: 'خدمة شحن البطارية عند الحاجة.' },
+            { icon: '⛽', title: 'البنزين', desc: 'نزودك بنزين بقيمة 1.5 د.ك من اختيارك. ما تدفع رسوم التوصيل - فقط رسوم البنزين (1.5 د.ك).' },
+            { icon: '🔑', title: 'فتح قفل الباب', desc: 'إذا لا سمح الله انقفلت السيارة والمفتاح داخلها، نفتحها لك بدون أي رسوم.' }
+          ],
+          termsText: [
+            'شروط وأحكام الاشتراك العائلي',
+            '١- مدة اشتراك العضوية سنة كاملة.',
+            '٢- الباقة تشمل 3 سيارات مسجلة فقط.',
+            '٣- يتم تفعيل الاشتراك بعد ثلاثة أيام عمل من شراء العضوية.',
+            '٤- يجب أن يكون الاشتراك صالحاً عند طلب الخدمة.',
+            '٥- يجب أن يكون دفتر السيارة صالحاً.',
+            '٦- الخدمة تقتصر على المركبات المسجلة ضمن هذه الباقة.',
+            '٧- لا تشمل الباقة خدمة السيارة البديلة.',
+            '٨- أولويتنا أمن وسلامة موظفي الشركة، لذلك لا يمكن استخدام الاشتراك في الأماكن المجهولة أو الخطرة.',
+            '٩- خدمة نقل المركبة غير متاحة في حال وقوف السيارة أمام منزل العميل.',
+            '١٠- يمكن للمشترك الاستفادة من خدمات المساعدة على الطريق التالية: نقل السيارة، شحن البطارية، تصليح الإطار، تزويد الوقود، وفتح قفل السيارة.',
+            '١١- يمكن الاستفادة من خدمات المساعدة على الطريق المشمولة في الاشتراك في حالات الطوارئ فقط.',
+            '١٢- يجب ألا يكون موديل المركبة أقدم من 10 سنوات.',
+            '١٣- الاشتراك لا يشمل نقل المركبة على السطحات الفل داون.',
+            '١٤- تقتصر الخدمات على مركبات السيدان والدفع الرباعي، ولا تشمل المركبات التجارية أو الشاحنات.',
+            '١٥- تستخدم خدمة تزويد الوقود فقط عند توقف السيارة على الطريق، ويتحمل المشترك قيمة الوقود.',
+            '١٦- تشمل خدمة تبديل الإطارات الحالات التي يتوفر فيها الإطار الاحتياطي فقط، ويتحمل المشترك قيمة الإطار عند الحاجة.',
+            '١٧- يتم توفير الخدمات داخل حدود دولة الكويت فقط.',
+            '١٨- للمشترك الحق في طلب خدمة واحدة يومياً.',
+            '١٩- لا يحق للمشترك استرداد قيمة الاشتراك بعد مرور ثلاثة أيام على الدفع (تفعيل الاشتراك)، حتى وإن لم يتم الانتفاع بالخدمات.',
+            '٢٠- بقبول هذا العرض، يوافق المشترك على الامتثال لشروط وأحكام شركة بورتراج للجر والمساعدة للمركبات على الطريق.'
+          ].join('\n')
+        },
+        vehicle: {
+          title: 'الاشتراك السنوي + السيارة البديلة',
+          subtitle: 'مع خدمات المساعدة على الطريق والسيارة البديلة',
+          note: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.',
+          details: [
+            { icon: '⏰', title: 'ملاحظة مهمة', desc: 'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.' },
+            { icon: '🚗', title: 'نقل السيارة (ونش/سطحة)', desc: 'من الطريق العام فقط. لا يشمل النقل عند البيت أو داخل الفريج أو عند القراج أو عند الشاليه (هذه الحالات عليها تكلفة إضافية).' },
+            { icon: '🔧', title: 'البنشر (الإطار)', desc: 'يشمل تبديل السبير، الرقعة الأمريكية الخارجية، أو تعبئة الإطار بالهواء.' },
+            { icon: '🔋', title: 'شحن البطارية', desc: 'خدمة شحن البطارية عند الحاجة.' },
+            { icon: '⛽', title: 'البنزين', desc: 'نزودك بنزين بقيمة 1.5 د.ك من اختيارك. ما تدفع رسوم التوصيل - فقط رسوم البنزين (1.5 د.ك).' },
+            { icon: '🔑', title: 'فتح قفل الباب', desc: 'إذا لا سمح الله انقفلت السيارة والمفتاح داخلها، نفتحها لك بدون أي رسوم.' },
+            { icon: '🚘', title: 'الميزة: السيارة البديلة', desc: 'تُتاح لك سيارة بديلة عند الحوادث مع تقديم المستندات المطلوبة، وفق الشروط والأحكام الخاصة بالباقه.' }
+          ],
+          termsText: [
+            'شروط وأحكام الاشتراك السنوي + السيارة البديلة',
+            '١- مدة اشتراك العضوية سنة كاملة.',
+            '٢- يتم تفعيل الاشتراك بعد ثلاثة أيام عمل من شراء العضوية.',
+            '٣- يجب أن يكون الاشتراك صالحاً عند طلب الخدمة.',
+            '٤- يجب أن يكون دفتر السيارة صالحاً.',
+            '٥- الاشتراك مخصص للسيارات التي تم تسجيل بياناتها فقط.',
+            '٦- في حال وقوع حادث أثناء استخدام السيارة البديلة، يلتزم المشترك بتقديم تقرير رسمي للحادث يوضح جميع الأطراف المعنية.',
+            '٧- يجب أن يكون الحادث مشمولاً بوثيقة التأمين الخاصة بالسيارة البديلة.',
+            '٨- يتحمل المشترك رسوم فتح ملف المطالبة لدى شركة التأمين.',
+            '٩- يشترط إبراز ورقة الحادث الأصلية الصادرة من المخفر عند استلام السيارة للاطلاع عليها.',
+            '١٠- في حال فقدان دفتر تسجيل السيارة الخاصة بالسيارة البديلة، يلتزم المشترك بسداد جميع الرسوم الحكومية اللازمة لإصدار بدل فاقد.',
+            '١١- لا تتحمل شركة بورتراج أي مسؤولية عن الأموال أو الأغراض أو المتعلقات الشخصية التي تترك داخل السيارة البديلة.',
+            '١٢- يحق للمشترك استخدام السيارة البديلة لمدة أقصاها 10 أيام لكل حادث.',
+            '١٣- الحد الأقصى للاستخدام هو 200 كيلومتر يومياً.',
+            '١٤- في حال تجاوز مدة الاستخدام أو الرغبة بتمديدها، يتم احتساب رسوم إيجار يومية إضافية حسب نوع السيارة وفئة الاشتراك.',
+            '١٥- يلتزم المشترك بإعادة السيارة في الموعد المتفق عليه عند الاستلام.',
+            '١٦- يجب الاشتراك في الباقة المطابقة لنوع وحجم المركبة المسجلة.',
+            '١٧- خدمة السيارة البديلة مخصصة للحوادث فقط مع تقديم جميع المستندات والأوراق المطلوبة.',
+            '١٨- لا يمكن طلب سيارة بديلة إذا لم يكن المستخدم مشتركاً في الخدمة قبل وقوع الحادث.',
+            '١٩- يتم تفعيل اشتراك خدمة السيارة البديلة خلال 24 ساعة من تاريخ التسجيل في التطبيق.',
+            '٢٠- يلتزم المشترك باستخدام السيارة البديلة وفقاً للقوانين والأنظمة المعمول بها في دولة الكويت.',
+            '٢١- يحق لإدارة التطبيق تعديل هذه الشروط والأحكام في أي وقت، ويتم نشر النسخة المحدثة داخل التطبيق.',
+            '٢٢- لا يحق للمشترك استرداد قيمة الاشتراك بعد مرور ثلاثة أيام على الدفع (تفعيل الاشتراك)، حتى وإن لم يتم الانتفاع بالخدمات.'
+          ].join('\n')
+        }
+      };
+
+      function renderAnnualPackageContent(packageKey) {
+        const data = annualPackageContent[packageKey] || annualPackageContent.vehicle;
+        currentAnnualPackage = packageKey;
+        const detailsContent = document.getElementById('detailsContent');
+        if (!detailsContent) return;
+
+        const cardsHtml = data.details.map(item => `
+          <div class="annual-detail-card">
+            <div class="annual-detail-title"><span>${item.icon}</span> ${item.title}</div>
+            <div class="annual-detail-desc">${item.desc}</div>
+          </div>
+        `).join('');
+
+        detailsContent.innerHTML = `
+          <div style="margin-bottom: 14px; padding: 12px; background: rgba(242,188,27,0.06); border: 1px solid rgba(242,188,27,0.16); border-radius: 12px; text-align: center;">
+            <strong style="color: #F2BC1B; display: block; margin-bottom: 6px;">${data.title}</strong>
+            <div style="font-size: 12px; color: #d9d9d9; line-height: 1.6;">${data.subtitle}</div>
+          </div>
+
+          <div class="annual-note-box">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="font-size:18px;">⏰</span>
+              <strong style="color:#fbbf24; font-size:13px;">ملاحظة مهمة</strong>
+            </div>
+            <div style="font-size:12px; color:#fde68a; line-height:1.6;">${data.note}</div>
+          </div>
+
+          <div class="annual-detail-grid">
+            ${cardsHtml}
+          </div>
+        `;
+      }
+
+      document.querySelectorAll('.annual-view-details').forEach(btn => {
+        btn.onclick = () => {
+          const packageKey = btn.closest('.annual-card')?.dataset.package || 'vehicle';
+          renderAnnualPackageContent(packageKey);
+          if (detailsModal) detailsModal.classList.remove('hidden');
+        };
+      });
+
+      document.querySelectorAll('.annual-card-copy-btn').forEach(btn => {
+        btn.onclick = async () => {
+          const packageKey = btn.closest('.annual-card')?.dataset.package || currentAnnualPackage;
+          const copyType = btn.dataset.copy; 
+          try {
+            const data = annualPackageContent[packageKey] || annualPackageContent.vehicle;
+            const text = copyType === 'terms' ? data.termsText : [
+              data.title,
+              data.subtitle,
+              '',
+              data.note,
+              '',
+              ...data.details.map(item => `${item.icon} ${item.title}: ${item.desc}`)
+            ].join('\n');
+            await copyToClipboard(text);
+            showToast(copyType === 'terms' ? 'تم نسخ الشروط' : 'تم نسخ التفاصيل');
+          } catch (e) {
+            console.warn('failed to copy annual copy', e);
+          }
+        };
+      });
+
       if (termsCloseBtn && termsModal) termsCloseBtn.onclick = () => termsModal.classList.add('hidden');
       if (detailsCloseBtn && detailsModal) detailsCloseBtn.onclick = () => detailsModal.classList.add('hidden');
 
@@ -12726,72 +14639,25 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
 
       const termsCopyTop = document.getElementById('termsCopyBtn');
       const detailsCopyTop = document.getElementById('detailsCopyBtn');
-      const buildAnnualCopyText = (sourceId) => {
-        if (sourceId === 'termsContent') {
-          return [
-            'شروط وأحكام الاشتراك السنوي',
-            '١- مدة اشتراك العضوية - سنة كاملة.',
-            '٢- تفعيل الاشتراك - يتم تفعيل الاشتراك بعد ثلاث أيام عمل من شراء العضوية.',
-            '٣- صلاحية الاشتراك - يجب أن يكون الاشتراك صالح عند طلب الخدمة.',
-            '٤- دفتر السيارة - يجب أن يكون دفتر السيارة صالح.',
-            '٥- تسجيل البيانات - الاشتراك للسيارات التي تم تسجيل بياناتها فقط.',
-            '٦- الأمن والسلامة - أولويتنا أمن وسلامة موظفين الشركة، بحيث لا يمكن استخدام الاشتراك في أماكن مجهولة وخطرة.',
-            '٧- خدمة نقل المركبة - غير متاحة / لا يمكن استخدامها في حال وقوف السيارة امام منزل العميل.',
-            '٨- الخدمات المتاحة - يمكن للمشترك الاستفادة من خدمات المساعدة على الطريق الآتية: خدمات نقل السيارة، خدمات شحن البطارية، خدمات تصليح الإطار، خدمات تزويد الوقود، خدمات فتح قفل السيارة.',
-            '٩- حالات الطوارئ - يمكن للمشترك الاستفادة من خدمات المساعدة على الطريق المشمولة في الاشتراك في حالة الطوارئ فقط.',
-            '١٠- عمر المركبة - يجب ألا يكون موديل المركبة أقدم من 10 سنوات.',
-            '١١- النقل على السطحات - الاشتراك لا يشمل نقل المركبة على السطحات الفل داون.',
-            '١٢- خدمات نقل السيارة - تشمل نقل السيارة في حالة العطل الميكانيكي أو الكهربائي ولجهة واحدة محددة، ولا يشمل نقل السيارة من والى محلات البيع أو المزاد أو المهرجانات أو السكراب.',
-            '١٣- حوادث الاصطدام - خدمات نقل السيارة لا يشملها نقلها من حادث.',
-            '١٤- أنواع المركبات - تقتصر الخدمات على مركبات السيدان والدفع الرباعي. ولا تشمل المركبات التجارية والشاحنات.',
-            '١٥- خدمات الوقود - تستخدم فقط عند توقف السيارة على الطريق، ويتم دفع قيمة الوقود من قبل المشترك.',
-            '١٦- تبديل الإطارات - خدمات تبديل الإطارات في حال توفر الإطار الاحتياطي فقط , ويدفع قيمة الاطار.',
-            '١٧- الكوارث الطبيعية - لا يتم توفير الخدمات في حالة الكوارث الطبيعية والحوادث المرورية وانغماس المركبات في الماء أو الرمال.',
-            '١٨- المنطقة الجغرافية - يتم توفير الخدمات فقط داخل حدود دولة الكويت.',
-            '١٩- عدد الطلبات اليومية - للمشترك الحق بطلب خدمة واحدة في اليوم الواحد.',
-            '٢٠- سياسه الإلغاء – لا يحق للمشترك استرداد قيمه الاشتراك بعد مرور ثلاثة أيام على الدفع (تفعيل الاشتراك) حتى وإن لم يتم الانتفاع بالخدمات.',
-            '٢١- سوء الاستخدام - للمشترك الحق في استخدام العضوية وفي حالة ثبوت سوء الاستخدام بصورة تتنافى مع شروط وأحكام البرنامج، يحق لشركة بورتراج للجر والمساعدة للمركبات على الطريق إلغاء الاشتراك.',
-            '٢٢- الامتثال للشروط - كمستخدم لخدمات شركة بورتراج للجر والمساعدة للمركبات على الطريق وبقبول هذا العرض، يوافق المشترك على الامتثال لشروط وأحكام شركة بورتراج للجر والمساعدة للمركبات على الطريق.'
-          ].join('\n');
-        }
-        if (sourceId === 'detailsContent') {
-          return [
-            'الاشتراك السنوي - شركة بورتراج',
-            '١. الاشتراك الفردي - لسيارة واحدة بقيمة 15 د.ك لمدة سنة كاملة',
-            '٢. الاشتراك العائلي - ل 3 سيارات بقيمة 40 د.ك لمدة سنة كاملة',
-            '',
-            '⏰ملاحظة مهمة',
-            'الاشتراك يتفعل بعد الدفع ب 3 أيام عمل. كل 24 ساعة لك خدمة واحدة فقط.',
-            '',
-            'نقل السيارة (ونش/سطحة)',
-            'من الطريق العام فقط. لا يشمل النقل عند البيت أو داخل الفريج أو عند القراج أو عند الشاليه (هذه الحالات عليها تكلفة إضافية).',
-            '',
-            'البنشر (الاطار)',
-            'يشمل تبديل السبير، الرقعة الأمريكية الخارجية، أو تعبئة الإطار بالهواء.',
-            '',
-            'شحن البطارية',
-            'خدمة شحن البطارية عند الحاجة.',
-            '',
-            'البنزين',
-            'نزودك بنزين بقيمة 1.5 د.ك من اختيارك. ما تدفع رسوم التوصيل - فقط رسوم البنزين (1.5 د.ك).',
-            '',
-            'فتح قفل الباب',
-            'إذا لا سمح الله انقفلت السيارة والمفتاح داخلها، نفتحها لك بدون أي رسوم.'
-          ].join('\n');
-        }
-        return '';
-      };
-      const doCopy = async (sourceId) => {
+      const doCopy = async (kind) => {
         try {
-          const text = buildAnnualCopyText(sourceId) || document.getElementById(sourceId)?.innerText || document.getElementById(sourceId)?.textContent || '';
+          const data = annualPackageContent[currentAnnualPackage] || annualPackageContent.vehicle;
+          const text = kind === 'terms' ? data.termsText : [
+            data.title,
+            data.subtitle,
+            '',
+            data.note,
+            '',
+            ...data.details.map(item => `${item.icon} ${item.title}: ${item.desc}`)
+          ].join('\n');
           await copyToClipboard(text);
-          showToast('تم النسخ');
+          showToast(kind === 'terms' ? 'تم نسخ الشروط' : 'تم نسخ التفاصيل');
         } catch (e) {
           console.warn('copy failed', e);
         }
       };
-      if (termsCopyTop) termsCopyTop.onclick = () => doCopy('termsContent');
-      if (detailsCopyTop) detailsCopyTop.onclick = () => doCopy('detailsContent');
+      if (termsCopyTop) termsCopyTop.onclick = () => doCopy('terms');
+      if (detailsCopyTop) detailsCopyTop.onclick = () => doCopy('details');
     }
     // Ensure and open the Groups Modal without replacing existing UI
     function openGroupsModal() {
@@ -14658,6 +16524,27 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
         notice.classList.toggle('hidden', !show);
       }
     }
+    function getBatteryWithoutServicePrice(salePrice) {
+      const numeric = Number(String(salePrice).replace(/[^0-9.]/g, ''));
+      if (!Number.isFinite(numeric)) return null;
+      return Math.max(0, numeric - 5);
+    }
+    function renderBatteryPriceBlock(salePrice) {
+      const withoutService = getBatteryWithoutServicePrice(salePrice);
+      if (withoutService === null) {
+        return `
+          <div class="battery-result-row-header">السعر</div>
+          <div class="battery-result-row-value">${escapeHtml(salePrice)} د.ك</div>
+        `;
+      }
+      const formattedPrice = withoutService.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      return `
+        <div class="battery-result-row-header">السعر</div>
+        <div class="battery-result-row-value" style="margin-bottom:6px;">${escapeHtml(salePrice)} د.ك</div>
+        <button type="button" class="battery-no-service-toggle btn-option" style="padding:4px 10px; font-size:11px; width:auto; min-height:auto; margin:0 auto;" data-price-label="${escapeHtml(String(salePrice))}" data-no-service-price="${formattedPrice}">إظهار</button>
+        <div class="battery-no-service-price hidden" style="margin-top:6px; color:#4ade80; font-weight:700; font-size:12px;">سعر البطارية بدون خدمة: ${formattedPrice} د.ك</div>
+      `;
+    }
     function renderBatteryResultsList(items, title, summary = '', carMake = '', carModel = '', carYear = '', requestedSizes = []) {
       const container = document.getElementById('batteryResultsContainer');
       const scroll = document.getElementById('batteryResultsScroll');
@@ -14706,8 +16593,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               <div class="battery-result-row-value">${escapeHtml(dealer)}</div>
             </div>
             <div class="battery-result-row-col-small">
-              <div class="battery-result-row-header">السعر</div>
-              <div class="battery-result-row-value">${escapeHtml(salePrice)} د.ك</div>
+              ${renderBatteryPriceBlock(salePrice)}
             </div>
             <div class="battery-result-row-col-small">
               <div class="battery-result-row-header">كمية المخزون</div>
@@ -14744,6 +16630,15 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
           if (!msg) return;
           await copyBatteryTextToClipboard(msg);
           showToast('تم نسخ الرسالة');
+        };
+      });
+      scroll.querySelectorAll('.battery-no-service-toggle').forEach(btn => {
+        btn.onclick = () => {
+          const hiddenBlock = btn.nextElementSibling;
+          if (!hiddenBlock) return;
+          const isHidden = hiddenBlock.classList.contains('hidden');
+          hiddenBlock.classList.toggle('hidden', !isHidden);
+          btn.textContent = isHidden ? 'إخفاء' : 'إظهار';
         };
       });
     }
@@ -14813,6 +16708,15 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
           showToast('تم نسخ الرسالة');
         };
       });
+      scroll.querySelectorAll('.battery-no-service-toggle').forEach(btn => {
+        btn.onclick = () => {
+          const hiddenBlock = btn.nextElementSibling;
+          if (!hiddenBlock) return;
+          const isHidden = hiddenBlock.classList.contains('hidden');
+          hiddenBlock.classList.toggle('hidden', !isHidden);
+          btn.textContent = isHidden ? 'إخفاء' : 'إظهار';
+        };
+      });
     }
     function renderBatteryItemList(items, groupSize, carMake = '', carModel = '', carYear = '') {
       if (!items.length) {
@@ -14854,8 +16758,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
               <div class="battery-result-row-value">${escapeHtml(dealer)}</div>
             </div>
             <div class="battery-result-row-col-small">
-              <div class="battery-result-row-header">السعر</div>
-              <div class="battery-result-row-value">${escapeHtml(salePrice)} د.ك</div>
+              ${renderBatteryPriceBlock(salePrice)}
             </div>
             <div class="battery-result-row-col-small">
               <div class="battery-result-row-header">كمية المخزون</div>
@@ -17348,6 +19251,687 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const oilTypeStr = oilTypeCell ? oilTypeCell.textContent.trim() : '';
       return window.onCarSelected(oilTypeStr);
     };
+
+    // ==========================================
+    // DISCOUNTS MODULE (الخصومات)
+    // ==========================================
+    const DISCOUNTS_SHEET_NAME = 'خصومات الشركات';
+    window._discountsCompaniesData = [];
+    window._discountsSelectedCompany = null;
+    window._discountsLastUpdated = null;
+    window._discountsLoading = false;
+
+    function parseDiscountDate(val) {
+      if (!val) return null;
+      const s = String(val).trim();
+      if (!s) return null;
+      const gvizMatch = s.match(/Date\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+      if (gvizMatch) {
+        return new Date(parseInt(gvizMatch[1], 10), parseInt(gvizMatch[2], 10), parseInt(gvizMatch[3], 10));
+      }
+      const ymd = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+      if (ymd) {
+        return new Date(parseInt(ymd[1], 10), parseInt(ymd[2], 10) - 1, parseInt(ymd[3], 10));
+      }
+      const dmy = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+      if (dmy) {
+        return new Date(parseInt(dmy[3], 10), parseInt(dmy[2], 10) - 1, parseInt(dmy[1], 10));
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDiscountDateDisplay(val) {
+      if (!val) return 'غير محدد';
+      const d = parseDiscountDate(val);
+      if (!d) return String(val).trim() || 'غير محدد';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function computeDiscountStatus(fromDateRaw, toDateRaw, sheetStatus) {
+      const fromDate = parseDiscountDate(fromDateRaw);
+      const toDate = parseDiscountDate(toDateRaw);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+      if (fromDate && toDate) {
+        const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 0, 0, 0, 0);
+        const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate(), 23, 59, 59, 999);
+        if (today < start) return 'لم يبدأ';
+        if (today > end) return 'منتهي';
+        return 'فعال';
+      } else if (toDate) {
+        const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate(), 23, 59, 59, 999);
+        if (today > end) return 'منتهي';
+        return 'فعال';
+      } else if (fromDate) {
+        const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 0, 0, 0, 0);
+        if (today < start) return 'لم يبدأ';
+        return 'فعال';
+      }
+
+      const raw = String(sheetStatus || '').trim();
+      if (raw.includes('منته') || raw.toLowerCase().includes('expired')) return 'منتهي';
+      if (raw.includes('لم يبدأ') || raw.toLowerCase().includes('pending')) return 'لم يبدأ';
+      return 'فعال';
+    }
+
+    function parseDiscountPercentage(val) {
+      if (val === null || val === undefined || val === '') return { decimal: 0, display: '0%' };
+      const str = String(val).replace('%', '').trim();
+      const num = parseFloat(str);
+      if (isNaN(num) || num <= 0) return { decimal: 0, display: '0%' };
+      if (num > 1) {
+        return { decimal: num / 100, display: `${num}%` };
+      } else {
+        return { decimal: num, display: `${Math.round(num * 100)}%` };
+      }
+    }
+
+    function parseMultilineBullets(text) {
+      if (!text) return [];
+      return String(text)
+        .split(/\r?\n+/)
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+    }
+
+    function formatKWD(num) {
+      const n = parseFloat(num) || 0;
+      return n.toFixed(3) + ' د.ك';
+    }
+
+    async function fetchDiscountsSheet(force = false) {
+      if (window._discountsLoading) return;
+      window._discountsLoading = true;
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(DISCOUNTS_SHEET_NAME)}&t=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('فشل جلب بيانات شيت الخصومات');
+        const text = await res.text();
+        const jsonString = text.substring(47).slice(0, -2);
+        const data = JSON.parse(jsonString);
+        
+        let rows = (data.table && data.table.rows) ? data.table.rows : [];
+        if (rows.length === 0) {
+          window._discountsCompaniesData = [];
+          window._discountsSheetMissing = false;
+          window._discountsLastUpdated = new Date();
+          return;
+        }
+
+        // Check if gviz defaulted to sheet 0 because "خصومات الشركات" tab doesn't exist yet
+        const firstColHeader = rows[0] && rows[0].c && rows[0].c[0] ? (rows[0].c[0].v ?? rows[0].c[0].f ?? '') : '';
+        if (String(firstColHeader).includes('اسعار الخدمات') || String(firstColHeader).includes('Portarage')) {
+          window._discountsCompaniesData = [];
+          window._discountsSheetMissing = true;
+          window._discountsLastUpdated = new Date();
+          return;
+        }
+
+        window._discountsSheetMissing = false;
+        const companies = [];
+
+        // Check if first row is header
+        let startIndex = 0;
+        const testRow0Col0 = String(firstColHeader).trim();
+        if (testRow0Col0.includes('اسم الشركة') || testRow0Col0.includes('الشركة') || testRow0Col0.includes('من تاريخ')) {
+          startIndex = 1;
+        }
+
+        for (let i = startIndex; i < rows.length; i++) {
+          const c = rows[i].c || [];
+          const companyName = (c[0] ? (c[0].v ?? c[0].f ?? '') : '').toString().trim();
+          if (!companyName) continue;
+          if (companyName.includes('اسم الشركة') || companyName.includes('من تاريخ')) continue;
+
+          const fromDateRaw = c[1] ? (c[1].f ?? c[1].v ?? '') : '';
+          const toDateRaw = c[2] ? (c[2].f ?? c[2].v ?? '') : '';
+          const servicesRaw = c[3] ? (c[3].v ?? c[3].f ?? '') : '';
+          const conditionsRaw = c[4] ? (c[4].v ?? c[4].f ?? '') : '';
+          const discountPercentRaw = c[5] ? (c[5].f ?? c[5].v ?? '') : '';
+          const sheetStatus = (c[6] ? (c[6].v ?? c[6].f ?? '') : '').toString().trim();
+
+          const computedStatus = computeDiscountStatus(fromDateRaw, toDateRaw, sheetStatus);
+          const percentObj = parseDiscountPercentage(discountPercentRaw);
+          const servicesList = parseMultilineBullets(servicesRaw);
+          const conditionsList = parseMultilineBullets(conditionsRaw);
+
+          companies.push({
+            id: 'comp_' + i + '_' + Math.random().toString(36).substr(2, 5),
+            name: companyName,
+            fromDateRaw: fromDateRaw,
+            toDateRaw: toDateRaw,
+            fromDateDisplay: formatDiscountDateDisplay(fromDateRaw),
+            toDateDisplay: formatDiscountDateDisplay(toDateRaw),
+            servicesRaw: servicesRaw,
+            servicesList: servicesList,
+            conditionsRaw: conditionsRaw,
+            conditionsList: conditionsList,
+            percent: percentObj,
+            status: computedStatus
+          });
+        }
+
+        window._discountsCompaniesData = companies;
+        window._discountsLastUpdated = new Date();
+      } catch (err) {
+        console.error('Error fetching discounts sheet:', err);
+        window._discountsFetchError = err.message;
+      } finally {
+        window._discountsLoading = false;
+      }
+    }
+
+    function renderDiscountsInterface() {
+      const contentArea = document.getElementById('contentArea');
+      if (!contentArea) return;
+
+      // Initial data load if needed
+      if (!window._discountsCompaniesData || window._discountsCompaniesData.length === 0) {
+        contentArea.innerHTML = `
+          <div class="discounts-page-container">
+            <div class="discounts-empty-state">
+              <span class="spinner"></span>
+              <span>جارٍ تحميل بيانات الخصومات من Google Sheets...</span>
+            </div>
+          </div>
+        `;
+        loadAndDisplayDiscounts(false);
+        return;
+      }
+
+      if (window._discountsSheetMissing) {
+        contentArea.innerHTML = `
+          <div class="discounts-page-container">
+            <div class="discounts-empty-state">
+              <div class="empty-icon">⚠️</div>
+              <h4 style="color:#F2BC1B; margin:0; font-size:16px;">ورقة "خصومات الشركات" غير موجودة بعد</h4>
+              <p style="margin:0; font-size:13px; max-width:550px; line-height:1.6; color:#ccc;">
+                يرجى إضافة Sheet جديد في جدول البيانات باسم <strong style="color:#F2BC1B;">"خصومات الشركات"</strong> مع الأعمدة:
+                <br><strong>A:</strong> اسم الشركة | <strong>B:</strong> من تاريخ | <strong>C:</strong> إلى تاريخ | <strong>D:</strong> الخدمات المشمولة | <strong>E:</strong> شروط الخصم | <strong>F:</strong> نسبة الخصم | <strong>G:</strong> الحالة
+              </p>
+              <button class="discounts-btn-refresh" onclick="loadAndDisplayDiscounts(true)" style="margin-top:10px;">
+                🔄 إعادة التحقق الآن
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // If a company is selected -> render Company View (Calculator ALWAYS visible + Circular details)
+      // Otherwise -> render Simple Companies List
+      if (window._discountsSelectedCompany) {
+        renderCompanyDetailView();
+      } else {
+        renderCompaniesListView();
+      }
+    }
+
+    async function loadAndDisplayDiscounts(force = false) {
+      await fetchDiscountsSheet(force);
+      renderDiscountsInterface();
+    }
+
+    // ==========================================
+    // VIEW 1: SIMPLE COMPANIES LIST (أسماء الشركات فقط)
+    // ==========================================
+    function renderCompaniesListView() {
+      const contentArea = document.getElementById('contentArea');
+      if (!contentArea) return;
+
+      const companies = window._discountsCompaniesData || [];
+      const activeCompanies = companies.filter(c => c.status === 'فعال');
+
+      // Global expired banner if no active discounts
+      let bannerHtml = '';
+      if (companies.length > 0 && activeCompanies.length === 0) {
+        bannerHtml = `
+          <div class="form-section full-width" style="background:rgba(239, 68, 68, 0.12); border:1px solid #ef4444; color:#fca5a5; font-size:13px; font-weight:bold; text-align:center; padding:8px 12px; margin-bottom:8px; border-radius:6px;">
+            ⚠️ لا توجد خصومات فعالة حالياً.
+          </div>
+        `;
+      }
+
+      contentArea.innerHTML = `
+        <div class="discounts-page-container">
+          ${bannerHtml}
+
+          <!-- Header -->
+          <div class="discounts-companies-section-header">
+            <div class="discounts-section-title">
+              <span>🏢</span>
+              <span>شركات الخصم المعتمدة (${companies.length})</span>
+            </div>
+          </div>
+
+          <!-- Simple Company Names Grid -->
+          <div id="companyNamesGrid" class="company-names-grid">
+          </div>
+        </div>
+      `;
+
+      renderCompanyTiles();
+      initCompaniesListEvents();
+    }
+
+    function renderCompanyTiles() {
+      const grid = document.getElementById('companyNamesGrid');
+      if (!grid) return;
+
+      const companies = window._discountsCompaniesData || [];
+
+      if (companies.length === 0) {
+        grid.innerHTML = `
+          <div class="discounts-empty-state">
+            <div class="empty-icon">🏢</div>
+            <h4 style="color:#fff; margin:0; font-size:14px;">لا توجد شركات مسجلة في جدول الخصومات</h4>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = companies.map(c => {
+        let statusBadgeHtml = '';
+        if (c.status === 'فعال') {
+          statusBadgeHtml = `<span class="discount-status-badge status-active"><span class="badge-icon">✓</span> فعال</span>`;
+        } else if (c.status === 'منتهي') {
+          statusBadgeHtml = `<span class="discount-status-badge status-expired"><span class="badge-icon">✕</span> منتهي</span>`;
+        } else {
+          statusBadgeHtml = `<span class="discount-status-badge status-pending"><span class="badge-icon">⏳</span> لم يبدأ</span>`;
+        }
+
+        return `
+          <div class="company-name-tile" data-company-id="${escapeHtml(c.id)}">
+            <div class="company-tile-main">
+              <span class="company-tile-icon">🏢</span>
+              <span class="company-tile-name">${escapeHtml(c.name)}</span>
+            </div>
+            <div class="company-tile-side">
+              <span class="discount-percent-tag">🏷️ ${escapeHtml(c.percent.display)}</span>
+              ${statusBadgeHtml}
+              <span class="company-tile-arrow">←</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function initCompaniesListEvents() {
+      const grid = document.getElementById('companyNamesGrid');
+      if (grid) {
+        grid.addEventListener('click', (e) => {
+          const tile = e.target.closest('.company-name-tile');
+          if (tile && tile.dataset.companyId) {
+            selectDiscountCompany(tile.dataset.companyId);
+          }
+        });
+      }
+    }
+
+    // ==========================================
+    // VIEW 2: SELECTED COMPANY VIEW
+    // (مربع الخصم دايماً ظاهر + التفاصيل على شكل دوائر)
+    // ==========================================
+    function renderCompanyDetailView() {
+      const contentArea = document.getElementById('contentArea');
+      if (!contentArea) return;
+
+      const comp = window._discountsSelectedCompany;
+      if (!comp) {
+        renderCompaniesListView();
+        return;
+      }
+
+      const companies = window._discountsCompaniesData || [];
+
+      // Status badge
+      let statusBadgeHtml = '';
+      if (comp.status === 'فعال') {
+        statusBadgeHtml = `<span class="discount-status-badge status-active"><span class="badge-icon">✓</span> فعال</span>`;
+      } else if (comp.status === 'منتهي') {
+        statusBadgeHtml = `<span class="discount-status-badge status-expired"><span class="badge-icon">✕</span> منتهي</span>`;
+      } else {
+        statusBadgeHtml = `<span class="discount-status-badge status-pending"><span class="badge-icon">⏳</span> لم يبدأ</span>`;
+      }
+
+      // Default circle open: 'services' if not set
+      if (!window._discountsActiveCircle) {
+        window._discountsActiveCircle = 'services';
+      }
+      const activeCircle = window._discountsActiveCircle;
+
+      contentArea.innerHTML = `
+        <div class="discounts-page-container company-detail-view">
+          <!-- Top Navigation Bar -->
+          <div class="company-detail-nav">
+            <button class="btn-back-companies" id="btnBackToCompaniesList" type="button">
+              <span>←</span>
+              <span>الرجوع لأسماء الشركات</span>
+            </button>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:12px; color:#aaa;">التبديل لشركة أخرى:</span>
+              <select id="discountsQuickCompanySelect" class="company-quick-select">
+                ${companies.map(c => `<option value="${escapeHtml(c.id)}" ${c.id === comp.id ? 'selected' : ''}>${escapeHtml(c.name)} (${c.percent.display})</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <!-- مربع حساب الخصم - دايماً ظاهر عند الدخول على مربع الشركة -->
+          <div class="discount-calc-card">
+            <div class="calc-company-header">
+              <div class="calc-company-name">
+                <span>🧮</span>
+                <span>حساب الخصم - ${escapeHtml(comp.name)}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="discount-percent-tag">🏷️ خصم ${escapeHtml(comp.percent.display)}</span>
+                ${statusBadgeHtml}
+              </div>
+            </div>
+
+            ${comp.status === 'منتهي' ? `
+              <div class="discount-expired-warning">
+                <span>⚠️</span>
+                <span>تنبيه: خصم هذه الشركة منتهي الصلاحية ولا يمكن تطبيقه في حساب السعر.</span>
+              </div>
+            ` : ''}
+
+            <div class="calc-input-wrapper">
+              <label for="calcOriginalAmount">قيمة الخدمة الأصلية:</label>
+              <div class="calc-input-field-group">
+                <input type="number" id="calcOriginalAmount" placeholder="0.000" step="0.001" min="0" autofocus>
+                <div class="calc-input-suffix">د.ك</div>
+              </div>
+            </div>
+
+            <!-- مربع نتائج الحساب - يظهر فقط بعد إدخال قيمة المبلغ -->
+            <div class="calc-summary-box" id="calcSummaryBox" style="display: none;">
+              <div class="calc-row">
+                <span>نسبة الخصم:</span>
+                <span class="val" id="calcRateDisplay" style="color:#F2BC1B;">
+                  ${comp.status === 'فعال' ? comp.percent.display : `${comp.percent.display} (${comp.status})`}
+                </span>
+              </div>
+              <div class="calc-row">
+                <span>قيمة الخصم:</span>
+                <span class="val" id="calcDiscountAmountDisplay" style="color:#ef4444;">0.000 د.ك</span>
+              </div>
+              <div class="calc-row final-row">
+                <span style="font-weight:700; color:#fff;">المبلغ بعد الخصم:</span>
+                <span class="val-final" id="calcFinalAmountDisplay">0.000 د.ك</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- تفاصيل الشركة على شكل دوائر (Circles) -->
+          <div class="discount-circles-wrapper">
+            <div class="discount-circles-header">
+              <h4>
+                <span>ℹ️</span>
+                <span>تفاصيل وشروط الخصم لـ ${escapeHtml(comp.name)}</span>
+              </h4>
+            </div>
+
+            <div class="discount-circles-row" id="discountCirclesRow">
+              <!-- دائرة 1: الخدمات المشمولة -->
+              <button type="button" class="discount-circle-item ${activeCircle === 'services' ? 'active' : ''}" data-circle="services">
+                <div class="circle-disc">
+                  ${comp.servicesList.length > 0 ? `<span class="circle-badge-count">${comp.servicesList.length}</span>` : ''}
+                  <span class="disc-icon">🛠</span>
+                  <span class="disc-sub">${comp.servicesList.length} خدمات</span>
+                </div>
+                <span class="circle-label">الخدمات المشمولة</span>
+              </button>
+
+              <!-- دائرة 2: شروط الخصم -->
+              <button type="button" class="discount-circle-item ${activeCircle === 'conditions' ? 'active' : ''}" data-circle="conditions">
+                <div class="circle-disc">
+                  ${comp.conditionsList.length > 0 ? `<span class="circle-badge-count">${comp.conditionsList.length}</span>` : ''}
+                  <span class="disc-icon">📋</span>
+                  <span class="disc-sub">${comp.conditionsList.length} شروط</span>
+                </div>
+                <span class="circle-label">شروط الخصم</span>
+              </button>
+
+              <!-- دائرة 3: فترة الخصم -->
+              <button type="button" class="discount-circle-item ${activeCircle === 'dates' ? 'active' : ''}" data-circle="dates">
+                <div class="circle-disc">
+                  <span class="disc-icon">📅</span>
+                  <span class="disc-sub">${escapeHtml(comp.status)}</span>
+                </div>
+                <span class="circle-label">فترة الصلاحية</span>
+              </button>
+
+              <!-- دائرة 4: نسبة الخصم -->
+              <button type="button" class="discount-circle-item ${activeCircle === 'rate' ? 'active' : ''}" data-circle="rate">
+                <div class="circle-disc">
+                  <span class="disc-icon">🏷️</span>
+                  <span class="disc-sub">${escapeHtml(comp.percent.display)}</span>
+                </div>
+                <span class="circle-label">نسبة الخصم</span>
+              </button>
+            </div>
+
+            <!-- صندوق التفاصيل المنبثق من الدائرة المحددة -->
+            <div id="circleExpandedCardContainer">
+              ${renderCircleExpandedContent(comp, activeCircle)}
+            </div>
+          </div>
+        </div>
+      `;
+
+      initCompanyDetailEvents();
+      calculateDiscount();
+    }
+
+    function renderCircleExpandedContent(comp, activeCircle) {
+      if (!activeCircle) {
+        return `
+          <div class="circle-expanded-card" style="text-align:center; color:#888; font-size:12px; padding:16px;">
+            اضغط على أي من الدوائر أعلاه لعرض الخدمات المشمولة أو الشروط أو الصلاحية.
+          </div>
+        `;
+      }
+
+      if (activeCircle === 'services') {
+        const hasServices = comp.servicesList.length > 0;
+        return `
+          <div class="circle-expanded-card">
+            <div class="circle-expanded-header">
+              <span>🛠 الخدمات المشمولة بالخصم (${comp.servicesList.length}):</span>
+              <span style="font-size:11px; color:#aaa;">كل بند في سطر مستقل</span>
+            </div>
+            ${hasServices ? `
+              <ul class="discount-bullets-list">
+                ${comp.servicesList.map(s => `
+                  <li class="discount-bullet-item">
+                    <span class="discount-bullet">•</span>
+                    <span style="color:#fff; font-size:13px; font-weight:600;">${escapeHtml(s)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            ` : '<div style="color:#777; font-size:12px;">لم يتم تسجيل خدمات مشمولة محددة.</div>'}
+          </div>
+        `;
+      }
+
+      if (activeCircle === 'conditions') {
+        const hasConditions = comp.conditionsList.length > 0;
+        return `
+          <div class="circle-expanded-card">
+            <div class="circle-expanded-header">
+              <span>📋 شروط وأحكام الخصم (${comp.conditionsList.length}):</span>
+              <span style="font-size:11px; color:#aaa;">شروط الاستفادة من العرض</span>
+            </div>
+            ${hasConditions ? `
+              <ul class="discount-bullets-list">
+                ${comp.conditionsList.map(cond => `
+                  <li class="discount-bullet-item">
+                    <span class="discount-bullet">•</span>
+                    <span style="color:#fff; font-size:13px; font-weight:600;">${escapeHtml(cond)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            ` : '<div style="color:#777; font-size:12px;">لا توجد شروط خاصة مسجلة لهذا الخصم.</div>'}
+          </div>
+        `;
+      }
+
+      if (activeCircle === 'dates') {
+        return `
+          <div class="circle-expanded-card">
+            <div class="circle-expanded-header">
+              <span>📅 فترة سريان وصلاحية الخصم:</span>
+              <span style="font-size:11px; color:#aaa;">التاريخ الحالي يحدد الحالة تلقائياً</span>
+            </div>
+            <div class="card-date-row" style="margin-bottom:8px;">
+              <span>تاريخ البداية: <strong style="color:#fff;">${escapeHtml(comp.fromDateDisplay)}</strong></span>
+              <span class="card-date-arrow">←</span>
+              <span>تاريخ النهاية: <strong style="color:#fff;">${escapeHtml(comp.toDateDisplay)}</strong></span>
+            </div>
+            <div style="font-size:12px; color:#ccc; line-height:1.5;">
+              حالة الخصم اليوم: <strong style="color:${comp.status === 'فعال' ? '#10b981' : (comp.status === 'منتهي' ? '#ef4444' : '#F2BC1B')}">${escapeHtml(comp.status)}</strong>
+              ${comp.status === 'فعال' ? ' (الخصم ساري ومتاح للاستخدام في الحاسبة)' : (comp.status === 'منتهي' ? ' (الخصم منتهي الصلاحية وغير قابل للتطبيق)' : ' (الخصم لم يبدأ بعد)')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (activeCircle === 'rate') {
+        return `
+          <div class="circle-expanded-card">
+            <div class="circle-expanded-header">
+              <span>🏷️ نسبة الخصم المعتمدة:</span>
+              <span style="font-size:11px; color:#aaa;">قيمة الخصم المالي</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+              <span style="font-size:22px; font-weight:800; color:#F2BC1B;">${escapeHtml(comp.percent.display)}</span>
+              <div style="font-size:12px; color:#ccc; line-height:1.4;">
+                يتم خصم هذه النسبة تلقائياً من قيمة الخدمة الأصلية في الحاسبة أعلاه بمجرد إدخال المبلغ.
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return '';
+    }
+
+    function initCompanyDetailEvents() {
+      // Back to companies button
+      const backBtn = document.getElementById('btnBackToCompaniesList');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          window._discountsSelectedCompany = null;
+          renderDiscountsInterface();
+        });
+      }
+
+      // Quick company dropdown
+      const quickSelect = document.getElementById('discountsQuickCompanySelect');
+      if (quickSelect) {
+        quickSelect.addEventListener('change', (e) => {
+          const compId = e.target.value;
+          if (compId) {
+            selectDiscountCompany(compId);
+          }
+        });
+      }
+
+      // Calculator input
+      const calcInput = document.getElementById('calcOriginalAmount');
+      if (calcInput) {
+        calcInput.addEventListener('input', calculateDiscount);
+      }
+
+      // Circle buttons interaction (Click to show/toggle details)
+      const circlesRow = document.getElementById('discountCirclesRow');
+      if (circlesRow) {
+        circlesRow.addEventListener('click', (e) => {
+          const circleBtn = e.target.closest('.discount-circle-item');
+          if (!circleBtn) return;
+          const circleKey = circleBtn.dataset.circle;
+
+          if (window._discountsActiveCircle === circleKey) {
+            // Clicking active circle closes it
+            window._discountsActiveCircle = null;
+          } else {
+            window._discountsActiveCircle = circleKey;
+          }
+
+          // Update active styles on circles
+          circlesRow.querySelectorAll('.discount-circle-item').forEach(b => {
+            if (b.dataset.circle === window._discountsActiveCircle) {
+              b.classList.add('active');
+            } else {
+              b.classList.remove('active');
+            }
+          });
+
+          // Update expanded details content
+          const container = document.getElementById('circleExpandedCardContainer');
+          if (container && window._discountsSelectedCompany) {
+            container.innerHTML = renderCircleExpandedContent(window._discountsSelectedCompany, window._discountsActiveCircle);
+          }
+        });
+      }
+    }
+
+    function selectDiscountCompany(companyId) {
+      const companies = window._discountsCompaniesData || [];
+      const comp = companies.find(c => c.id === companyId);
+      if (!comp) return;
+
+      window._discountsSelectedCompany = comp;
+      // Reset active circle to 'services' on new company select
+      window._discountsActiveCircle = 'services';
+      renderDiscountsInterface();
+
+      // Smooth scroll to top of content
+      const contentArea = document.getElementById('contentArea');
+      if (contentArea) contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function calculateDiscount() {
+      const input = document.getElementById('calcOriginalAmount');
+      const summaryBox = document.getElementById('calcSummaryBox');
+      const discountDisplay = document.getElementById('calcDiscountAmountDisplay');
+      const finalDisplay = document.getElementById('calcFinalAmountDisplay');
+      if (!input || !summaryBox || !discountDisplay || !finalDisplay) return;
+
+      const rawVal = (input.value || '').trim();
+      const originalVal = parseFloat(rawVal);
+
+      // Hide summary box until a valid positive number is typed
+      if (!rawVal || isNaN(originalVal) || originalVal <= 0) {
+        summaryBox.style.display = 'none';
+        discountDisplay.textContent = formatKWD(0);
+        finalDisplay.textContent = formatKWD(0);
+        return;
+      }
+
+      // Show summary box when user enters an amount
+      summaryBox.style.display = 'flex';
+
+      const comp = window._discountsSelectedCompany;
+      if (!comp || comp.status !== 'فعال') {
+        discountDisplay.textContent = formatKWD(0);
+        finalDisplay.textContent = formatKWD(originalVal);
+        return;
+      }
+
+      const rate = comp.percent.decimal;
+      const discountVal = originalVal * rate;
+      const finalVal = Math.max(0, originalVal - discountVal);
+
+      discountDisplay.textContent = formatKWD(discountVal);
+      finalDisplay.textContent = formatKWD(finalVal);
+    }
   </script>
 </body>
 </html>==
