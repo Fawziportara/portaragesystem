@@ -3824,7 +3824,7 @@
     const GOOGLE_SHEET_ID = '1x2ongtstODqEEWh_jAwN8zLHjsYeIppk8EH_Q1CXMzk';
     const USERS_SHEET_NAME = 'users';
     const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${USERS_SHEET_NAME}`;
-    const SITE_VERSION = '5.1';
+    const SITE_VERSION = '5.2';
     
     let usersData = [];
     let isAuthenticated = false;
@@ -14938,6 +14938,10 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       if (clean === 'india' || clean === 'ind' || clean === 'الهند' || clean === 'هندية') {
         return { nationality: 'هندية', flag: '🇮🇳' };
       }
+      // Bangladesh
+      if (clean === 'bangladesh' || clean === 'bangladeshi' || clean === 'بنغلاديش' || clean === 'بنغلادشيه' || clean === 'بنغلادش') {
+        return { nationality: 'بنغلاديشية', flag: '🇧🇩' };
+      }
       // Germany
       if (clean === 'germany' || clean === 'ger' || clean === 'de' || clean === 'المانيا' || clean === 'ألمانيا' || clean === 'ألمانية' || clean === 'المانية') {
         return { nationality: 'ألمانية', flag: '🇩🇪' };
@@ -15035,6 +15039,8 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
 
     function getDealer(brand, size = '') {
       const normalizedBrand = normalizeBrandName(brand);
+      if (normalizedBrand === 'LBS') return 'اف كي';
+      if (normalizedBrand === 'INDIGO' || normalizedBrand === 'انديقو') return 'الفتو انترنشلن';
       if (normalizedBrand === 'هانكوك' || (brand || '').toUpperCase().includes('HANKOOK')) {
         const cleanSize = (size || '').toUpperCase().trim();
         if (cleanSize.includes('DA74') || cleanSize.includes('74')) {
@@ -15977,10 +15983,11 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
         // كمية السائق فقط (اف كي / افتخار / الميلم أو فارتا)
         let qtyBadges = '';
         const brand_upper = brand.toUpperCase();
-        const isVartaOrHankookNotDa74 = (brand_upper.includes('VARTA') || (brand_upper.includes('HANKOOK') && !size.toUpperCase().includes('DA74') && !size.toUpperCase().includes('74')));
-        if (isVartaOrHankookNotDa74) {
+        const isVartaLikeNotDa74 = (brand_upper.includes('VARTA') || brand_upper.includes('INDIGO') || (brand_upper.includes('HANKOOK') && !size.toUpperCase().includes('DA74') && !size.toUpperCase().includes('74')));
+        if (isVartaLikeNotDa74) {
           const total = fk + m + three;
-          qtyBadges = `<span class="status-badge" style="background:#F2BC1B;color:#000;font-weight:700;">فارتا: ${total}</span>`;
+          const label = brand_upper.includes('INDIGO') ? 'المورد فارتا' : 'فارتا';
+          qtyBadges = `<span class="status-badge" style="background:#F2BC1B;color:#000;font-weight:700;">${label}: ${total}</span>`;
         } else {
           if (fk) qtyBadges += `<span class="status-badge" style="background:rgba(242,188,27,0.18);color:#F2BC1B;border:1px solid rgba(242,188,27,0.4);margin:2px;">اف كي: ${fk}</span>`;
           if (m) qtyBadges += `<span class="status-badge" style="background:rgba(242,188,27,0.18);color:#F2BC1B;border:1px solid rgba(242,188,27,0.4);margin:2px;">افتخار: ${m}</span>`;
@@ -16848,7 +16855,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const mQty = Number(row[8]) || 0;
       const threeQty = Number(row[9]) || 0;
       const badges = [];
-      if (brand.includes('VARTA')) {
+      if (brand.includes('VARTA') || brand.includes('INDIGO')) {
         const total = fkQty + mQty + threeQty;
         if (total > 0) {
           badges.push(`<span class="status-badge" style="background:#F2BC1B;color:#000; margin:3px;">فارتا: ${total}</span>`);
@@ -16891,6 +16898,8 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
     const BATTERY_BRAND_INFO = {
       'Motorcraft': { country: 'أمريكية', warranty: { default: '3 سنوات', special: { '95AGM': 'سنة واحدة', 'DA100': 'سنة واحدة' } }, dealer: 'فورد الغانم' },
       'Varta': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
+      'LBS': { country: 'بنغلاديشية', warranty: { default: 'سنة' }, dealer: 'اف كي' },
+      'INDIGO': { country: 'بنغلاديشية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنشلن' },
       'Hankook': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'Booster': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'Oakley': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
@@ -16907,6 +16916,8 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       'موتر كرافت': { country: 'أمريكية', warranty: { default: '3 سنوات', special: { '95AGM': 'سنتين', 'DA100': 'سنتين' } }, dealer: 'فورد الغانم' },
       'موتو رافت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
       'موتو رفت': { country: 'هندية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
+      'ال بي اس': { country: 'بنغلاديشية', warranty: { default: 'سنة' }, dealer: 'اف كي' },
+      'انديقو': { country: 'بنغلاديشية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنشلن' },
       'فارتا': { country: 'ألمانية', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'هانكوك': { country: 'كوريه', warranty: { default: 'سنة' }, dealer: 'الفتو انترنتشلن' },
       'بوستر': { country: 'صينية', warranty: { default: 'سنة' }, dealer: 'المشعل' },
@@ -16930,7 +16941,9 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const upperBrand = brand.toUpperCase().trim();
       if (upperBrand.includes('MOTER CRAFT') || upperBrand.includes('MOTORCRAFT')) return 'موتر كرافت';
       if (upperBrand.includes('MOTO RAFT') || upperBrand.includes('MOTORAFT')) return 'موتو رافت';
+      if (upperBrand.includes('LBS')) return 'LBS';
       if (upperBrand.includes('VARTA')) return 'فارتا';
+      if (upperBrand.includes('INDIGO')) return 'INDIGO';
       if (upperBrand.includes('HANKOOK')) return 'هانكوك';
       if (upperBrand.includes('BOSSTER') || upperBrand.includes('BOOSTER')) return 'بوستر';
       if (upperBrand.includes('ABM')) return 'ABM';
@@ -16955,6 +16968,8 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const normalized = normalizeBrandName(brand);
       if (normalized === 'موتر كرافت') return 'موتر كرافت';
       if (normalized === 'موتو رافت' || normalized === 'موتو رفت') return 'موتو رافت';
+      if (normalized === 'LBS') return 'ال بي اس';
+      if (normalized === 'INDIGO' || normalized === 'انديقو') return 'انديقو';
       if (normalized === 'فارتا') return 'فارتا';
       if (normalized === 'هانكوك') return 'هانكوك';
       if (normalized === 'ABM') return 'ايه بي ام';
@@ -16984,7 +16999,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const brand = (row[1] || '').toUpperCase();
       const size = (row[0] || '').toUpperCase().trim();
       const isHankookDa74 = brand.includes('HANKOOK') && (size.includes('DA74') || size.includes('74'));
-      const isVartaOrHankook = (brand.includes('VARTA') || brand.includes('HANKOOK')) && !isHankookDa74;
+      const isVartaLike = (brand.includes('VARTA') || brand.includes('INDIGO') || brand.includes('HANKOOK')) && !isHankookDa74;
       driverGroups.forEach(group => {
         const driverNameRaw = group.name || '';
         const name = getDriverName(driverNameRaw);
@@ -16995,7 +17010,7 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
         const totalQty = fkQty + mQty + threeQty;
         if (totalQty > 0) {
           hasStock = true;
-          if (isVartaOrHankook) {
+          if (isVartaLike) {
             badges.push(`<span class="battery-driver-badge">${escapeHtml(name)} فارتا : ${totalQty}</span>`);
           } else {
             const parts = [];
@@ -17038,6 +17053,14 @@ const sheetNames = ['تأمين وربه', 'تأمين صفينه VIP', 'تأم�
       const dealer = getDealer(brand, size);
       const salePrice = (row[6] || '').trim() || '-';
       const flagPart = flag ? ` ${flag}` : '';
+
+      if (upperBrand.includes('LBS') || arabicBrand.includes('ال بي اس')) {
+        return `متوفرة بطارية ${arabicBrand} ${nationality}${flagPart} كفالتها ${warranty} على الوكيل ${dealer} السعر مع رسوم التركيب ${salePrice} دك`;
+      }
+
+      if (upperBrand.includes('INDIGO') || arabicBrand.includes('انديقو')) {
+        return `متوفرة بطارية ${arabicBrand} ${nationality}${flagPart} كفالتها ${warranty} على الوكيل ${dealer} السعر مع رسوم التركيب ${salePrice} دك`;
+      }
 
       if (upperBrand.includes('HANKOOK') || arabicBrand.includes('هانكوك')) {
         if (upperSize.includes('DA74') || upperSize.includes('74')) {
